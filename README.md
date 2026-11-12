@@ -125,6 +125,15 @@ Com o `config.js` vazio, o jogo funciona como antes: sem login, salvando só no 
 
 ---
 
+## Painel de ADM (testes)
+
+- **Sem conta (offline):** abra o jogo com `?admin` no fim do endereço (ex.: `.../brumaval/?admin`). O botão **ADM** aparece no topo. Para esconder de novo, use `?admin=0`. Vale só para aquele navegador.
+- **Com contas (Supabase):** rode o `supabase/schema.sql` atualizado e, no SQL Editor, marque a sua conta:
+  `update public.profiles set is_admin = true where id = (select id from auth.users where email = 'SEU-EMAIL');`
+- O painel muda nível, dá ouro, itens (com raridade) e poções, teleporta para qualquer mapa, invoca monstros e chefes, renasce chefes e tem modo deus.
+- Personagens que usaram o painel ficam marcados como **(teste)** na lista.
+- Atenção: o jogo roda no navegador do jogador, então quem entende de programação consegue mexer no próprio save. Para um jogo online competitivo, a lógica importante precisa ir para um servidor (etapa futura).
+
 ## Etapa 3 (futuro): VIP
 
 Já está preparado: a coluna `profiles.vip_until` existe e o jogo mostra "VIP até dd/mm/aaaa" quando ela está no futuro. Falta:

@@ -12,6 +12,10 @@ drop policy if exists "ver o próprio perfil" on public.profiles;
 create policy "ver o próprio perfil" on public.profiles for select using (auth.uid() = id);
 -- Sem política de insert/update: o jogador não consegue se dar VIP.
 
+-- Administrador (painel de ADM no jogo). Também só muda pelo SQL Editor. Para se tornar ADM, rode:
+--   update public.profiles set is_admin = true where id = (select id from auth.users where email = 'SEU-EMAIL-AQUI');
+alter table public.profiles add column if not exists is_admin boolean not null default false;
+
 -- Cria o perfil automaticamente quando alguém se cadastra.
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$

@@ -34,6 +34,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .panel.collapsed h2{margin-bottom:0}
 .battle{display:flex;flex-direction:column;gap:4px;height:226px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:2px}
 .battle .bl{flex:0 0 auto}
+.admg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
+.admg fieldset{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:0;min-width:0}
+.admg legend{font-family:var(--display);font-size:13px;color:var(--muted);padding:0 4px}
+.admg select{font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:3px 4px;max-width:100%}
+#btnAdm{border-color:#c06aff;color:#e2c2ff}
 #afk{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;padding:16px}
 #afk[hidden]{display:none}
 .afkw{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
@@ -197,6 +202,8 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <div class="spacer"></div>
     <span class="where" id="acct" hidden></span>
     <button id="btnLogout" type="button" hidden>Sair da conta</button>
+    <button id="btnAdm" type="button" hidden>ADM</button>
+    <button id="btnChars" type="button" title="Salvar e voltar para a lista de personagens">Personagens</button>
     <button id="btnAfk" type="button" title="Tela de acompanhamento da caçada">AFK</button>
     <button id="btnKeys" type="button">Atalhos</button>
     <button id="btnHelp" type="button">Controles</button>
@@ -238,7 +245,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
           <div id="startBody"></div>
           <div class="keys">
             <b>Clique</b><span>andar, atacar, falar com NPC, abrir corpo</span>
-            <b>WASD / setas</b><span>andar</span>
+            <b>WASD / setas</b><span>andar (duas teclas juntas, como W+D, andam na diagonal; o teclado numérico também)</span>
             <b>Espaço</b><span>mirar no inimigo mais próximo</span>
             <b>1 a 8</b><span>magias · 9 e 0 poções · "Atalhos" para mudar</span>
             <b>Esc</b><span>cancelar alvo / fechar janela</span>
@@ -1260,10 +1267,11 @@ const passPlayer=(m,x,y)=>!BLOCKS.has(tileAt(m,x,y));
 const passMon=(m,x,y)=>{const t=tileAt(m,x,y); return !BLOCKS.has(t)&&!LINKS_T.has(t)&&!(m.town&&SAFE.has(t));};
 
 // ============================================================ A* (4 direções)
-function findPath(m, sx, sy, goal, hx, hy, pass, maxN=1500, ignore, noOcc){
+const DIR4=[[1,0],[-1,0],[0,1],[0,-1]], DIR8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+function findPath(m, sx, sy, goal, hx, hy, pass, maxN=1500, ignore, noOcc, diag){
   if(goal(sx,sy)) return [];
   const W=m.W, start=sy*W+sx, gS=new Map([[start,0]]), from=new Map(), heap=[];
-  const h=(x,y)=>Math.abs(x-hx)+Math.abs(y-hy);
+  const h=diag?(x,y)=>{ const a=Math.abs(x-hx), b=Math.abs(y-hy); return Math.max(a,b)+0.4*Math.min(a,b); }:(x,y)=>Math.abs(x-hx)+Math.abs(y-hy);
   const push=(f,i)=>{heap.push([f,i]);let k=heap.length-1;while(k>0){const p=(k-1)>>1;if(heap[p][0]<=heap[k][0])break;[heap[p],heap[k]]=[heap[k],heap[p]];k=p;}};
   const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let s=k;if(l<heap.length&&heap[l][0]<heap[s][0])s=l;if(r<heap.length&&heap[r][0]<heap[s][0])s=r;if(s===k)break;[heap[s],heap[k]]=[heap[k],heap[s]];k=s;}}return top;};
   push(h(sx,sy),start); let n=0;
@@ -1271,11 +1279,12 @@ function findPath(m, sx, sy, goal, hx, hy, pass, maxN=1500, ignore, noOcc){
     const [,i]=pop(); const x=i%W, y=(i/W)|0;
     if(goal(x,y)){ const out=[]; let c=i; while(c!==start){ out.push({x:c%W,y:(c/W)|0}); c=from.get(c);} return out.reverse(); }
     const g=gS.get(i);
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    for(const [dx,dy] of (diag?DIR8:DIR4)){
       const nx=x+dx, ny=y+dy; if(nx<0||ny<0||nx>=m.W||ny>=m.H) continue;
       if(!pass(m,nx,ny)) continue;
+      if(dx&&dy&&cornerBlocked(m,x,y,dx,dy)) continue;
       if(!noOcc&&occupied(m.id,nx,ny,ignore)) continue;
-      const j=ny*W+nx, ng=g+1;
+      const j=ny*W+nx, ng=g+(dx&&dy?1.4:1);
       if(ng < (gS.get(j)??1e9)){ gS.set(j,ng); from.set(j,i); push(ng+h(nx,ny), j); }
     }
   }
@@ -1293,16 +1302,17 @@ function startStep(e, nx, ny, dur){
 function tryPlayerStep(dx,dy){
   const nx=player.x+dx, ny=player.y+dy;
   player.dir = dx>0?'right':dx<0?'left':dy>0?'down':'up'; if(dx) player.face=dx;
-  if(!passPlayer(cur,nx,ny) || occupied(cur.id,nx,ny,player)) return false;
-  startStep(player,nx,ny,stats().stepDur); return true;
+  if(!passPlayer(cur,nx,ny) || occupied(cur.id,nx,ny,player) || cornerBlocked(cur,player.x,player.y,dx,dy)) return false;
+  startStep(player,nx,ny,Math.round(stats().stepDur*(dx&&dy?1.4:1))); return true;
 }
+const NUMDIR={Numpad7:[-1,-1],Numpad8:[0,-1],Numpad9:[1,-1],Numpad4:[-1,0],Numpad6:[1,0],Numpad1:[-1,1],Numpad2:[0,1],Numpad3:[1,1]};
 function keyDir(){
-  if(keys.has('ArrowUp')||keys.has('KeyW')) return [0,-1];
-  if(keys.has('ArrowDown')||keys.has('KeyS')) return [0,1];
-  if(keys.has('ArrowLeft')||keys.has('KeyA')) return [-1,0];
-  if(keys.has('ArrowRight')||keys.has('KeyD')) return [1,0];
-  return null;
+  for(const k in NUMDIR) if(keys.has(k)) return NUMDIR[k];
+  const u=keys.has('ArrowUp')||keys.has('KeyW'), d=keys.has('ArrowDown')||keys.has('KeyS'), l=keys.has('ArrowLeft')||keys.has('KeyA'), r=keys.has('ArrowRight')||keys.has('KeyD');
+  const dx=(r?1:0)-(l?1:0), dy=(d?1:0)-(u?1:0);
+  return dx||dy ? [dx,dy] : null;
 }
+const cornerBlocked=(m,x,y,dx,dy)=>dx&&dy&&BLOCKS.has(tileAt(m,x+dx,y))&&BLOCKS.has(tileAt(m,x,y+dy));
 function reveal(){ const m=cur; for(let y=player.y-8;y<=player.y+8;y++) for(let x=player.x-10;x<=player.x+10;x++){ if(x<0||y<0||x>=m.W||y>=m.H) continue; if(!m.explored[y*m.W+x]){ m.explored[y*m.W+x]=1; miniDirty=true; } } }
 function onArrive(){
   reveal();
@@ -1328,14 +1338,14 @@ function updatePlayer(dt){
   if(dir){ if(bot.on) toggleBot(false,'Caça automática pausada: você assumiu o controle.'); p.path=null; p.follow=false; p.pending=null; tryPlayerStep(dir[0],dir[1]); return; }
   if(target && p.follow){
     const tg=target, rg=attackRange(stats()); const ok=(x,y)=>Math.max(Math.abs(x-tg.x),Math.abs(y-tg.y))<=rg && (rg===1 || los(cur,{x,y},tg));
-    if(!ok(p.x,p.y)){ const path=findPath(cur,p.x,p.y,ok,tg.x,tg.y,bot.on?passNoLink:passPlayer,900,p);
+    if(!ok(p.x,p.y)){ const path=findPath(cur,p.x,p.y,ok,tg.x,tg.y,bot.on?passNoLink:passPlayer,900,p,false,true);
       if(path&&path.length) tryPlayerStep(path[0].x-p.x, path[0].y-p.y); }
     return;
   }
   if(p.path && p.path.length){
     const n=p.path[0];
     if(occupied(cur.id,n.x,n.y,p) || !passPlayer(cur,n.x,n.y)){
-      const g=p.pathGoal; p.path = g ? findPath(cur,p.x,p.y,g.fn,g.x,g.y,g.pass||passPlayer,1500,p) : null; if(!p.path){ p.pending=null; } return;
+      const g=p.pathGoal; p.path = g ? findPath(cur,p.x,p.y,g.fn,g.x,g.y,g.pass||passPlayer,1500,p,false,true) : null; if(!p.path){ p.pending=null; } return;
     }
     p.path.shift(); tryPlayerStep(n.x-p.x, n.y-p.y);
   }
@@ -1344,7 +1354,7 @@ const passNoLink=(m,a,b)=>passPlayer(m,a,b)&&!m.links[b*m.W+a];
 function walkTo(x,y,adjacent,ref,maxN=4000,quiet=false){
   const fn = adjacent ? (a,b)=>Math.max(Math.abs(a-x),Math.abs(b-y))<=1 : (a,b)=>a===x&&b===y;
   const pass = quiet ? (m,a,b)=>passPlayer(m,a,b)&&(!m.links[b*m.W+a]||(a===x&&b===y)) : passPlayer;
-  const path=findPath(cur,player.x,player.y,fn,x,y,pass,maxN,player);
+  const path=findPath(cur,player.x,player.y,fn,x,y,pass,maxN,player,false,true);
   player.follow=false; player.pending = ref?{ref}:null;
   if(!path){ if(!quiet) log('Não há caminho até lá.','sys'); player.pending=null; return; }
   player.path=path; player.pathGoal={fn,x,y,pass};
@@ -1400,7 +1410,7 @@ function gainXp(n, src){
   uiDirty=true;
 }
 function hurtPlayer(dmg, src){
-  if(player.dead) return;
+  if(player.dead||player.god) return;
   { const B=player.buffs||{}; dmg=Math.max(1,Math.round(dmg*(B.arcshield>0?0.7:1)*(B.bark>0?0.85:1))); }
   player.hp-=dmg; player.flash=120; player.lastHit=now; floatAt(player, String(dmg), '#ff4a3a'); blood(player,false);
   const mxh=stats().maxHp; if(dmg>=mxh*0.08) trauma=Math.min(1,trauma+Math.min(0.35,dmg/mxh*1.2));
@@ -1872,7 +1882,7 @@ function botCast(B,st){
 function botGo(x,y,adjacent){ if(player.moving||(player.path&&player.path.length)) return;
   walkTo(x,y,adjacent,null,40000,true); if(player.path){ bot.stuck=0; return; }
   { const fn=adjacent?(a,b)=>Math.max(Math.abs(a-x),Math.abs(b-y))<=1:(a,b)=>a===x&&b===y, pass=(m,a,b)=>passPlayer(m,a,b)&&(!m.links[b*m.W+a]||(a===x&&b===y));
-    const P=findPath(cur,player.x,player.y,fn,x,y,pass,40000,player,true);
+    const P=findPath(cur,player.x,player.y,fn,x,y,pass,40000,player,true,true);
     const blk=P&&P.map(s=>monsters.find(m=>!m.dead&&m.map===cur.id&&m.x===s.x&&m.y===s.y)).find(Boolean);
     if(blk){ target=blk; player.follow=true; botStatus('Abrindo caminho: '+blk.def.name); bot.stuck=0; return; } }
   { if(++bot.stuck>12){ toggleBot(false,'Caça automática parou: não achei caminho até '+(bot.mode==='return'?'a caçada':'a cidade')+'.'); } } }
@@ -2827,11 +2837,17 @@ function frame(t){
 // ============================================================ salvar / carregar
 function encFog(){ const o={}; for(const m of Object.values(MAPS)){ const E=m.explored; let any=false, runs=[], v=0, n=0; for(let i=0;i<E.length;i++){ const b=E[i]?1:0; if(b) any=true; if(b===v) n++; else { runs.push(n.toString(36)); v=b; n=1; } } runs.push(n.toString(36)); if(any) o[m.id]=runs.join('.'); } return o; }
 function decFog(o){ for(const [id,str] of Object.entries(o||{})){ const m=MAPS[id]; if(!m||typeof str!=='string') continue; let i=0, v=0; for(const r of str.split('.')){ const n=parseInt(r,36)||0; if(v) m.explored.fill(1,i,Math.min(i+n,m.explored.length)); i+=n; v^=1; } } miniDirty=true; }
-function serialize(){ return {v:8, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
+function serialize(){ return {v:8, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
 function save(){ if(!running) return; const d=serialize();
   if(Cloud.on&&Cloud.charId){ Cloud.queue(d); try{ localStorage.setItem(SAVE_KEY+':'+Cloud.charId, JSON.stringify(d)); }catch(e){} return; }
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(d)); }catch(e){} }
-function readSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
+  if(!localSlot) localSlot='c'+Date.now().toString(36);
+  try{ localStorage.setItem(LKEY+localSlot, JSON.stringify(d)); localStorage.setItem(SAVE_KEY+':last', localSlot); }catch(e){} }
+const LKEY=SAVE_KEY+':local:', MAX_LOCAL=6; let localSlot=null;
+function localChars(){ const out=[];
+  try{ const old=localStorage.getItem(SAVE_KEY); if(old){ const id='c'+Date.now().toString(36); localStorage.setItem(LKEY+id, old); localStorage.setItem(SAVE_KEY+':last', id); localStorage.removeItem(SAVE_KEY); }
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(!k||!k.startsWith(LKEY)) continue; try{ const d=JSON.parse(localStorage.getItem(k)); if(d&&d.name) out.push({id:k.slice(LKEY.length), d}); }catch(e){} } }catch(e){}
+  return out.sort((a,b)=>(b.d.savedAt||0)-(a.d.savedAt||0)); }
+function readSave(){ const L=localChars(); let last=null; try{ last=localStorage.getItem(SAVE_KEY+':last'); }catch(e){} return (L.find(c=>c.id===last)||L[0])?.d||null; }
 function applySave(s){
   const fix0 = it => typeof it==='string' ? {id:it,n:1,r:0,a:[]} : {r:0,a:[],...it};
   const fix = it => { const f=fix0(it); delete f._u; if(f.items) f.items=f.items.filter(x=>ITEMS[typeof x==='string'?x:x.id]).map(fix); return f; };
@@ -2847,7 +2863,7 @@ function applySave(s){
   if(!player.eq.bag.items) player.eq.bag.items=[];
   player.eq.bag.items.push(...oldInv);
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
-  player.learned={fae:false,ash:false,...(s.learned||{})};
+  player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm;
   { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
   decFog(s.fog);
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
@@ -2862,11 +2878,75 @@ $('btnSave').addEventListener('click',async ()=>{ if(!running) return; save(); i
 $('btnHelp').addEventListener('click',()=>{ if(!running) return; openDialog(player,'Controles',`<div class="keys" style="margin-top:0">
   <b>Clique no chão</b><span>andar até lá</span><b>Clique num monstro</b><span>atacar (ataque automático quando estiver ao lado)</span>
   <b>Clique num NPC</b><span>conversar</span><b>Clique num corpo</b><span>ver o saque (marcado com um ponto amarelo)</span>
-  <b>WASD / setas</b><span>andar</span><b>Espaço</b><span>alternar entre inimigos próximos</span>
+  <b>WASD / setas</b><span>andar (duas teclas juntas, como W+D, andam na diagonal; o teclado numérico também)</span><b>Espaço</b><span>alternar entre inimigos próximos</span>
   <b>Atalhos</b><span>botão "Atalhos" no topo: escolha a tecla de cada magia, poção e da caça automática (padrão: 1 a 8, 9 e 0, Espaço, B)</span><b>Caça automática</b><span>marque pontos da rota no andar (aqui ou no minimapa), escolha magias e o que pegar, e ligue</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span></div>
   <p style="margin-top:10px">O jogo salva sozinho neste navegador a cada 15 segundos.</p><div class="row"><button data-act="close">Fechar</button></div>`,()=>closeDialog()); });
 $('btnRespawn').addEventListener('click',respawn);
 
+// ============================================================ trocar de personagem
+$('btnChars').addEventListener('click', async ()=>{ if(!running) return; save(); if(Cloud.on&&Cloud.charId) await Cloud.flush(); location.reload(); });
+
+// ============================================================ painel de ADM (testes)
+// Offline: abra o jogo com ?admin no endereço (e ?admin=0 para desligar). Na nuvem: profiles.is_admin = true.
+try{ const q=new URLSearchParams(location.search); if(q.has('admin')) localStorage.setItem('brumaval-admin', q.get('admin')==='0'?'0':'1'); }catch(e){}
+function isAdmin(){ if(Cloud.on) return !!Cloud.admin; try{ return localStorage.getItem('brumaval-admin')==='1'; }catch(e){ return false; } }
+const ADM={item:'', r:0, n:1, map:'', mon:'', mn:1, lvl:'', gold:1000};
+function admArrival(id){ for(const m of Object.values(MAPS)) for(const l of Object.values(m.links||{})) if(l.map===id) return {x:l.x,y:l.y}; return MAPS[id].spawn||null; }
+function openAdm(note){
+  if(!isAdmin()) return;
+  const items=Object.keys(ITEMS).filter(id=>id!=='gold').sort((a,b)=>(ITEMS[a].slot||'~').localeCompare(ITEMS[b].slot||'~')||(ITEMS[a].lvl||0)-(ITEMS[b].lvl||0)||ITEMS[a].name.localeCompare(ITEMS[b].name));
+  if(!ADM.item) ADM.item=items[0]; if(!ADM.map) ADM.map=cur.id;
+  const mons=Object.keys(MON).sort((a,b)=>(MON[b].boss?1:0)-(MON[a].boss?1:0)||(MON[a].lvl||0)-(MON[b].lvl||0)); if(!ADM.mon) ADM.mon=mons.find(k=>MON[k].boss)||mons[0];
+  const SL={weapon:'Armas',shield:'Mão esquerda',helmet:'Elmos',armor:'Armaduras',legs:'Calças',boots:'Botas',ring:'Anéis',amulet:'Colares',bag:'Mochilas'};
+  const groups={}; for(const id of items){ const g=SL[ITEMS[id].slot]||(ITEMS[id].heal||ITEMS[id].mana?'Poções':'Outros'); (groups[g]=groups[g]||[]).push(id); }
+  const opt=(v,l,sel)=>`<option value="${v}" ${sel?'selected':''}>${esc(l)}</option>`;
+  const bosses=spawns.filter(sp=>MON[sp.type].boss), dead=bosses.filter(sp=>!sp.mon).length;
+  const html=`<p class="hint" style="margin-top:0">Ferramentas de teste. Este personagem fica marcado como <b>teste</b> ao usar o painel.${note?'<br><b style="color:var(--accent)">'+esc(note)+'</b>':''}</p>
+  <div class="admg">
+   <fieldset><legend>Personagem</legend>
+    <div class="botrow">Nível <input type="number" id="admLvl" min="1" max="300" value="${ADM.lvl||player.level}"><button data-act="lvl" type="button">Definir</button></div>
+    <div class="botrow">Ouro <input type="number" id="admGold" min="1" step="100" value="${ADM.gold}"><button data-act="gold" type="button">Dar</button></div>
+    <div class="rowb" style="margin-top:6px"><button data-act="heal" type="button">Curar tudo</button><button data-act="god" type="button" aria-pressed="${!!player.god}">${player.god?'Modo deus: ligado':'Modo deus: desligado'}</button><button data-act="spells" type="button">Aprender todas as magias</button><button data-act="pots" type="button">+100 poções de cada</button></div>
+   </fieldset>
+   <fieldset><legend>Dar item</legend>
+    <select id="admItem" style="width:100%">${Object.entries(groups).map(([g,ids])=>`<optgroup label="${g}">${ids.map(id=>opt(id,ITEMS[id].name+(ITEMS[id].lvl?' (nv '+ITEMS[id].lvl+')':''),id===ADM.item)).join('')}</optgroup>`).join('')}</select>
+    <div class="botrow"><select id="admR">${RAR.map((r,i)=>opt(i,r,i===ADM.r)).join('')}</select> Qtd. <input type="number" id="admN" min="1" max="999" value="${ADM.n}"><button data-act="item" type="button" class="primary">Dar</button></div>
+   </fieldset>
+   <fieldset><legend>Ir para</legend>
+    <select id="admMap" style="width:100%">${Object.values(MAPS).map(m=>opt(m.id,m.name,m.id===ADM.map)).join('')}</select>
+    <div class="botrow"><button data-act="tp" type="button" class="primary">Teleportar</button></div>
+   </fieldset>
+   <fieldset><legend>Monstros e chefes</legend>
+    <select id="admMon" style="width:100%">${mons.map(k=>opt(k,(MON[k].boss?'★ ':'')+MON[k].name+' (nv '+(MON[k].lvl||'?')+')',k===ADM.mon)).join('')}</select>
+    <div class="botrow">Qtd. <input type="number" id="admMn" min="1" max="10" value="${ADM.mn}"><button data-act="summon" type="button" class="primary">Invocar aqui</button></div>
+    <div class="botrow"><button data-act="bosses" type="button">Renascer todos os chefes agora</button><small class="hint" style="margin:0">${dead} de ${bosses.length} mortos</small></div>
+    <div class="botrow"><button data-act="clear" type="button">Matar monstros deste andar</button></div>
+   </fieldset>
+  </div>
+  <div class="row"><button data-act="close" type="button">Fechar</button></div>`;
+  openDialog(player,'Painel de ADM',html,(act)=>{
+    const v=id=>document.getElementById(id)?.value;
+    ADM.item=v('admItem')||ADM.item; ADM.r=+(v('admR')||0); ADM.n=Math.max(1,Math.min(999,Math.floor(+v('admN')||1))); ADM.map=v('admMap')||ADM.map; ADM.mon=v('admMon')||ADM.mon; ADM.mn=Math.max(1,Math.min(10,Math.floor(+v('admMn')||1))); ADM.gold=Math.max(1,Math.floor(+v('admGold')||1000));
+    if(act==='close') return closeDialog();
+    player.adm=true; let msg='';
+    if(act==='lvl'){ const L=Math.max(1,Math.min(300,Math.floor(+v('admLvl')||1))); ADM.lvl=L; player.level=L; player.xp=totalXp(L); const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; buildActions(); msg='Nível '+L+'.'; }
+    if(act==='gold'){ player.gold+=ADM.gold; msg='+'+ADM.gold+' de ouro.'; }
+    if(act==='heal'){ const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; player.slowT=0; msg='Vida e mana cheias.'; }
+    if(act==='god'){ player.god=!player.god; msg=player.god?'Modo deus ligado: você não recebe dano.':'Modo deus desligado.'; }
+    if(act==='spells'){ player.learned={fae:true,ash:true}; quests.fae.state=2; quests.ash.state=2; buildActions(); msg='Todas as magias da classe liberadas (ainda respeitam o nível).'; }
+    if(act==='pots'){ for(const id of ['hp','mp','hp2','mp2']) addItem({id,n:100,r:0,a:[]}); msg='+100 de cada poção.'; }
+    if(act==='item'){ const d=ITEMS[ADM.item]; let given=0;
+      if(d.stack){ if(addItem({id:ADM.item,n:ADM.n,r:0,a:[]})) given=ADM.n; }
+      else for(let i=0;i<ADM.n;i++){ if(addItem(makeItem(ADM.item, ADM.r, d.lvl||player.level))) given++; else break; }
+      msg=given?'Recebeu '+given+'× '+d.name+(d.slot&&!d.stack?' ('+RAR[ADM.r]+')':'')+'.':'A mochila está cheia.'; }
+    if(act==='tp'){ const a=admArrival(ADM.map); if(a){ if(bot.on) toggleBot(false); changeMap(ADM.map,a.x,a.y,'Teleportado para '+MAPS[ADM.map].name+'.'); msg='Você está em '+MAPS[ADM.map].name+'.'; } else msg='Não achei um ponto de chegada nesse mapa.'; }
+    if(act==='summon'){ const n0=monsters.length; summon(ADM.mon,{x:player.x,y:player.y,map:cur.id},ADM.mn); const n=monsters.length-n0; msg=n?'Invocado: '+n+'× '+MON[ADM.mon].name+'.':'Sem espaço livre perto de você.'; }
+    if(act==='bosses'){ let n=0; for(const sp of spawns) if(MON[sp.type].boss&&!sp.mon){ sp.timer=1; n++; } msg=n?n+' chefe(s) vão renascer (longe de você ou em outro andar).':'Todos os chefes já estão vivos.'; }
+    if(act==='clear'){ let n=0; for(const m of monsters) if(!m.dead&&m.map===cur.id&&!m.def.boss){ m.hp=0; killMonster(m); n++; } msg=n+' monstros mortos.'; }
+    uiDirty=true; save(); openAdm(msg);
+  });
+}
+$('btnAdm').addEventListener('click',()=>{ if(running) openAdm(); });
 // ============================================================ início
 function begin(fromSave, forcedName){
   for(const m of Object.values(MAPS)) m.explored.fill(0);
@@ -2877,14 +2957,14 @@ function begin(fromSave, forcedName){
     player.eq={}; for(const id of C.start) player.eq[ITEMS[id].slot]=makeItem(id,0);
     player.eq.legs=makeItem('leatherlegs',0);
     player.eq.bag={id:'basicbag',n:1,r:0,a:[],items:[{id:'hp',n:3,r:0,a:[]}]}; if(C.mpLv>10) player.eq.bag.items.push({id:'mp',n:3,r:0,a:[]});
-    player.learned={fae:false,ash:false}; player.bot=BOT_DEF();
+    player.learned={fae:false,ash:false}; player.bot=BOT_DEF(); player.adm=false;
     quests.wolves={state:0,count:0}; quests.king={state:0}; quests.fae={state:0,base:0}; quests.ash={state:0,base:0};
     cur=MAPS.over; const s=MAPS.over.spawn; player.x=player.px=s.x; player.y=player.py=s.y;
     const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp;
   }
   if(!fromSave) player.auto=AUTO_DEF(); player.potCd=0;
   player.buffs={}; player.spellCd={}; openWins=[]; timers=[]; player.slowT=0; if(!fromSave){ player.bossKills={}; player.depot={gold:0,items:[]}; }
-  $('startScreen').hidden=true; running=true; bot.on=false; bot.mode='hunt'; bot.mark=false; resetSess(); buildActions(); renderAuto(); renderBot(); reveal(); miniDirty=true; uiDirty=true;
+  $('startScreen').hidden=true; running=true; bot.on=false; bot.mode='hunt'; bot.mark=false; resetSess(); player.god=false; $('btnAdm').hidden=!isAdmin(); buildActions(); renderAuto(); renderBot(); reveal(); miniDirty=true; uiDirty=true;
   if(fromSave && fromSave.dead){ player.hp=1; }
   log(fromSave?`Bem-vindo de volta, ${player.name}.`:`Bem-vindo a Brumaval, ${player.name}. ${CLASSES[player.cls].name}${CLASSES[player.cls].name.endsWith('r')?'es':'s'} começam no templo de Pedraluz.`,'sys');
   if(!fromSave) log('Dica: fale com o Capitão Bento, perto do portão norte. Ratos rondam os campos fora da cidade.','npc');
@@ -2916,7 +2996,7 @@ const Cloud = {
   async signUp(email,password){ const {data,error}=await this.sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}}); if(error) throw error;
     if(data.session){ this.user=data.user; await this.loadVip(); return true; } return false; },
   async signOut(){ await this.flush(); await this.sb.auth.signOut(); this.user=null; this.charId=null; },
-  async loadVip(){ try{ const {data}=await this.sb.from('profiles').select('vip_until').eq('id',this.user.id).maybeSingle(); this.vipUntil=data?.vip_until?new Date(data.vip_until):null; }catch(e){ this.vipUntil=null; } },
+  async loadVip(){ try{ const {data}=await this.sb.from('profiles').select('*').eq('id',this.user.id).maybeSingle(); this.vipUntil=data?.vip_until?new Date(data.vip_until):null; this.admin=!!data?.is_admin; }catch(e){ this.vipUntil=null; this.admin=false; } },
   isVip(){ return !!(this.vipUntil && this.vipUntil>new Date()); },
   async list(){ const {data,error}=await this.sb.from('characters').select('id,name,cls,level,updated_at').order('updated_at',{ascending:false}); if(error) throw error; return data||[]; },
   async load(id){ const {data,error}=await this.sb.from('characters').select('data').eq('id',id).single(); if(error) throw error; return data.data; },
@@ -2984,18 +3064,46 @@ async function cloudStart(){
 
 function startScreen(){
   if(Cloud.enabled) return cloudStart();
-  const s=readSave(); const body=$('startBody');
-  body.innerHTML = (s?`<div class="row" style="margin:0 0 14px"><button class="primary" id="btnCont" type="button">Continuar: ${esc(s.name)}, ${(CLASSES[s.cls]||CLASSES.guerreiro).name} nível ${s.level}</button></div>`:'')+
-    `<label class="f" for="heroName">Nome do personagem</label><input type="text" id="heroName" maxlength="16" value="Aventureiro" autocomplete="off">
-     <label class="f" style="margin-top:10px">Classe</label><div class="classes" id="classes">${CLASS_ORDER.map(k=>`<button type="button" class="cls" data-c="${k}" aria-pressed="${k===chosenClass}"><b>${CLASSES[k].name}</b><small>${CLASSES[k].desc}</small></button>`).join('')}</div>
-     <div class="row"><button class="${s?'':'primary'}" id="btnNew" type="button">${s?'Novo personagem':'Começar'}</button></div><p id="newWarn" class="hint" hidden>Isso apaga o personagem salvo. Clique de novo para confirmar.</p>`;
-  if(s) $('btnCont').addEventListener('click',()=>begin(s));
-  $('classes').addEventListener('click',e=>{ const b=e.target.closest('[data-c]'); if(!b) return; chosenClass=b.dataset.c; for(const x of $('classes').children) x.setAttribute('aria-pressed', x===b); });
-  let armed=false;
-  $('btnNew').addEventListener('click',()=>{ if(s&&!armed){ armed=true; $('newWarn').hidden=false; $('btnNew').textContent='Confirmar novo personagem'; return; } begin(null); });
-  $('heroName').addEventListener('keydown',e=>{ if(e.key==='Enter') $('btnNew').click(); });
+  const L=localChars(); let lastId=null; try{ lastId=localStorage.getItem(SAVE_KEY+':last'); }catch(e){} const last=L.find(c=>c.id===lastId)||L[0], s=last?.d, full=L.length>=MAX_LOCAL; const body=$('startBody');
+  const where=d=>MAPS[d.map]?.name||'';
+  body.innerHTML = (last?`<div class="row" style="margin:0 0 12px"><button class="primary" id="btnCont" type="button">Continuar: ${esc(s.name)}, ${(CLASSES[s.cls]||CLASSES.guerreiro).name} nível ${s.level}</button></div>`:'')+
+    (L.length?`<h2 style="font-size:16px;margin:4px 0 6px">Seus personagens <span class="price">${L.length}/${MAX_LOCAL}</span></h2><div class="list" id="charList">${L.map(c=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${esc(c.d.name)}${c.d.adm?' <small>(teste)</small>':''}</b><small>${(CLASSES[c.d.cls]||CLASSES.guerreiro).name} · nível ${c.d.level}${where(c.d)?' · '+esc(where(c.d)):''}</small></div><div class="btns"><button class="primary" data-play="${c.id}" type="button">Jogar</button><button data-del="${c.id}" type="button">Apagar</button></div></div>`).join('')}</div>`:'')+
+    (full?`<p class="hint">Limite de ${MAX_LOCAL} personagens neste navegador. Apague um para criar outro.</p>`:
+    `<h2 style="font-size:16px;margin:14px 0 6px">Novo personagem</h2><label class="f" for="heroName">Nome do personagem</label><input type="text" id="heroName" maxlength="16" value="${L.length?'':'Aventureiro'}" placeholder="Nome do personagem" autocomplete="off">
+     ${classPicker()}
+     <div class="row"><button class="${last?'':'primary'}" id="btnNew" type="button">${L.length?'Criar personagem':'Começar'}</button></div>`)+`<p class="hint" id="charMsg" role="status"></p>`;
+  const play=id=>{ const c=L.find(c=>c.id===id); if(!c) return; localSlot=id; begin(c.d); };
+  if(last) $('btnCont').addEventListener('click',()=>play(last.id));
+  $('charList')?.addEventListener('click',e=>{ const p=e.target.closest('[data-play]'), d=e.target.closest('[data-del]');
+    if(p) play(p.dataset.play);
+    if(d){ if(d.dataset.armed!=='1'){ d.dataset.armed='1'; d.textContent='Confirmar'; $('charMsg').textContent='Clique em "Confirmar" para apagar esse personagem para sempre.'; return; }
+      try{ localStorage.removeItem(LKEY+d.dataset.del); }catch(e){} startScreen(); } });
+  if(!full){ bindClassPicker();
+    $('btnNew').addEventListener('click',()=>{ const nm=$('heroName').value.trim(); if(!nm){ $('charMsg').textContent='Escolha um nome.'; return; } localSlot='c'+Date.now().toString(36); begin(null); });
+    $('heroName').addEventListener('keydown',e=>{ if(e.key==='Enter') $('btnNew').click(); }); }
 }
 
+// ---- escadas/buracos que fecham um corredor: abre um desvio ao lado para dar para passar sem trocar de andar
+let chokesFixed=[];
+function fixLinkChokes(){
+  for(const m of Object.values(MAPS)) for(const k of Object.keys(m.links)){
+    const i=+k, x=i%m.W, y=(i/m.W)|0;
+    const ok=(a,b)=>a>0&&b>0&&a<m.W-1&&b<m.H-1&&!BLOCKS.has(tileAt(m,a,b))&&!m.links[b*m.W+a];
+    const nb=DIR4.map(([dx,dy])=>[x+dx,y+dy]).filter(([a,b])=>ok(a,b)); if(nb.length<2) continue;
+    const need=new Set(nb.slice(1).map(([a,b])=>b*m.W+a)), seen=new Set([nb[0][1]*m.W+nb[0][0]]), q=[nb[0]];
+    for(let h=0;h<q.length&&need.size;h++){ const [a,b]=q[h]; for(const [dx,dy] of DIR4){ const c=a+dx, d=b+dy, j=d*m.W+c; if(seen.has(j)||!ok(c,d)) continue; seen.add(j); need.delete(j); q.push([c,d]); } }
+    if(!need.size) continue;
+    const floor=tileAt(m,nb[0][0],nb[0][1]), vert=nb.some(([a])=>a===x);
+    const sides = vert ? [[1,0],[-1,0]] : [[0,1],[0,-1]];
+    for(const [sx,sy] of sides){
+      const cells = vert ? [[x+sx,y-1],[x+sx,y],[x+sx,y+1]] : [[x-1,y+sy],[x,y+sy],[x+1,y+sy]];
+      if(cells.some(([a,b])=>a<=0||b<=0||a>=m.W-1||b>=m.H-1||m.links[b*m.W+a])) continue;
+      for(const [a,b] of cells) if(BLOCKS.has(tileAt(m,a,b))) m.t[b*m.W+a]=floor;
+      chokesFixed.push(m.id+'@'+x+','+y); break;
+    }
+  }
+}
+fixLinkChokes();
 setupWorld();
 startScreen();
 // prévia atrás da tela inicial
@@ -3003,7 +3111,7 @@ player.x=player.px=MAPS.over.spawn.x; player.y=player.py=MAPS.over.spawn.y+5;
 window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
-window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
