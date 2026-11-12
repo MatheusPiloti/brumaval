@@ -1800,6 +1800,7 @@ function botTick(dt){
   if(B.stopNoPots && !(B.refill&&B.refill.on) && countItem('hp')+countItem('hp2')===0 && player.hp<st.maxHp*0.5){ toggleBot(false,'Caça automática parou: acabaram as poções de vida.'); return; }
   if(!dlg.hidden && dialogRef && dialogRef.items) closeDialog();
   if(bot.mode!=='hunt'){ botTravel(B,st); return; }
+  for(const c of corpses) if(c.map===cur.id&&!c.botDone&&!c.player&&cheb(player,c)<=1&&c.items.some(lootWanted)) botLoot(c);
   if(target && !target.dead && target.map===cur.id){ if(!botKite(B,st)) botStatus('Atacando: '+target.def.name); botCast(B,st); return; }
   { const why=needRefill(); if(why){ startRefill(why); return; } }
   const foes=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(player,m)<=B.range&&los(cur,player,m)).sort((a,b)=>cheb(player,a)-cheb(player,b));
