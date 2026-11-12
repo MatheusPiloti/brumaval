@@ -1260,7 +1260,7 @@ const passPlayer=(m,x,y)=>!BLOCKS.has(tileAt(m,x,y));
 const passMon=(m,x,y)=>{const t=tileAt(m,x,y); return !BLOCKS.has(t)&&!LINKS_T.has(t)&&!(m.town&&SAFE.has(t));};
 
 // ============================================================ A* (4 direções)
-function findPath(m, sx, sy, goal, hx, hy, pass, maxN=1500, ignore){
+function findPath(m, sx, sy, goal, hx, hy, pass, maxN=1500, ignore, noOcc){
   if(goal(sx,sy)) return [];
   const W=m.W, start=sy*W+sx, gS=new Map([[start,0]]), from=new Map(), heap=[];
   const h=(x,y)=>Math.abs(x-hx)+Math.abs(y-hy);
@@ -1274,7 +1274,7 @@ function findPath(m, sx, sy, goal, hx, hy, pass, maxN=1500, ignore){
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
       const nx=x+dx, ny=y+dy; if(nx<0||ny<0||nx>=m.W||ny>=m.H) continue;
       if(!pass(m,nx,ny)) continue;
-      if(occupied(m.id,nx,ny,ignore)) continue;
+      if(!noOcc&&occupied(m.id,nx,ny,ignore)) continue;
       const j=ny*W+nx, ng=g+1;
       if(ng < (gS.get(j)??1e9)){ gS.set(j,ng); from.set(j,i); push(ng+h(nx,ny), j); }
     }
@@ -1870,7 +1870,12 @@ function botCast(B,st){
     if(s.kind==='suporte'){ const k=BUFF_OF(s.name); if(k&&player.buffs[k]>0) continue; }
     if(!canHit(s,target)) continue; cast(i); break; } }
 function botGo(x,y,adjacent){ if(player.moving||(player.path&&player.path.length)) return;
-  walkTo(x,y,adjacent,null,40000,true); if(!player.path){ if(++bot.stuck>12){ toggleBot(false,'Caça automática parou: não achei caminho até '+(bot.mode==='return'?'a caçada':'a cidade')+'.'); } } else bot.stuck=0; }
+  walkTo(x,y,adjacent,null,40000,true); if(player.path){ bot.stuck=0; return; }
+  { const fn=adjacent?(a,b)=>Math.max(Math.abs(a-x),Math.abs(b-y))<=1:(a,b)=>a===x&&b===y, pass=(m,a,b)=>passPlayer(m,a,b)&&(!m.links[b*m.W+a]||(a===x&&b===y));
+    const P=findPath(cur,player.x,player.y,fn,x,y,pass,40000,player,true);
+    const blk=P&&P.map(s=>monsters.find(m=>!m.dead&&m.map===cur.id&&m.x===s.x&&m.y===s.y)).find(Boolean);
+    if(blk){ target=blk; player.follow=true; botStatus('Abrindo caminho: '+blk.def.name); bot.stuck=0; return; } }
+  { if(++bot.stuck>12){ toggleBot(false,'Caça automática parou: não achei caminho até '+(bot.mode==='return'?'a caçada':'a cidade')+'.'); } } }
 function botTravel(B,st){
   if(target&&!target.dead&&target.map===cur.id){ botStatus('Defendendo-se: '+target.def.name); botCast(B,st); return; }
   const foes=botDanger(); if(foes.length){ target=foes[0]; player.follow=true; player.path=null; return; }
