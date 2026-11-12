@@ -48,8 +48,22 @@ Escolha **uma** das opções. Todas são gratuitas para começar.
 
 ### Opção B: GitHub Pages (atualiza sozinho a cada mudança)
 
-1. Crie um repositório no GitHub (por exemplo, `brumaval`).
-2. Envie esta pasta:
+1. Crie um repositório vazio no GitHub (por exemplo, `brumaval`).
+2. Dentro desta pasta, se ela ainda não for um repositório git (por exemplo, se veio do zip):
+
+   ```bash
+   git init -b main
+   ```
+
+   ```bash
+   git add -A
+   ```
+
+   ```bash
+   git commit -m "Primeira versão do Brumaval"
+   ```
+
+3. Ligue ao GitHub e envie:
 
    ```bash
    git remote add origin https://github.com/SEU_USUARIO/brumaval.git
@@ -59,8 +73,8 @@ Escolha **uma** das opções. Todas são gratuitas para começar.
    git push -u origin main
    ```
 
-3. No repositório: **Settings → Pages → Source: GitHub Actions**.
-4. A cada `git push` para a `main`, o jogo é publicado em `https://SEU_USUARIO.github.io/brumaval/`.
+4. No repositório: **Settings → Pages → Source: GitHub Actions**.
+5. A cada `git push` para a `main`, o jogo é publicado em `https://SEU_USUARIO.github.io/brumaval/`.
 
 ### Opção C: Netlify (arrastar e soltar)
 
