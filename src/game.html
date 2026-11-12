@@ -72,8 +72,23 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 input[type=text],input[type=number],input[type=email],input[type=password]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px}
 .keys{font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:12px}
 .keys b{color:var(--ink);font-weight:500}
-.actionbar{display:flex;gap:6px;flex-wrap:wrap}
-.act{position:relative;overflow:hidden;min-width:0;flex:1 1 78px;text-align:left;padding:6px 8px;display:flex;flex-direction:column;gap:1px}
+.actionbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(66px,1fr));gap:5px}
+.act{position:relative;overflow:hidden;min-width:0;padding:5px 3px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center}
+.act .icw{position:relative;width:30px;height:30px;flex:none}
+.act .ic{width:30px;height:30px;image-rendering:pixelated;border-radius:3px;display:block}
+.act:disabled .ic{filter:grayscale(1) brightness(.6)}
+.act .n{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:700;line-height:1.2}
+.act .c{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;line-height:1.2}
+.act .k{position:absolute;top:2px;left:2px;font-size:10px;background:rgba(0,0,0,.75);padding:0 3px;border-radius:2px;line-height:13px}
+.act .cdv{position:absolute;left:0;top:0;width:30px;height:0;background:rgba(0,0,0,.65);border-radius:3px;pointer-events:none}
+.kbd{display:inline-block;min-width:26px;text-align:center;font-family:var(--mono);font-size:12px;padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;background:var(--bg)}
+.kbd.wait{border-color:var(--accent);color:var(--accent)}
+.botui h3{font-family:var(--display);font-weight:500;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px}
+.botstate{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rowb{display:flex;flex-wrap:wrap;gap:4px}.rowb button{padding:3px 7px;font-size:12px}.rowb button[aria-pressed=true]{border-color:#4fd0ff;color:#bfefff}
+.botsp{display:flex;flex-direction:column;gap:3px}.botsp label{display:flex;align-items:center;gap:6px;font-size:13px}.botsp img{width:18px;height:18px}.botsp small{color:var(--muted)}
+.botrow{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px;flex-wrap:wrap}.botrow input[type=number]{width:52px;padding:2px 5px}.botrow select{font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:2px 4px}
+.botui input[type=checkbox],.botrow input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;margin:0}
 .act .k{font-family:var(--mono);font-size:11px;color:var(--accent)}
 .act .n{font-weight:700;font-size:13px;line-height:1.1}
 .act .c{font-size:12px;color:var(--muted)}
@@ -151,12 +166,14 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <div class="spacer"></div>
     <span class="where" id="acct" hidden></span>
     <button id="btnLogout" type="button" hidden>Sair da conta</button>
+    <button id="btnKeys" type="button">Atalhos</button>
     <button id="btnHelp" type="button">Controles</button>
     <button id="btnSave" type="button">Salvar</button>
   </header>
 
   <aside class="side side-l" id="sideL">
     <section class="panel" data-p="battle"><h2>Batalha <span class="price" id="battleCount"></span></h2><div class="pbody"><div class="battle" id="battle"></div></div></section>
+    <section class="panel" data-p="bot"><h2>Caça automática</h2><div class="pbody"><div class="botui" id="botui"></div></div></section>
     <section class="panel" data-p="auto"><h2>Cura automática</h2><div class="pbody"><div class="auto" id="autoheal"></div></div></section>
     <section class="panel" data-p="quests"><h2>Missões</h2><div class="pbody"><div class="quests" id="quests"></div></div></section>
     <section class="panel" data-p="bosses"><h2>Chefes</h2><div class="pbody"><div class="quests" id="bosses"></div></div></section>
@@ -181,7 +198,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
             <b>Clique</b><span>andar, atacar, falar com NPC, abrir corpo</span>
             <b>WASD / setas</b><span>andar</span>
             <b>Espaço</b><span>mirar no inimigo mais próximo</span>
-            <b>1 a 8</b><span>magias · 9 e 0 poções</span>
+            <b>1 a 8</b><span>magias · 9 e 0 poções · "Atalhos" para mudar</span>
             <b>Esc</b><span>cancelar alvo / fechar janela</span>
           </div>
         </div>
@@ -752,6 +769,17 @@ Object.assign(ITEMS, {
   emberquiver:{name:'Aljava de Brasa', slot:'shield', ok:'quiver', atk:10, crit:4, price:4500, lvl:40, icon:'quiver', look:'#ff7a2a'},
   leafbook:  {name:'Livro das Folhas', slot:'shield', ok:'book', def:4, mag:6, price:1700, lvl:22, cls:MAGES, icon:'book', look:'#3a7a4a'},
 });
+Object.assign(ITEMS, {
+  warscepter:{name:'Cetro de Guerra', slot:'weapon', wk:'wand', hands:2, atk:9, mag:10, price:650, lvl:12, icon:'staff', look:'#c06aff'},
+  stormscepter:{name:'Cetro das Tempestades', slot:'weapon', wk:'wand', hands:2, atk:18, mag:26, sell:1600, lvl:30, icon:'staff', look:'#fff07a'},
+  archscepter:{name:'Cetro do Arquimago', slot:'weapon', wk:'wand', hands:2, atk:30, mag:46, sell:6000, lvl:60, icon:'staff', look:'#ff5aff'},
+  greatoak:  {name:'Cajado Grande de Carvalho', slot:'weapon', wk:'staff', hands:2, atk:9, mag:10, price:650, lvl:12, icon:'staff', look:'#5ab04a'},
+  elderwood: {name:'Cajado do Bosque Antigo', slot:'weapon', wk:'staff', hands:2, atk:18, mag:26, sell:1600, lvl:30, icon:'staff', look:'#c8f0a0'},
+  eldertree: {name:'Cajado do Ancião', slot:'weapon', wk:'staff', hands:2, atk:30, mag:46, sell:6000, lvl:60, icon:'staff', look:'#ffd54a'},
+  ironquarter:{name:'Bastão de Ferro', slot:'weapon', wk:'fist', hands:2, atk:15, atkspd:-15, price:700, lvl:12, icon:'quarter', look:'#a4aab3'},
+  faequarter:{name:'Bastão Feérico', slot:'weapon', wk:'fist', hands:2, atk:28, atkspd:-15, sell:1600, lvl:30, icon:'quarter', look:'#ff9af0'},
+  dragonquarter:{name:'Bastão do Dragão', slot:'weapon', wk:'fist', hands:2, atk:54, atkspd:-15, sell:6000, lvl:60, icon:'quarter', look:'#c0301a'},
+});
 for(const id of ['shortbow','longbow','yewbow','windbow','sylvanbow','faebow','obsidianbow','flamebow','dragonbow','axe','hammer','flameaxe']) ITEMS[id].hands=2;
 for(const d of Object.values(ITEMS)) if(d.slot==='shield' && !d.ok) d.ok = d.icon==='book' ? 'book' : 'shield';
 Object.assign(ITEMS.smallbag,{slots:8}); Object.assign(ITEMS.bigbag,{slots:26}); Object.assign(ITEMS.magicbag,{slots:32}); Object.assign(ITEMS.faebag,{slots:30}); Object.assign(ITEMS.dragonbag,{slots:40});
@@ -808,7 +836,7 @@ const sellPrice = it => { const d=ITEMS[it.id]; return Math.floor((d.sell ?? Mat
 function statLines(it){
   const d=ITEMS[it.id], s=[];
   if(d.atk) s.push('Ataque +'+d.atk); if(d.mag) s.push('Magia +'+d.mag); if(d.def) s.push('Defesa +'+d.def);
-  if(d.hp) s.push('Vida +'+d.hp); if(d.mp) s.push('Mana +'+d.mp); if(d.crit) s.push('Crítico +'+d.crit+'%'); if(d.speed) s.push('Velocidade +'+d.speed); if(d.slots) s.push('Capacidade: '+d.slots+' itens'); if(d.hands===2) s.push('Duas mãos'); if(d.regen) s.push('Regeneração +'+d.regen);
+  if(d.hp) s.push('Vida +'+d.hp); if(d.mp) s.push('Mana +'+d.mp); if(d.crit) s.push('Crítico +'+d.crit+'%'); if(d.speed) s.push('Velocidade +'+d.speed); if(d.slots) s.push('Capacidade: '+d.slots+' itens'); if(d.hands===2) s.push('Duas mãos'); if(d.atkspd) s.push('Vel. de ataque '+(d.atkspd>0?'+':'')+d.atkspd+'%'); if(d.regen) s.push('Regeneração +'+d.regen);
   if(d.heal) s.push('Cura '+d.heal); if(d.mana) s.push('Mana +'+d.mana);
   return s;
 }
@@ -830,6 +858,7 @@ function iconURL(id){
   const c=document.createElement('canvas'); c.width=c.height=24; const g=c.getContext('2d'); const d=ITEMS[id]; const L=d.look||'#ccc';
   const r=(col,x,y,w,h)=>{g.fillStyle=col;g.fillRect(x,y,w,h)};
   switch(d.icon){
+    case 'quarter': for(let i=0;i<18;i++) r('#6a4a2a',3+i,21-i,2,2); r(L,2,19,4,4); r(L,19,2,4,4); r(L,10,10,4,4); break;
     case 'legs': r(L,6,3,12,4); r(L,6,7,5,15); r(L,13,7,5,15); r('rgba(0,0,0,.3)',11,7,2,8); r('#2a1a10',6,20,5,2); r('#2a1a10',13,20,5,2); break;
     case 'ring': g.strokeStyle='#c9a440'; g.lineWidth=2.5; g.beginPath(); g.arc(12,14,6,0,7); g.stroke(); g.fillStyle=L; g.beginPath(); g.arc(12,7,3.5,0,7); g.fill(); r('#ffffff',11,6,1,1); break;
     case 'quiver': for(let i=0;i<12;i++) r('#5a3a1c',6+i,18-i,4,4); r(L,8,8,6,12); for(const fx of [14,17,20]) { r('#e8e0cc',fx,2,2,6); r('#c03a2a',fx,1,2,2); } break;
@@ -974,7 +1003,7 @@ function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
   const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0};
   for(const k in player.eq){ const it=player.eq[k]; if(!it) continue; const d=ITEMS[it.id];
-    for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal']) if(d[f]) s[f]+=d[f];
+    for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal','atkspd']) if(d[f]) s[f]+=d[f];
     for(const a of it.a||[]) s[a.k]+=a.v; }
   const B=player.buffs||{}; if(B.fury>0) s.def=Math.round(s.def*1.2); if(B.ironskin>0) s.def=Math.round(s.def*1.5); if(B.bark>0) s.def=Math.round(s.def*1.4);
   if(B.eagle>0) s.crit+=20; if(B.tiger>0){ s.atkspd+=35; s.crit+=5; } if(B.haste>0) s.atkspd+=40; if(B.balance>0) s.lifesteal+=15;
@@ -1240,7 +1269,7 @@ function onArrive(){
   if(dialogRef && cheb(player,dialogRef)>2) closeDialog();
 }
 function changeMap(id,x,y,msg){
-  const prev=cur.id; cur=MAPS[id]; mpan=null; battleKey=''; player.x=player.px=x; player.y=player.py=y; player.moving=false; player.path=null; player.pending=null; target=null; player.follow=false;
+  const prev=cur.id; cur=MAPS[id]; mpan=null; battleKey=''; if(bot.on){ bot.on=false; log('Caça automática parou: você mudou de andar.','sys'); } bot.mark=false; player.x=player.px=x; player.y=player.py=y; player.moving=false; player.path=null; player.pending=null; target=null; player.follow=false;
   projectiles=[]; particles=[]; floats=[]; keys.clear(); player.lock=450;
   reveal(); miniDirty=true; uiDirty=true;
   log(msg || (['over','ash','fae'].includes(id) ? 'Você volta à superfície.' : ((['over','ash','fae'].includes(prev))&&MAPS[id].enter ? MAPS[id].enter : 'Você chega a: '+MAPS[id].name+'.')),'sys'); fields=[];
@@ -1254,7 +1283,7 @@ function updatePlayer(dt){
   if(p.lock>0){ p.lock-=dt; return; }
   if(p.pending && cheb(p,p.pending.ref)<=1){ const pd=p.pending; p.pending=null; p.path=null; interact(pd.ref); return; }
   const dir=keyDir();
-  if(dir){ p.path=null; p.follow=false; p.pending=null; tryPlayerStep(dir[0],dir[1]); return; }
+  if(dir){ if(bot.on) toggleBot(false,'Caça automática pausada: você assumiu o controle.'); p.path=null; p.follow=false; p.pending=null; tryPlayerStep(dir[0],dir[1]); return; }
   if(target && p.follow){
     const tg=target, rg=attackRange(stats()); const ok=(x,y)=>Math.max(Math.abs(x-tg.x),Math.abs(y-tg.y))<=rg && (rg===1 || los(cur,{x,y},tg));
     if(!ok(p.x,p.y)){ const path=findPath(cur,p.x,p.y,ok,tg.x,tg.y,passPlayer,900,p);
@@ -1269,11 +1298,11 @@ function updatePlayer(dt){
     p.path.shift(); tryPlayerStep(n.x-p.x, n.y-p.y);
   }
 }
-function walkTo(x,y,adjacent,ref,maxN=4000){
+function walkTo(x,y,adjacent,ref,maxN=4000,quiet=false){
   const fn = adjacent ? (a,b)=>Math.max(Math.abs(a-x),Math.abs(b-y))<=1 : (a,b)=>a===x&&b===y;
   const path=findPath(cur,player.x,player.y,fn,x,y,passPlayer,maxN,player);
   player.follow=false; player.pending = ref?{ref}:null;
-  if(!path){ log('Não há caminho até lá.','sys'); player.pending=null; return; }
+  if(!path){ if(!quiet) log('Não há caminho até lá.','sys'); player.pending=null; return; }
   player.path=path; player.pathGoal={fn,x,y};
 }
 
@@ -1608,6 +1637,164 @@ function drawChest(c,x,y){
   rect(c,'#c9a440',x+4,y+14,24,2); rect(c,'#c9a440',x+9,y+8,2,20); rect(c,'#c9a440',x+21,y+8,2,20); rect(c,'#e8c860',x+14,y+15,4,5); rect(c,'#3a2412',x+15,y+17,2,2);
 }
 
+// ============================================================ ícones das magias
+const SPELL_ICON = {
+  'Bandagem':['cross','#7ee07a'],'Golpe Pesado':['sword','#e8e8e8'],'Golpe Giratório':['whirl','#c8ccd8'],'Fúria':['flame','#ff5a3a'],
+  'Pele de Ferro':['shield','#c8ccd8'],'Lâmina Sísmica':['quake','#c8a070'],'Segundo Fôlego':['heart','#7ee07a'],'Fúria dos Titãs':['boom','#ff9a2a'],
+  'Curativo':['cross','#7ee07a'],'Flecha Certeira':['arrow','#e8c890'],'Chuva de Flechas':['rain','#e8c890'],'Olho de Águia':['eye','#ffd54a'],
+  'Flecha Envenenada':['drop','#7ad04a'],'Vento Ágil':['wind','#a0e0ff'],'Flecha Explosiva':['boom','#ff7a2a'],'Instinto de Sobrevivência':['heart','#7ee07a'],
+  'Cura Arcana':['cross','#9ad0ff'],'Bola de Fogo':['flame','#ff7a2a'],'Tempestade de Raios':['bolt','#fff07a'],'Escudo Arcano':['shield','#9ad0ff'],
+  'Raio Encadeado':['chain','#c8e8ff'],'Concentração':['focus','#c06aff'],'Meteoro':['meteor','#ff5a1a'],'Inferno':['flame','#ff3a1a'],
+  'Toque Curativo':['cross','#7ee07a'],'Lança de Gelo':['ice','#9ad8ff'],'Raízes Ancestrais':['roots','#8ad06a'],'Bênção da Floresta':['leaf','#9fe08a'],
+  'Chuva de Granizo':['hail','#e8f6ff'],'Pele de Casca':['shield','#a07a4a'],'Tempestade Glacial':['snow','#c8f0ff'],'Renascer da Natureza':['heart','#9fe08a'],
+  'Meditação':['yin','#e8e0cc'],'Palma Explosiva':['palm','#ffd54a'],'Rajada de Golpes':['fists','#ffe08a'],'Postura do Tigre':['claw','#ff9a2a'],
+  'Chute Giratório':['kick','#ffe08a'],'Equilíbrio Interior':['yin','#c8f0ff'],'Punho do Dragão':['palm','#ff7a2a'],'Mil Golpes':['fists','#ff9a2a'],
+};
+const spellIconCache={};
+function spellIconURL(s){
+  if(spellIconCache[s.name]) return spellIconCache[s.name];
+  const [type,col]=SPELL_ICON[s.name]||['focus','#d9a441'], c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d');
+  const bg=g.createRadialGradient(16,13,2,16,16,23); bg.addColorStop(0,shade(col,-70)); bg.addColorStop(1,'#120e0a'); g.fillStyle=bg; g.fillRect(0,0,32,32);
+  g.strokeStyle=shade(col,-30); g.lineWidth=1; g.strokeRect(0.5,0.5,31,31);
+  g.fillStyle=col; g.strokeStyle=col; g.lineCap='round'; g.lineJoin='round'; g.lineWidth=2.5;
+  const P=(pts,fill=true)=>{ g.beginPath(); g.moveTo(pts[0],pts[1]); for(let i=2;i<pts.length;i+=2) g.lineTo(pts[i],pts[i+1]); if(fill){ g.closePath(); g.fill(); } else g.stroke(); };
+  const C=(x,y,r,fill=true)=>{ g.beginPath(); g.arc(x,y,r,0,7); fill?g.fill():g.stroke(); };
+  switch(type){
+    case 'cross': g.fillRect(13,6,6,20); g.fillRect(6,13,20,6); g.fillStyle='rgba(255,255,255,.5)'; g.fillRect(14,7,2,8); break;
+    case 'heart': g.beginPath(); g.moveTo(16,26); g.bezierCurveTo(3,17,6,5,16,11); g.bezierCurveTo(26,5,29,17,16,26); g.fill(); g.fillStyle='#fff'; g.fillRect(14,12,4,10); g.fillRect(11,15,10,4); break;
+    case 'sword': g.lineWidth=3.5; P([8,24,23,9],false); g.lineWidth=2.5; P([9,17,15,23],false); g.fillStyle='#8a6a3a'; C(7,25,2.5); break;
+    case 'whirl': g.beginPath(); g.arc(16,16,9,0.4,5.6); g.stroke(); P([24,8,26,15,19,13]); g.beginPath(); g.arc(16,16,4,3.5,9); g.stroke(); break;
+    case 'flame': g.beginPath(); g.moveTo(16,4); g.quadraticCurveTo(27,15,22,23); g.quadraticCurveTo(16,30,10,23); g.quadraticCurveTo(5,15,16,4); g.fill(); g.fillStyle='#ffe08a'; g.beginPath(); g.moveTo(16,13); g.quadraticCurveTo(21,19,16,25); g.quadraticCurveTo(11,19,16,13); g.fill(); break;
+    case 'shield': P([16,5,26,9,25,18,16,27,7,18,6,9]); g.fillStyle='rgba(255,255,255,.35)'; P([16,8,23,11,22,17,16,23]); break;
+    case 'quake': g.fillRect(4,22,24,4); g.lineWidth=2; P([16,22,13,16,18,12,14,6],false); P([10,22,7,17],false); P([22,22,25,16],false); break;
+    case 'arrow': g.lineWidth=2.5; P([7,25,23,9],false); P([24,8,17,9,23,15]); g.strokeStyle='#fff'; g.lineWidth=1.5; P([7,25,7,20],false); P([7,25,12,25],false); break;
+    case 'rain': for(const x of [9,16,23]){ g.lineWidth=2; P([x,5,x,20],false); P([x-3,18,x+3,18,x,25]); } break;
+    case 'eye': g.lineWidth=2; g.beginPath(); g.ellipse(16,16,11,7,0,0,7); g.stroke(); C(16,16,4.5); g.fillStyle='#120e0a'; C(16,16,2); break;
+    case 'drop': g.beginPath(); g.moveTo(16,5); g.quadraticCurveTo(26,18,16,26); g.quadraticCurveTo(6,18,16,5); g.fill(); g.fillStyle='rgba(255,255,255,.5)'; C(13,18,2); break;
+    case 'wind': g.lineWidth=2; for(const [y,w] of [[10,18],[16,22],[22,14]]){ g.beginPath(); g.moveTo(5,y); g.lineTo(5+w,y); g.arc(5+w,y-3,3,1.6,-1.6,true); g.stroke(); } break;
+    case 'boom': { const pts=[]; for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, r=i%2?6:13; pts.push(16+Math.cos(a)*r,16+Math.sin(a)*r); } P(pts); g.fillStyle='#ffe08a'; C(16,16,4); } break;
+    case 'bolt': P([18,3,8,18,15,18,12,29,24,12,17,12]); break;
+    case 'chain': g.lineWidth=2; P([5,24,11,10,17,22,23,8,27,16],false); for(const [x,y] of [[5,24],[17,22],[27,16]]) C(x,y,2.5); break;
+    case 'focus': P([16,3,19,13,29,16,19,19,16,29,13,19,3,16,13,13]); g.fillStyle='#fff'; C(16,16,2.5); break;
+    case 'meteor': g.lineWidth=2; for(const o of [0,4,8]) P([6+o,5,15+o,14],false); C(20,20,7); g.fillStyle='#ffe08a'; C(18,18,3); break;
+    case 'ice': P([16,3,22,16,16,29,10,16]); g.fillStyle='rgba(255,255,255,.55)'; P([16,6,19,16,16,25]); break;
+    case 'roots': g.lineWidth=2.5; g.beginPath(); g.moveTo(16,29); g.quadraticCurveTo(14,18,7,8); g.moveTo(16,29); g.quadraticCurveTo(18,16,25,7); g.moveTo(16,29); g.lineTo(16,10); g.stroke(); g.fillStyle='#5a3a1c'; g.fillRect(4,27,24,3); break;
+    case 'leaf': g.beginPath(); g.moveTo(6,26); g.quadraticCurveTo(6,6,27,5); g.quadraticCurveTo(26,26,6,26); g.fill(); g.strokeStyle='#2a5a2a'; g.lineWidth=1.5; P([7,25,22,10],false); break;
+    case 'hail': for(const [x,y,r] of [[9,9,3],[20,7,2.5],[15,16,3.5],[24,18,2.5],[8,21,2.5],[17,26,2.5]]) C(x,y,r); break;
+    case 'snow': g.lineWidth=2; for(let i=0;i<3;i++){ const a=i*Math.PI/3; P([16+Math.cos(a)*11,16+Math.sin(a)*11,16-Math.cos(a)*11,16-Math.sin(a)*11],false); } C(16,16,2.5); break;
+    case 'yin': C(16,16,11); g.fillStyle='#120e0a'; g.beginPath(); g.arc(16,16,11,-Math.PI/2,Math.PI/2); g.arc(16,21.5,5.5,Math.PI/2,-Math.PI/2,true); g.arc(16,10.5,5.5,Math.PI/2,-Math.PI/2); g.fill(); C(16,10.5,2); g.fillStyle=col; C(16,21.5,2); break;
+    case 'palm': g.fillRect(9,13,14,13); for(const [x,h] of [[9,8],[13,10],[17,10],[21,8]]) g.fillRect(x,13-h,3,h); g.fillRect(5,15,5,3); g.fillStyle='rgba(255,255,255,.4)'; g.fillRect(11,16,10,2); break;
+    case 'fists': for(const [x,y] of [[10,11],[21,13],[13,22]]){ C(x,y,4.5); } g.lineWidth=1.5; for(const y of [6,12,18,24]) P([2,y,6,y],false); break;
+    case 'claw': g.lineWidth=3; for(const o of [0,6,12]) P([8+o,5,4+o,27],false); break;
+    case 'kick': g.lineWidth=2; g.beginPath(); g.arc(16,16,11,3.6,6.4); g.stroke(); g.fillRect(19,18,9,5); g.fillRect(19,9,4,12); break;
+  }
+  return spellIconCache[s.name]=c.toDataURL();
+}
+
+// ============================================================ atalhos configuráveis
+const KEY_DEF={s0:'Digit1',s1:'Digit2',s2:'Digit3',s3:'Digit4',s4:'Digit5',s5:'Digit6',s6:'Digit7',s7:'Digit8',hp:'Digit9',mp:'Digit0',next:'Space',bot:'KeyB'};
+let KEYS={...KEY_DEF}; try{ Object.assign(KEYS, JSON.parse(localStorage.getItem('brumaval-keys')||'{}')||{}); }catch(e){}
+const RESERVED=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape','Minus','Equal','NumpadAdd','NumpadSubtract','Tab','Enter']);
+function keyLabel(code){ if(!code) return '—'; if(/^Digit\d$/.test(code)) return code.slice(5); if(/^Key[A-Z]$/.test(code)) return code.slice(3); if(/^Numpad\d$/.test(code)) return 'Num '+code.slice(6);
+  return {Space:'Espaço',Backquote:'´',Backslash:'\\',Comma:',',Period:'.',Slash:'/',Semicolon:'ç',Quote:'~',BracketLeft:'[',BracketRight:']',ShiftLeft:'Shift',ShiftRight:'Shift dir.',ControlLeft:'Ctrl',AltLeft:'Alt',CapsLock:'Caps'}[code]||code; }
+const keyActions=()=>[...classSpells().map((s,i)=>({id:'s'+i, label:(i+1)+'. '+s.name})), {id:'hp',label:'Poção de vida'}, {id:'mp',label:'Poção de mana'}, {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}];
+let capturing=null;
+const saveKeys=()=>{ try{ localStorage.setItem('brumaval-keys',JSON.stringify(KEYS)); }catch(e){} };
+function actionFor(code){ for(const k in KEYS) if(KEYS[k]===code) return k; return null; }
+function targetNext(){ const near=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(m,player)<=7).sort((a,b)=>cheb(a,player)-cheb(b,player)); if(near.length){ const i=near.indexOf(target); setTarget(near[(i+1)%near.length], true); } }
+function doAction(a){ if(a[0]==='s') cast(+a.slice(1)); else if(a==='hp') usePotion('hp'); else if(a==='mp') usePotion('mp'); else if(a==='next') targetNext(); else if(a==='bot') toggleBot(); }
+function openKeys(){
+  const rows=keyActions().map(A=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${esc(A.label)}</b></div><div class="btns"><span class="kbd${capturing===A.id?' wait':''}">${capturing===A.id?'aperte a tecla…':esc(keyLabel(KEYS[A.id]))}</span><button data-act="set" data-a="${A.id}">Mudar</button><button data-act="clr" data-a="${A.id}" aria-label="Remover o atalho de ${esc(A.label)}">×</button></div></div>`).join('');
+  openDialog(player,'Atalhos',`<p class="hint" style="margin-top:0">Clique em "Mudar" e aperte a tecla nova (letras, números, F1–F12, teclado numérico). WASD, setas, Esc, Enter, + e − são reservados. Se a tecla já estiver em uso, os atalhos trocam de lugar.</p><div class="list">${rows}</div><div class="row"><button data-act="def">Restaurar padrão</button><button class="primary" data-act="close">Fechar</button></div>`,(act,ds)=>{
+    if(act==='close'){ capturing=null; return closeDialog(); }
+    if(act==='set'){ capturing=ds.a; return openKeys(); }
+    if(act==='clr'){ KEYS[ds.a]=''; capturing=null; saveKeys(); buildActions(); return openKeys(); }
+    if(act==='def'){ KEYS={...KEY_DEF}; capturing=null; saveKeys(); buildActions(); return openKeys(); } });
+}
+addEventListener('keydown',e=>{ if(!capturing) return; e.preventDefault(); e.stopImmediatePropagation(); const code=e.code;
+  if(code==='Escape'){ capturing=null; openKeys(); return; }
+  if(RESERVED.has(code)){ log('A tecla '+keyLabel(code)+' é reservada. Escolha outra.','sys'); return; }
+  const other=actionFor(code); if(other&&other!==capturing) KEYS[other]=KEYS[capturing]||''; KEYS[capturing]=code; capturing=null; saveKeys(); buildActions(); openKeys(); }, true);
+$('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
+
+// ============================================================ caça automática por rota
+const BOT_DEF=()=>({routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true});
+let bot={on:false, wp:0, mark:false, msg:'', lastLootFail:-1e9, think:0, stuck:0};
+const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Flecha Certeira':6,'Chuva de Flechas':6,'Flecha Envenenada':6,'Flecha Explosiva':6,
+  'Bola de Fogo':6,'Raio Encadeado':6,'Meteoro':6,'Lança de Gelo':6,'Chuva de Granizo':6};
+const SELFR={'Golpe Giratório':1,'Lâmina Sísmica':2,'Fúria dos Titãs':2,'Tempestade de Raios':3,'Inferno':3,'Raízes Ancestrais':3,'Tempestade Glacial':3,'Chute Giratório':1};
+const BUFF_OF=name=>Object.keys(BUFFS).find(k=>BUFFS[k]===name);
+const route=()=>{ const B=player.bot; return B.routes[cur.id]||(B.routes[cur.id]=[]); };
+function lootWanted(it){ const L=player.bot.loot, d=ITEMS[it.id]; if(it.id==='gold') return L.gold; if(d.heal||d.mana) return L.pots; if(d.slot==='bag') return L.bags; if(d.slot) return (it.r||0)>=L.rar; return L.mats; }
+function botLoot(c){ let full=false;
+  for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(!lootWanted(it)) continue;
+    if(addItem(it)){ c.items.splice(i,1); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else full=true; }
+  c.botDone=true; if(full&&now-bot.lastLootFail>15000){ bot.lastLootFail=now; log('Caça automática: a mochila está cheia; alguns itens ficaram no corpo.','sys'); } }
+function botStatus(t){ if(bot.msg===t) return; bot.msg=t; const el=$('botMsg'); if(el) el.textContent=t; }
+function nearestWp(){ const R=route(); let bi=0,bd=1e9; R.forEach((p,i)=>{ const d=Math.abs(p.x-player.x)+Math.abs(p.y-player.y); if(d<bd){ bd=d; bi=i; } }); return bi; }
+function toggleBot(force, why){
+  if(!player.bot) return; const on = force===undefined ? !bot.on : force;
+  if(on && !bot.on){ if(!route().length){ log('Marque pelo menos um ponto de rota neste andar antes de ligar a caça automática.','sys'); return; } bot.on=true; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática ligada.','sys'); }
+  else if(!on && bot.on){ bot.on=false; player.path=null; log(why||'Caça automática desligada.','sys'); }
+  bot.msg=''; renderBot();
+}
+function canHit(s, tg){ if(SELFR[s.name]!=null) return monsters.some(m=>!m.dead&&m.map===cur.id&&cheb(player,m)<=SELFR[s.name]); const r=AIM[s.name]; if(r==null) return true; return !!tg && cheb(player,tg)<=r && (r===1||los(cur,player,tg)); }
+function botTick(dt){
+  if(!bot.on||!running) return; if(player.dead){ toggleBot(false,'Caça automática parou: você morreu.'); return; }
+  bot.think-=dt; if(bot.think>0) return; bot.think=180;
+  const B=player.bot, st=stats();
+  if(B.stopNoPots && countItem('hp')+countItem('hp2')===0 && player.hp<st.maxHp*0.5){ toggleBot(false,'Caça automática parou: acabaram as poções de vida.'); return; }
+  if(!dlg.hidden && dialogRef && dialogRef.items) closeDialog();
+  if(target && !target.dead && target.map===cur.id){
+    botStatus('Atacando: '+target.def.name);
+    if(player.mp/st.maxMp*100>=B.minMana){ const sp=classSpells();
+      for(let i=0;i<sp.length;i++){ const s=sp[i]; if(!B.spells[i]||s.kind==='cura'||!spellReady(s)||(player.spellCd[i]||0)>0||player.mp<s.mana) continue;
+        if(s.kind==='suporte'){ const k=BUFF_OF(s.name); if(k&&player.buffs[k]>0) continue; }
+        if(!canHit(s,target)) continue; cast(i); break; } }
+    return;
+  }
+  const foes=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(player,m)<=B.range&&los(cur,player,m)).sort((a,b)=>cheb(player,a)-cheb(player,b));
+  if(foes.length){ target=foes[0]; player.follow=true; player.path=null; player.pending=null; botStatus('Atacando: '+target.def.name); return; }
+  const c=corpses.find(c=>c.map===cur.id&&!c.botDone&&!c.player&&cheb(player,c)<=B.range&&c.items.some(lootWanted));
+  if(c){ if(cheb(player,c)<=1){ botLoot(c); return; } if(!player.moving&&!(player.path&&player.path.length)){ botStatus('Indo saquear'); walkTo(c.x,c.y,true,null,4000,true); if(!player.path) c.botDone=true; } return; }
+  const R=route(); if(!R.length){ toggleBot(false); return; } if(bot.wp>=R.length) bot.wp=0; const w=R[bot.wp];
+  if(Math.max(Math.abs(w.x-player.x),Math.abs(w.y-player.y))<=1){ bot.wp=(bot.wp+1)%R.length; return; }
+  botStatus('Indo ao ponto '+(bot.wp+1)+' de '+R.length);
+  if(!player.moving&&!(player.path&&player.path.length)){ walkTo(w.x,w.y,true,null,20000,true); if(!player.path){ if(++bot.stuck>3){ bot.stuck=0; bot.wp=(bot.wp+1)%R.length; } } else bot.stuck=0; }
+}
+function renderBot(){
+  const el=$('botui'); if(!el||!player.bot) return; const B=player.bot, R=route(), sp=classSpells();
+  if(!B.spells){ B.spells={}; sp.forEach((s,i)=>{ if(s.kind==='ataque') B.spells[i]=true; }); }
+  const rarOpts=[['5','nenhum equipamento'],['0','todos'],['1','Incomum ou melhor'],['2','Raro ou melhor'],['3','Épico ou melhor'],['4','só Lendário']];
+  el.innerHTML=`<div class="botstate"><button type="button" class="${bot.on?'':'primary'}" data-b="toggle">${bot.on?'Parar':'Ligar'} caça</button><span class="kbd">${esc(keyLabel(KEYS.bot))}</span><span class="hint" id="botMsg" style="margin:0">${bot.on?esc(bot.msg||'Ligada'):'Desligada'}</span></div>
+    <h3>Rota deste andar · ${R.length} ponto${R.length===1?'':'s'}</h3>
+    <div class="rowb"><button type="button" data-b="here">+ Ponto aqui</button><button type="button" data-b="mark" aria-pressed="${bot.mark}">${bot.mark?'Marcando no minimapa…':'Marcar no minimapa'}</button><button type="button" data-b="undo" ${R.length?'':'disabled'}>Desfazer</button><button type="button" data-b="clear" ${R.length?'':'disabled'}>Limpar</button></div>
+    <h3>Magias que a caça usa</h3>
+    <div class="botsp">${sp.map((s,i)=>s.kind==='cura'?'':`<label title="${esc(s.desc)}"><input type="checkbox" data-sp="${i}" ${B.spells[i]?'checked':''} ${spellReady(s)?'':'disabled'}><img alt="" src="${spellIconURL(s)}"><span>${esc(s.name)}${spellReady(s)?'':' <small>('+esc(spellLock(s))+')</small>'}</span></label>`).join('')}</div>
+    <label class="botrow">Só com mana acima de <input type="number" min="0" max="95" step="5" data-k="minMana" value="${B.minMana}"> %</label>
+    <label class="botrow">Atacar até <input type="number" min="3" max="10" data-k="range" value="${B.range}"> quadrados</label>
+    <h3>O que pegar dos corpos</h3>
+    <div class="botsp">${[['gold','Ouro'],['pots','Poções'],['mats','Materiais para vender'],['bags','Mochilas']].map(([k,l])=>`<label><input type="checkbox" data-l="${k}" ${B.loot[k]?'checked':''}><span>${l}</span></label>`).join('')}</div>
+    <label class="botrow">Equipamentos: <select data-k="rar">${rarOpts.map(([v,l])=>`<option value="${v}" ${String(B.loot.rar)===v?'selected':''}>${l}</option>`).join('')}</select></label>
+    <label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''}> Parar se acabarem as poções de vida</label>
+    <p class="hint" style="margin:4px 0 0">A cura usa o painel "Cura automática". Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
+}
+$('botui').addEventListener('click',e=>{ const b=e.target.closest('[data-b]'); if(!b||!running||!player.bot) return; const R=route();
+  if(b.dataset.b==='toggle') toggleBot();
+  if(b.dataset.b==='here'){ if(R.some(p=>p.x===player.x&&p.y===player.y)) return; R.push({x:player.x,y:player.y}); log('Ponto '+R.length+' marcado aqui.','sys'); }
+  if(b.dataset.b==='mark'){ bot.mark=!bot.mark; if(bot.mark) log('Clique no minimapa para marcar pontos da rota. Clique no botão de novo para terminar.','sys'); }
+  if(b.dataset.b==='undo') R.pop();
+  if(b.dataset.b==='clear'){ R.length=0; if(bot.on) toggleBot(false); }
+  renderBot(); save(); });
+$('botui').addEventListener('change',e=>{ const t=e.target, B=player.bot; if(!B) return;
+  if(t.dataset.sp!=null) B.spells[+t.dataset.sp]=t.checked;
+  if(t.dataset.l) B.loot[t.dataset.l]=t.checked;
+  if(t.dataset.k==='minMana') B.minMana=clamp(+t.value||0,0,95);
+  if(t.dataset.k==='range') B.range=clamp(+t.value||7,3,10);
+  if(t.dataset.k==='rar') B.loot.rar=+t.value;
+  if(t.dataset.k==='stopNoPots') B.stopNoPots=t.checked;
+  save(); });
+
 // ============================================================ interação com NPCs, corpos e lojas
 const dlg=$('dialog'), dlgTitle=$('dlgTitle'), dlgBody=$('dlgBody');
 let dlgHandler=null;
@@ -1721,10 +1908,9 @@ addEventListener('keydown', e=>{
   if(k==='Minus'||k==='NumpadSubtract'){ setZoom(-1); return; } if(k==='Equal'||k==='NumpadAdd'){ setZoom(1); return; }
   if(k==='Escape'){ if(!dlg.hidden) closeDialog(); else { target=null; player.follow=false; player.path=null; } return; }
   if(player.dead) return;
-  if(/^Digit[1-8]$/.test(k)) cast(+k.slice(5)-1);
-  else if(k==='Digit9') usePotion('hp'); else if(k==='Digit0') usePotion('mp');
-  else if(k==='Space'){ const near=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(m,player)<=7).sort((a,b)=>cheb(a,player)-cheb(b,player)); if(near.length){ const i=near.indexOf(target); setTarget(near[(i+1)%near.length], true); } }
-  else keys.add(k);
+  if(bot.on && ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)) toggleBot(false,'Caça automática pausada: você assumiu o controle.');
+  const act=actionFor(k); if(act){ e.preventDefault(); if(!e.repeat||act[0]==='s'||act==='hp'||act==='mp') doAction(act); return; }
+  keys.add(k);
 });
 addEventListener('keyup', e=>keys.delete(e.code));
 addEventListener('blur', ()=>keys.clear());
@@ -1733,6 +1919,7 @@ function screenToWorld(e){ const r=cv.getBoundingClientRect(); const sx=(e.clien
 function entityAtScreen(list, sx, sy){ for(const e of list){ const r=rpos(e); const ex=r.x*T-cam.x, ey=r.y*T-cam.y; if(sx>=ex&&sx<ex+T&&sy>=ey-6&&sy<ey+T) return e; } return null; }
 cv.addEventListener('pointerdown', e=>{
   if(!running||player.dead) return;
+  if(bot.on) toggleBot(false,'Caça automática pausada: você assumiu o controle.');
   const {sx,sy,wx,wy}=screenToWorld(e);
   const m=entityAtScreen(monsters.filter(m=>m.map===cur.id&&!m.dead), sx, sy); if(m){ setTarget(m); return; }
   const n=entityAtScreen(npcs.filter(n=>n.map===cur.id), sx, sy); if(n){ if(cheb(player,n)<=1) interact(n); else walkTo(n.x,n.y,true,n); return; }
@@ -2077,7 +2264,7 @@ function drawPlayer(c,x,y){
   const e=player.eq, I=it=>it&&ITEMS[it.id], C=CLASSES[player.cls]||CLASSES.guerreiro, L=C.look;
   if(player.buffs.fury>0){ c.fillStyle='rgba(255,70,40,'+(0.28+Math.sin(now/90)*0.1)+')'; c.beginPath(); c.ellipse(x+16,y+27,15,6,0,0,7); c.fill(); }
   const o={dir:player.dir, skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:I(e.armor)?.look||'#6a6a5a',
-    helm:I(e.helmet)?.look, shield:I(e.shield)?.ok==='shield'?I(e.shield).look:null, weapon:I(e.weapon)?.look, legs:I(e.legs)?.look||'#3e3428', wk:I(e.weapon)?.wk, boots:I(e.boots)?.look};
+    helm:I(e.helmet)?.look, shield:I(e.shield)?.ok==='shield'?I(e.shield).look:null, weapon:I(e.weapon)?.look, legs:I(e.legs)?.look||'#3e3428', wk:I(e.weapon)?.icon==='quarter'?'staff':I(e.weapon)?.wk, boots:I(e.boots)?.look};
   drawHuman(c,x,y,o,player.phase,player.moving);
   if(player.flash>0){ c.globalAlpha=.32; c.fillStyle='#ff4a30'; c.beginPath(); c.ellipse(x+16,y+17,10,13,0,0,7); c.fill(); c.globalAlpha=1; }
 }
@@ -2140,6 +2327,9 @@ function render(){
   for(const co of corpses) if(co.map===m.id) drawCorpse(ctx,co,co.x*T-cam.x,co.y*T-cam.y);
   if(hover && running){ ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1; ctx.strokeRect(hover.x*T-cam.x+0.5,hover.y*T-cam.y+0.5,T-1,T-1); }
   if(player.path&&player.path.length){ const g=player.path[player.path.length-1]; ctx.strokeStyle='rgba(255,213,74,.6)'; ctx.strokeRect(g.x*T-cam.x+4.5,g.y*T-cam.y+4.5,T-9,T-9); }
+  { const RT=player.bot?.routes?.[m.id]; if(RT&&RT.length&&(bot.on||bot.mark||!$('sideL').closest('.collapsed'))){ ctx.save(); ctx.font='700 11px monospace'; ctx.textAlign='center';
+      RT.forEach((p,i)=>{ const sx=p.x*T-cam.x+16, sy=p.y*T-cam.y+16; if(sx<-20||sy<-20||sx>cv.width+20||sy>cv.height+20) return; ctx.fillStyle='rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(sx,sy,9,0,7); ctx.fill();
+        ctx.strokeStyle=bot.on&&i===bot.wp?'#ffd54a':'rgba(80,210,255,.9)'; ctx.lineWidth=2; ctx.stroke(); ctx.fillStyle='#d8f6ff'; ctx.fillText(String(i+1),sx,sy+4); }); ctx.restore(); } }
   if(target){ const r=rpos(target); ctx.strokeStyle='#ff3a2a'; ctx.lineWidth=2; ctx.strokeRect(r.x*T-cam.x+1,r.y*T-cam.y+1,T-2,T-2); ctx.lineWidth=1; }
   // entidades por linha
   const ents=[]; if(!player.dead) ents.push(player);
@@ -2207,6 +2397,8 @@ function drawMini(){
   if((now/400|0)%2===0){ mctx.fillStyle='#fff'; mctx.fillRect(px-1,py-1,ps+2,ps+2); }
   mctx.fillStyle='#ff3a2a'; mctx.fillRect(px,py,ps,ps);
   if(player.path&&player.path.length&&!player.follow){ const g=player.path[player.path.length-1]; mctx.strokeStyle='#ffd54a'; mctx.lineWidth=1; mctx.strokeRect((g.x-V.x0)*z-1.5,(g.y-V.y0)*z-1.5,ps+3,ps+3); }
+  { const RT=player.bot?.routes?.[m.id]; if(RT&&RT.length){ mctx.strokeStyle='rgba(80,210,255,.7)'; mctx.lineWidth=1; mctx.beginPath(); RT.forEach((p,i)=>{ const x=(p.x+0.5-V.x0)*z, y=(p.y+0.5-V.y0)*z; i?mctx.lineTo(x,y):mctx.moveTo(x,y); }); if(RT.length>2) mctx.closePath(); mctx.stroke();
+      RT.forEach((p,i)=>{ mctx.fillStyle=bot.on&&i===bot.wp?'#ffd54a':'#4fd0ff'; mctx.fillRect((p.x-V.x0)*z-1,(p.y-V.y0)*z-1,Math.max(3,z)+2,Math.max(3,z)+2); }); } }
   if(mpan){ mctx.fillStyle='rgba(0,0,0,.6)'; mctx.fillRect(4,mini.height-18,112,14); mctx.fillStyle='#d9a441'; mctx.font='10px sans-serif'; mctx.fillText('◎ para centralizar',8,mini.height-8); }
 }
 let mdrag=null;
@@ -2217,6 +2409,7 @@ mini.addEventListener('pointerup',e=>{ const d=mdrag; mdrag=null; if(!d||d.moved
   const r=mini.getBoundingClientRect(), V=miniView(), m=cur, tx=Math.floor(V.x0+(e.clientX-r.left)*mini.width/r.width/V.z), ty=Math.floor(V.y0+(e.clientY-r.top)*mini.height/r.height/V.z);
   if(tx<0||ty<0||tx>=m.W||ty>=m.H) return;
   if(!m.explored[ty*m.W+tx]){ log('Você ainda não explorou essa parte do mapa.','sys'); return; }
+  if(bot.mark&&player.bot){ if(!passPlayer(m,tx,ty)||LINKS_T.has(m.t[ty*m.W+tx])){ log('Escolha um chão livre para o ponto da rota.','sys'); return; } const R=route(); R.push({x:tx,y:ty}); log('Ponto '+R.length+' da rota marcado.','sys'); renderBot(); save(); return; }
   let best=null, bd=1e9;
   for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){ const x=tx+dx, y=ty+dy; if(x<0||y<0||x>=m.W||y>=m.H) continue; if(!passPlayer(m,x,y)||LINKS_T.has(m.t[y*m.W+x])||!m.explored[y*m.W+x]) continue; const dd=dx*dx+dy*dy; if(dd<bd){ bd=dd; best={x,y}; } }
   if(!best){ log('Não dá para andar até lá.','sys'); return; }
@@ -2237,7 +2430,7 @@ function updateBars(){
   setBar('hp', player.hp, st.maxHp, `Vida ${Math.ceil(player.hp)} / ${st.maxHp}`);
   setBar('mp', player.mp, st.maxMp, `Mana ${Math.floor(player.mp)} / ${st.maxMp}`);
   setBar('xp', player.xp-a, b-a, `${player.xp-a} / ${b-a} xp`);
-  classSpells().forEach((s,i)=>{ const el=actEls[i]; if(!el) return; const cd=player.spellCd[i]||0; el.cd.style.width=(cd>0?cd/s.cd*100:0)+'%'; el.btn.disabled = !spellReady(s); });
+  classSpells().forEach((s,i)=>{ const el=actEls[i]; if(!el) return; const cd=player.spellCd[i]||0; el.cd.style.height=(cd>0?cd/s.cd*30:0)+'px'; el.btn.disabled = !spellReady(s); });
   renderCond();
 }
 function renderUI(){
@@ -2249,6 +2442,7 @@ function renderUI(){
   $('equip').innerHTML = SLOTS.map(([s,label])=>{ const it=player.eq[s]; const [r,c]=pos[s].split('/');
     return `<button class="slot r${it?.r||0}" style="grid-row:${r};grid-column:${c}" data-slot="${s}" ${it&&s!=='bag'?'draggable="true"':''} aria-label="${it?esc(itemName(it)):label+' vazio'}">${it?`<img alt="" src="${iconURL(it.id)}">`:`<span class="ph">${label}</span>`}</button>`; }).join('');
   renderContainers();
+  for(const k of ['hp','mp']) if(actEls[k]){ const t='×'+(countItem(k)+countItem(k+'2')), c=actEls[k].btn.querySelector('.c'); if(c.textContent!==t) c.textContent=t; }
   const q=quests; const ql=[];
   if(q.wolves.state===1) ql.push(`<div>Lobos do bosque <small>· ${Math.min(8,q.wolves.count)}/8 ${q.wolves.count>=8?'· fale com o Capitão Bento':''}</small></div>`);
   if(q.king.state===1) ql.push(`<div>O rei morto <small>· Cripta Esquecida, a noroeste</small></div>`);
@@ -2394,15 +2588,15 @@ addEventListener('resize',placeSide); placeSide();
 
 let actEls={};
 const spellReady = s => player.level>=s.lvl && (!s.learn || !!player.learned?.[s.learn]);
-const spellLock = s => s.learn && !player.learned?.[s.learn] ? 'missão em '+(s.learn==='fae'?'Lunária':'Cinzaforte') : player.level<s.lvl ? 'nível '+s.lvl : s.mana+' mana';
+const spellLock = s => s.learn && !player.learned?.[s.learn] ? (s.learn==='fae'?'Lunária':'Cinzaforte')+' · nv '+s.lvl : player.level<s.lvl ? 'nível '+s.lvl : s.mana+' mana';
 function buildActions(){
   const bar=$('actionbar'); bar.innerHTML=''; actEls={};
-  const add=(key,name,cost,fn,i,desc)=>{ const b=document.createElement('button'); b.type='button'; b.className='act'; if(desc) b.title=desc;
-    b.innerHTML=`<span class="k">${key}</span><span class="n">${name}</span><span class="c">${cost}</span><span class="cd"></span>`; b.addEventListener('click',fn); bar.appendChild(b);
-    if(i!==undefined) actEls[i]={btn:b, cd:b.querySelector('.cd')}; };
-  classSpells().forEach((s,i)=>add(String(i+1), s.name, spellLock(s), ()=>cast(i), i, (s.kind?s.kind[0].toUpperCase()+s.kind.slice(1)+': ':'')+s.desc));
-  add('9','Poção de Vida','da mochila',()=>usePotion('hp'));
-  add('0','Poção de Mana','da mochila',()=>usePotion('mp'));
+  const add=(key,name,cost,fn,i,desc,icon)=>{ const b=document.createElement('button'); b.type='button'; b.className='act'; if(desc) b.title=desc;
+    b.innerHTML=`<span class="icw">${icon?`<img class="ic" alt="" src="${icon}">`:''}<span class="cdv"></span></span><span class="n">${name}</span><span class="c">${cost}</span><span class="k">${esc(keyLabel(key))}</span>`; b.addEventListener('click',fn); bar.appendChild(b);
+    if(i!==undefined) actEls[i]={btn:b, cd:b.querySelector('.cdv')}; };
+  classSpells().forEach((s,i)=>add(KEYS['s'+i], s.name, spellLock(s), ()=>cast(i), i, s.name+' · '+(s.kind?s.kind[0].toUpperCase()+s.kind.slice(1)+': ':'')+s.desc+(s.lvl>1?' · nível '+s.lvl:''), spellIconURL(s)));
+  add(KEYS.hp,'Poção de Vida','×'+(countItem('hp')+countItem('hp2')),()=>usePotion('hp'),'hp','Poção de vida (a forte primeiro)',iconURL('hp'));
+  add(KEYS.mp,'Poção de Mana','×'+(countItem('mp')+countItem('mp2')),()=>usePotion('mp'),'mp','Poção de mana (a forte primeiro)',iconURL('mp'));
 }
 buildActions();
 showInfo(null);
@@ -2413,7 +2607,7 @@ function update(dt){
   now+=dt;
   trauma=Math.max(0,trauma-dt/1000*2.2);
   for(const k in player.spellCd) player.spellCd[k]=Math.max(0,player.spellCd[k]-dt);
-  player.potCd=Math.max(0,(player.potCd||0)-dt); if(!player.dead) autoHeal(dt);
+  player.potCd=Math.max(0,(player.potCd||0)-dt); if(!player.dead) autoHeal(dt); botTick(dt);
   for(const t of timers){ t.t-=dt; if(t.t<=0&&!t.done){ t.done=true; t.fn(); } } timers=timers.filter(t=>!t.done);
   updatePlayer(dt);
   if(!player.dead){
@@ -2451,7 +2645,7 @@ function frame(t){
 }
 
 // ============================================================ salvar / carregar
-function serialize(){ return {v:7, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
+function serialize(){ return {v:8, bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
 function save(){ if(!running) return; const d=serialize();
   if(Cloud.on&&Cloud.charId){ Cloud.queue(d); try{ localStorage.setItem(SAVE_KEY+':'+Cloud.charId, JSON.stringify(d)); }catch(e){} return; }
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(d)); }catch(e){} }
@@ -2472,6 +2666,7 @@ function applySave(s){
   player.eq.bag.items.push(...oldInv);
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
   player.learned={fae:false,ash:false,...(s.learned||{})};
+  { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}}; }
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
   if(s.corpse){ const left=s.corpse.left-(Date.now()-s.corpse.at); if(left>0&&MAPS[s.corpse.map]) corpses.push({map:s.corpse.map,x:s.corpse.x,y:s.corpse.y,player:true,name:s.name,items:(s.corpse.items||[]).filter(it=>ITEMS[it.id]).map(fix),t:0,life:left}); }
   Object.assign(quests.wolves, s.quests?.wolves||{}); Object.assign(quests.king, s.quests?.king||{});
@@ -2485,7 +2680,7 @@ $('btnHelp').addEventListener('click',()=>{ if(!running) return; openDialog(play
   <b>Clique no chão</b><span>andar até lá</span><b>Clique num monstro</b><span>atacar (ataque automático quando estiver ao lado)</span>
   <b>Clique num NPC</b><span>conversar</span><b>Clique num corpo</b><span>ver o saque (marcado com um ponto amarelo)</span>
   <b>WASD / setas</b><span>andar</span><b>Espaço</b><span>alternar entre inimigos próximos</span>
-  <b>1 a 8</b><span>magias (4 iniciais; 2 aprendidas em Lunária e 2 em Cinzaforte)</span><b>9 · 0</b><span>poção de vida · poção de mana</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span></div>
+  <b>Atalhos</b><span>botão "Atalhos" no topo: escolha a tecla de cada magia, poção e da caça automática (padrão: 1 a 8, 9 e 0, Espaço, B)</span><b>Caça automática</b><span>marque pontos da rota no andar (aqui ou no minimapa), escolha magias e o que pegar, e ligue</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span></div>
   <p style="margin-top:10px">O jogo salva sozinho neste navegador a cada 15 segundos.</p><div class="row"><button data-act="close">Fechar</button></div>`,()=>closeDialog()); });
 $('btnRespawn').addEventListener('click',respawn);
 
@@ -2498,14 +2693,14 @@ function begin(fromSave, forcedName){
     player.eq={}; for(const id of C.start) player.eq[ITEMS[id].slot]=makeItem(id,0);
     player.eq.legs=makeItem('leatherlegs',0);
     player.eq.bag={id:'basicbag',n:1,r:0,a:[],items:[{id:'hp',n:3,r:0,a:[]}]}; if(C.mpLv>10) player.eq.bag.items.push({id:'mp',n:3,r:0,a:[]});
-    player.learned={fae:false,ash:false};
+    player.learned={fae:false,ash:false}; player.bot=BOT_DEF();
     quests.wolves={state:0,count:0}; quests.king={state:0}; quests.fae={state:0,base:0}; quests.ash={state:0,base:0};
     cur=MAPS.over; const s=MAPS.over.spawn; player.x=player.px=s.x; player.y=player.py=s.y;
     const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp;
   }
   if(!fromSave) player.auto=AUTO_DEF(); player.potCd=0;
   player.buffs={}; player.spellCd={}; openWins=[]; timers=[]; player.slowT=0; if(!fromSave){ player.bossKills={}; player.depot={gold:0,items:[]}; }
-  $('startScreen').hidden=true; running=true; buildActions(); renderAuto(); reveal(); miniDirty=true; uiDirty=true;
+  $('startScreen').hidden=true; running=true; bot.on=false; bot.mark=false; buildActions(); renderAuto(); renderBot(); reveal(); miniDirty=true; uiDirty=true;
   if(fromSave && fromSave.dead){ player.hp=1; }
   log(fromSave?`Bem-vindo de volta, ${player.name}.`:`Bem-vindo a Brumaval, ${player.name}. ${CLASSES[player.cls].name}${CLASSES[player.cls].name.endsWith('r')?'es':'s'} começam no templo de Pedraluz.`,'sys');
   if(!fromSave) log('Dica: fale com o Capitão Bento, perto do portão norte. Ratos rondam os campos fora da cidade.','npc');
@@ -2624,7 +2819,7 @@ player.x=player.px=MAPS.over.spawn.x; player.y=player.py=MAPS.over.spawn.y+5;
 window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
-window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, toggleBot, get bot(){return bot}, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
