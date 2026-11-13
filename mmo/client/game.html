@@ -53,6 +53,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bst-i .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bst-i small{color:var(--muted)}
 .bst-i .st{grid-row:1/3;grid-column:2;display:flex;gap:3px;align-items:center}.bst-i .st i{width:8px;height:8px;border-radius:50%;border:1px solid var(--line)}.bst-i .st i.on{background:var(--accent);border-color:var(--accent)}
 .bst-i.done{border-color:var(--accent)}
+.pkkey{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px;margin-bottom:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px}.pkkey .kbd.wait{color:var(--accent)}
 .spbk{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:44vh;overflow-y:auto;margin-top:8px}
 .spb{display:grid;grid-template-columns:32px minmax(0,1fr);column-gap:8px;text-align:left;padding:5px 7px;background:var(--panel-2);align-items:center}
 .spb img{grid-row:1/4;width:32px;height:32px;image-rendering:pixelated}.spb .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.spb small,.spb span:last-child{font-size:11px}
@@ -142,8 +143,9 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .keys{font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:12px}
 .keys b{color:var(--ink);font-weight:500}
 .actionbar{display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:3px;flex:none}
-.actionbar .act{position:relative;width:auto;height:auto;aspect-ratio:1;min-width:0;max-height:60px;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px}
-.actionbar .act .ic{width:min(82%,48px);height:auto;aspect-ratio:1;image-rendering:pixelated;border-radius:3px;display:block}
+.actionbar .act.dragover{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}.actionbar .act[draggable=true]{cursor:grab}
+.actionbar .act{position:relative;width:auto;height:auto;aspect-ratio:1;min-width:0;max-height:42px;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px}
+.actionbar .act .ic{width:min(84%,36px);height:auto;aspect-ratio:1;image-rendering:pixelated;border-radius:3px;display:block}
 .actionbar .act:disabled .ic{filter:grayscale(1) brightness(.55)}
 .actionbar .act .k{position:absolute;top:1px;left:1px;font-size:9px;background:rgba(0,0,0,.78);padding:0 2px;border-radius:2px;line-height:11px;color:var(--ink)}
 .actionbar .act .c{position:absolute;right:1px;bottom:1px;font-size:9px;font-family:var(--mono);background:rgba(0,0,0,.78);padding:0 2px;border-radius:2px;line-height:11px;color:var(--ink)}
@@ -151,6 +153,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .actionbar .act.empty{opacity:.45;border-style:dashed}.actionbar .act.empty:hover{opacity:.85}
 .actionbar .act .ic0{color:var(--muted);font-size:15px;line-height:1}
 .actionbar .act:hover{border-color:var(--accent)}
+.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:5px;margin-bottom:8px}
 .pick{display:flex;align-items:center;gap:8px;text-align:left;padding:5px 7px}.pick img{width:26px;height:26px;image-rendering:pixelated;flex:none}.pick span{display:flex;flex-direction:column;min-width:0}.pick b{font-weight:600;font-size:13px}.pick small{color:var(--muted);font-size:11px}
 .pick.on{border-color:var(--accent);background:var(--panel-2)}.pk0{width:26px;height:26px}
 .pkh{font-family:var(--display);font-weight:500;font-size:13px;color:var(--muted);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.05em}
@@ -250,7 +253,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .cls b{font-family:var(--display);font-size:15px;font-weight:500;color:var(--accent)}
 .cls small{color:var(--muted);font-size:12px;line-height:1.25}
 .zoom{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:4px}
-@media (max-width:880px){.actionbar{grid-template-columns:repeat(10,minmax(0,1fr))}}
+
 .hud{position:absolute;top:8px;left:8px;right:84px;display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:2;pointer-events:none}
 .hud .bar{margin:0;height:18px;box-shadow:0 1px 4px rgba(0,0,0,.7)}.hud .bar span{line-height:16px;font-size:12px}
 .grip{cursor:grab;color:var(--muted);font-size:14px;line-height:1;padding:0 2px;user-select:none;opacity:.55;flex:none}.grip:hover{opacity:1;color:var(--accent)}.grip:active{cursor:grabbing}
@@ -2668,32 +2671,36 @@ function spellIconURL(s){ return spellIconCache[s.name]||(spellIconCache[s.name]
 
 
 // ============================================================ atalhos configuráveis
-const KEY_DEF={...Object.fromEntries(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','KeyQ','KeyE','KeyR','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyT',...Array(20).fill('')].map((k,i)=>['b'+i,k])), next:'Space', bot:'KeyB'};
+const KEY_DEF={...Object.fromEntries(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','KeyQ','KeyE','KeyR','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyT',...Array(60).fill('')].map((k,i)=>['b'+i,k])), next:'Space', bot:'KeyB'};
 let KEYS={...KEY_DEF}; try{ const old=JSON.parse(localStorage.getItem('brumaval-keys')||'{}')||{};
   if(old.s0!==undefined||old.hp!==undefined){ for(let i=0;i<8;i++) if(old['s'+i]!==undefined) old['b'+i]=old['s'+i]; if(old.hp!==undefined) old.b8=old.hp; if(old.mp!==undefined) old.b9=old.mp; for(const k of ['s0','s1','s2','s3','s4','s5','s6','s7','hp','mp']) delete old[k]; }
   Object.assign(KEYS, old); for(const k of Object.keys(KEYS)) if(!(k in KEY_DEF)) delete KEYS[k];
   for(let i=10;i<20;i++){ const c=KEYS['b'+i]; if(c&&Object.keys(KEYS).some(k=>k!=='b'+i&&KEYS[k]===c)) KEYS['b'+i]=''; } }catch(e){}
 const RESERVED=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape','Minus','Equal','NumpadAdd','NumpadSubtract','Tab','Enter']);
-function keyLabel(code){ if(!code) return '—'; if(/^Digit\d$/.test(code)) return code.slice(5); if(/^Key[A-Z]$/.test(code)) return code.slice(3); if(/^Numpad\d$/.test(code)) return 'Num '+code.slice(6);
+function keyLabel(code){ if(!code) return '—'; if(code.includes('+')){ const p=code.split('+'); return p.slice(0,-1).join('+')+'+'+keyLabel(p[p.length-1]); } if(/^Digit\d$/.test(code)) return code.slice(5); if(/^Key[A-Z]$/.test(code)) return code.slice(3); if(/^Numpad\d$/.test(code)) return 'Num '+code.slice(6);
   return {Space:'Espaço',Backquote:'´',Backslash:'\\',Comma:',',Period:'.',Slash:'/',Semicolon:'ç',Quote:'~',BracketLeft:'[',BracketRight:']',ShiftLeft:'Shift',ShiftRight:'Shift dir.',ControlLeft:'Ctrl',AltLeft:'Alt',CapsLock:'Caps'}[code]||code; }
-const keyActions=()=>[...Array.from({length:BAR_N},(_,i)=>({id:'b'+i, label:'Atalho '+(i+1)+': '+(slotInfo(player.bar?.[i])?.name||'vazio')})), {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}];
+const keyActions=()=>[...Array.from({length:barVis},(_,i)=>({id:'b'+i, label:'Atalho '+(i+1)+': '+(slotInfo(player.bar?.[i])?.name||'vazio')})), {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}];
 let capturing=null;
 const saveKeys=()=>{ try{ localStorage.setItem('brumaval-keys',JSON.stringify(KEYS)); }catch(e){} };
+const MODS=new Set(['ShiftLeft','ShiftRight','ControlLeft','ControlRight','AltLeft','AltRight','MetaLeft','MetaRight']);
+const comboOf=e=>MODS.has(e.code)?e.code:(e.ctrlKey?'Ctrl+':'')+(e.altKey?'Alt+':'')+(e.shiftKey?'Shift+':'')+e.code;
 function actionFor(code){ for(const k in KEYS) if(KEYS[k]===code) return k; return null; }
 function targetNext(){ const near=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(m,player)<=7).sort((a,b)=>cheb(a,player)-cheb(b,player)); if(near.length){ const i=near.indexOf(target); setTarget(near[(i+1)%near.length], true); } }
 function doAction(a,fromKey){ if(/^b\d+$/.test(a)) slotAction(+a.slice(1),fromKey); else if(a==='next') targetNext(); else if(a==='bot') toggleBot(); }
 function openKeys(){
   const rows=keyActions().map(A=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${esc(A.label)}</b></div><div class="btns"><span class="kbd${capturing===A.id?' wait':''}">${capturing===A.id?'aperte a tecla…':esc(keyLabel(KEYS[A.id]))}</span><button data-act="set" data-a="${A.id}">Mudar</button><button data-act="clr" data-a="${A.id}" aria-label="Remover o atalho de ${esc(A.label)}">×</button></div></div>`).join('');
-  openDialog(player,'Atalhos',`<p class="hint" style="margin-top:0">Clique em "Mudar" e aperte a tecla nova (letras, números, F1–F12, teclado numérico). WASD, setas, Esc, Enter, + e − são reservados. Se a tecla já estiver em uso, os atalhos trocam de lugar.</p><div class="list">${rows}</div><div class="row"><button data-act="def">Restaurar padrão</button><button class="primary" data-act="close">Fechar</button></div>`,(act,ds)=>{
+  openDialog(player,'Atalhos',`<p class="hint" style="margin-top:0">Clique em "Mudar" e aperte a tecla nova (letras, números, F1–F12, teclado numérico, e também combinações como Shift+1 ou Ctrl+Q). Dica: o botão direito num quadrado da barra também muda a tecla dele. WASD, setas, Esc, Enter, + e − são reservados. Se a tecla já estiver em uso, os atalhos trocam de lugar.</p><div class="list">${rows}</div><div class="row"><button data-act="def">Restaurar padrão</button><button class="primary" data-act="close">Fechar</button></div>`,(act,ds)=>{
     if(act==='close'){ capturing=null; return closeDialog(); }
     if(act==='set'){ capturing=ds.a; return openKeys(); }
     if(act==='clr'){ KEYS[ds.a]=''; capturing=null; saveKeys(); buildActions(); return openKeys(); }
     if(act==='def'){ KEYS={...KEY_DEF}; capturing=null; saveKeys(); buildActions(); return openKeys(); } });
 }
-addEventListener('keydown',e=>{ if(!capturing) return; e.preventDefault(); e.stopImmediatePropagation(); const code=e.code;
-  if(code==='Escape'){ capturing=null; openKeys(); return; }
+let captureBack=null;
+addEventListener('keydown',e=>{ if(!capturing) return; e.preventDefault(); e.stopImmediatePropagation(); if(MODS.has(e.code)) return; const code=comboOf(e);
+  const back=()=>{ const f=captureBack; captureBack=null; f?f():openKeys(); };
+  if(e.code==='Escape'){ capturing=null; back(); return; }
   if(RESERVED.has(code)){ log('A tecla '+keyLabel(code)+' é reservada. Escolha outra.','sys'); return; }
-  const other=actionFor(code); if(other&&other!==capturing) KEYS[other]=KEYS[capturing]||''; KEYS[capturing]=code; capturing=null; saveKeys(); buildActions(); openKeys(); }, true);
+  const other=actionFor(code); if(other&&other!==capturing) KEYS[other]=KEYS[capturing]||''; KEYS[capturing]=code; capturing=null; saveKeys(); buildActions(); back(); }, true);
 $('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
 
 // ============================================================ caça automática por rota
@@ -2821,7 +2828,7 @@ function openTrainer(n){ const town=n.map, sp=classSpells(), here=sp.filter(s=>s
 let bookSel=null;
 function openSpellbook(){ const sp=classSpells();
   const card=(s,i)=>{ const ok=spellReady(s), have=!s.learn||player.learned[s.learn], st=ok?'<span class="good">Pronta</span>':have?'<span class="hint">nível '+s.lvl+'</span>':'<span class="bad">'+esc(spellWhere(s)||'bloqueada')+'</span>';
-    return `<button type="button" class="spb${ok?'':' off'}" data-act="sel" data-i="${i}" aria-pressed="${bookSel===i}"><img alt="" src="${spellIconURL(s)}"><span class="nm">${esc(s.name)}</span><small>${s.kind} · nv ${s.lvl}</small>${st}</button>`; };
+    return `<button type="button" draggable="true" ondragstart="event.dataTransfer.setData('text/brv','s${i}')" class="spb${ok?'':' off'}" data-act="sel" data-i="${i}" aria-pressed="${bookSel===i}"><img alt="" src="${spellIconURL(s)}"><span class="nm">${esc(s.name)}</span><small>${s.kind} · nv ${s.lvl}</small>${st}</button>`; };
   const s=bookSel!=null?sp[bookSel]:null;
   const det=s?`<div class="spd"><img alt="" src="${spellIconURL(s)}"><div><h3>${esc(s.name)} <small class="hint">${s.kind}</small></h3><p>${esc(s.desc)}.</p><p class="hint">${s.mana} mana · recarga ${(s.cd/1000).toFixed(1).replace('.0','')} s · nível ${s.lvl}</p><p>${spellReady(s)?'<span class="good">Você já sabe esta magia.</span>':'<b>Como aprender:</b> '+esc(spellHow(s))+'.'}</p></div></div>`:'<p class="hint">Escolha uma magia para ver os detalhes.</p>';
   const n=sp.filter(spellReady).length;
@@ -3287,7 +3294,7 @@ addEventListener('keydown', e=>{
   if(k==='Escape'){ if(galOpen){ openGallery(false); return; } if(afkOpen){ openAfk(false); return; } if(!dlg.hidden) closeDialog(); else { target=null; player.follow=false; player.path=null; } return; }
   if(player.dead) return;
   if(bot.on && ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)) toggleBot(false,'Caça automática pausada: você assumiu o controle.');
-  const act=actionFor(k); if(act){ e.preventDefault(); if(!e.repeat||act[0]==='b') doAction(act,true); return; }
+  const combo=comboOf(e), act=actionFor(combo)||(!e.ctrlKey&&!e.altKey&&combo!==k?actionFor(k):null); if(act){ e.preventDefault(); if(!e.repeat||act[0]==='b') doAction(act,true); return; }
   keys.add(k);
 });
 addEventListener('keyup', e=>keys.delete(e.code));
@@ -4565,7 +4572,7 @@ let actEls={};
 const spellReady = s => player.level>=s.lvl && (!s.learn || !!player.learned?.[s.learn]);
 const spellLock = s => s.learn && !player.learned?.[s.learn] ? spellWhere(s)+' · nv '+s.lvl : player.level<s.lvl ? 'nível '+s.lvl : s.mana+' mana';
 // ---- barra de atalhos: 2 linhas de 10, cada espaço recebe uma magia, poção ou item
-const BAR_N=40;
+const BAR_N=80, SLOT_PX=34; let barVis=40;
 const BAR_DEF=()=>{ const b=Array(BAR_N).fill(null); for(let i=0;i<8;i++) b[i]={t:'s',i}; b[8]={t:'p',id:'hp'}; b[9]={t:'p',id:'mp'}; return b; };
 const slotCount=s=>s.id==='hp'||s.id==='mp'?potCount(s.id):countItem(s.id);
 function slotInfo(s){
@@ -4585,27 +4592,39 @@ function openSlotPicker(i){
   const opt=(val,icon,name,sub,on)=>`<button type="button" class="pick${on?' on':''}" data-act="pick" data-v="${val}">${icon?`<img alt="" src="${icon}">`:'<span class="pk0"></span>'}<span><b>${esc(name)}</b>${sub?`<small>${esc(sub)}</small>`:''}</span></button>`;
   const same=(a,b)=>a&&b&&a.t===b.t&&a.i===b.i&&a.id===b.id;
   const items=[['hp','Poção de Vida','usa a mais forte'],['mp','Poção de Mana','usa a mais forte'],['warmpot',null,'Fiordes Gelados'],['airpot',null,'Recife Profundo'],...(player.cls==='cacador'?Object.keys(ITEMS).filter(id=>ITEMS[id].ammo).map(id=>[id,null,'escolhe a flecha ativa']):[])];
-  const html=`<p class="hint" style="margin-top:0">Atalho ${i+1} · tecla <span class="kbd">${esc(keyLabel(KEYS['b'+i]))}</span>. Escolha o que este espaço faz.</p>
+  const html=`<div class="pkkey"><span>Tecla deste atalho:</span><span class="kbd${capturing==='b'+i?' wait':''}">${capturing==='b'+i?'aperte a tecla… (Esc cancela)':esc(keyLabel(KEYS['b'+i]))}</span><button type="button" data-act="setkey">Mudar tecla</button>${KEYS['b'+i]?'<button type="button" data-act="clrkey">Sem tecla</button>':''}</div>
+    <p class="hint" style="margin-top:0">Escolha o que o atalho ${i+1} faz. Você também pode arrastar um atalho para outro quadrado, ou arrastar uma magia do Livro de Magias para a barra.</p>
     <h3 class="pkh">Magias</h3><div class="picks">${sp.map((s,k)=>opt('s'+k,spellIconURL(s),s.name,spellLock(s),same(cur,{t:'s',i:k}))).join('')}</div>
     <h3 class="pkh">Poções e itens</h3><div class="picks">${items.map(([id,nm,sub])=>opt('p'+id,iconURL(id),nm||ITEMS[id].name,sub+(id!=='hp'&&id!=='mp'?' · '+countItem(id)+' na mochila':''),same(cur,{t:'p',id}))).join('')}</div>
     <div class="row"><button type="button" data-act="pick" data-v="">Deixar vazio</button><button type="button" data-act="keys">Mudar teclas</button><button type="button" class="primary" data-act="close">Fechar</button></div>`;
   openDialog(player,'Atalho '+(i+1),html,(act,ds)=>{
-    if(act==='close') return closeDialog(); if(act==='keys'){ closeDialog(); return openKeys(); }
+    if(act==='close'){ capturing=null; return closeDialog(); } if(act==='keys'){ closeDialog(); return openKeys(); }
+    if(act==='setkey'){ capturing='b'+i; captureBack=()=>openSlotPicker(i); return openSlotPicker(i); }
+    if(act==='clrkey'){ KEYS['b'+i]=''; saveKeys(); buildActions(); return openSlotPicker(i); }
     if(act==='pick'){ const v=ds.v; B[i]=!v?null:v[0]==='s'?{t:'s',i:+v.slice(1)}:{t:'p',id:v.slice(1)}; buildActions(); save(); closeDialog(); } });
 }
+function barCols(){ const W=$('actionbar').clientWidth||$('gameCol').clientWidth||800; return Math.max(8,Math.min(BAR_N/2,Math.floor((W+3)/(SLOT_PX+3)))); }
 function buildActions(){
   const bar=$('actionbar'); bar.innerHTML=''; actEls={}; if(!player.bar) player.bar=BAR_DEF(); while(player.bar.length<BAR_N) player.bar.push(null);
-  for(let i=0;i<BAR_N;i++){ const s=player.bar[i], inf=slotInfo(s), key=KEYS['b'+i];
+  const cols=barCols(); barVis=cols*2; bar.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;
+  for(let i=0;i<barVis;i++){ const s=player.bar[i], inf=slotInfo(s), key=KEYS['b'+i];
     const b=document.createElement('button'); b.type='button'; b.className='act'+(inf?'':' empty'); b.dataset.slot=i;
     b.title=(inf?inf.name+(s.t==='s'?' · '+inf.cost:'')+'\n'+inf.desc:'Atalho vazio: clique para escolher')+'\nBotão direito: trocar';
     b.innerHTML=inf?`<img class="ic" alt="" src="${inf.icon}"><span class="cdv"></span>${s.t==='p'?`<span class="c">${esc(inf.cost.replace('×',''))}</span>`:''}${key?`<span class="k">${esc(keyLabel(key))}</span>`:''}`
       :`<span class="ic0">+</span>${key?`<span class="k">${esc(keyLabel(key))}</span>`:''}`;
     b.setAttribute('aria-label',(inf?inf.name:'Atalho vazio')+(key?' ('+keyLabel(key)+')':''));
     b.addEventListener('click',()=>slotAction(i,false)); b.addEventListener('contextmenu',e=>{ e.preventDefault(); if(running) openSlotPicker(i); });
+    if(inf){ b.draggable=true; b.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/brv','slot:'+i); e.dataTransfer.effectAllowed='move'; }); }
+    b.addEventListener('dragover',e=>{ if([...e.dataTransfer.types].includes('text/brv')){ e.preventDefault(); b.classList.add('dragover'); } });
+    b.addEventListener('dragleave',()=>b.classList.remove('dragover'));
+    b.addEventListener('drop',e=>{ e.preventDefault(); b.classList.remove('dragover'); const v=e.dataTransfer.getData('text/brv'), B=player.bar; if(!v) return;
+      if(v.startsWith('slot:')){ const j=+v.slice(5); if(j===i) return; [B[i],B[j]]=[B[j],B[i]]; } else if(v[0]==='s') B[i]={t:'s',i:+v.slice(1)}; else if(v[0]==='p') B[i]={t:'p',id:v.slice(1)};
+      buildActions(); save(); });
     bar.appendChild(b); actEls[i]={btn:b, cd:b.querySelector('.cdv'), s:inf?s:null}; }
 }
 buildActions();
 showInfo(null);
+{ let lastCols=0, rt=0; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ const c=barCols(); if(c!==lastCols){ lastCols=c; buildActions(); } },120); }); new ResizeObserver(()=>{ const c=barCols(); if(c*2!==barVis){ lastCols=c; buildActions(); } }).observe($('actionbar')); }
 
 // ============================================================ loop
 let last=0, zoneT=0;
