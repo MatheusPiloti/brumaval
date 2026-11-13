@@ -2087,8 +2087,10 @@ function rollP(base, def, st, extraCrit=0, canMiss=true){
   return {d:Math.max(1,Math.round(d)), crit};
 }
 function leech(dmg, st){ if(!st.lifesteal) return; const v=Math.round(dmg*st.lifesteal/100); if(v>=1) player.hp=Math.min(st.maxHp, player.hp+v); }
-function randomGearId(lv){
-  const pool=Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id]; return d.slot && d.slot!=='bag' && (d.lvl||1)<=lv+2 && (d.lvl||1)>=lv-20; });
+const REG_ITEMS={over:['stone','crypt'],fae:['fae'],ash:['fire'],ice:['ice'],sea:['sea']};
+function randomGearId(lv, reg){
+  let pool=Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id]; return d.slot && d.slot!=='bag' && (d.lvl||1)<=lv+2 && (d.lvl||1)>=lv-20; });
+  const ok=REG_ITEMS[reg]; if(ok){ const local=pool.filter(id=>ok.includes(itemRegion(id))); if(local.length) pool=local; }
   const mine=pool.filter(id=>canUse(ITEMS[id]));
   const src=(mine.length && R()<0.65) ? mine : pool;
   return src[Math.floor(R()*src.length)];
@@ -2110,7 +2112,7 @@ function killMonster(m){
   const AF=bot.on?AUTO_PENALTY:1;
   if(!m.sp.temp) for(const [id,ch,a,b] of m.def.loot) if(R()<ch*AF) items.push(ITEMS[id].slot ? makeItem(id, rollRarity(lv, m.def.boss), lv) : {id, n:Math.max(1,Math.round(ri(a,b)*(id==='gold'?AF:1)))});
   const extra = m.sp.temp ? 0 : m.def.boss ? (bot.on?2:3) : (R() < (0.04+lv*0.006)*AF ? 1 : 0);
-  for(let i=0;i<extra;i++){ const id=randomGearId(lv); if(id) items.push(makeItem(id, rollRarity(lv, m.def.boss), lv)); }
+  for(let i=0;i<extra;i++){ const id=randomGearId(lv, monRegion(m.type)); if(id) items.push(makeItem(id, rollRarity(lv, m.def.boss), lv)); }
   corpses.push({map:m.map, x:m.x, y:m.y, type:m.type, items, t:0, life:120000});
   burst(m, m.def.undead?'#d8d0bc':'#8a1a10', 18, 90); if(m.def.boss) trauma=Math.min(1,trauma+0.4);
   gainXp(Math.max(1,Math.round((m.sp.temp?m.xp/2:m.xp)*XP_RATE*(bot.on?AUTO_PENALTY:1))), m);
@@ -4585,7 +4587,7 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
-window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
