@@ -1033,6 +1033,7 @@ const MON = {
   usurper: {name:'Lorde Varek, o Usurpador', lvl:21, hp:5000, atk:70, def:31, xp:11000, step:420, as:1500, sight:8, col:'#7a1a1a', boss:true, respawn:600000, charge:true,
             ab:{phases:[{at:.7,summon:'archer',n:3,say:'Guardas! A mim!'},{at:.45,summon:'knight',n:2,say:'Vocês não vão tomar meu trono!',enrage:true},{at:.2,summon:'knight',n:3,say:'Este castelo é MEU!'}]},
             loot:[['gold',1,800,1400],['usurperhelm',.6,1,1],['bigbag',.3,1,1],['magicbag',.1,1,1],['crest',1,2,3],['plate',.3,1,1],['hp',1,2,4],['mp',1,1,3]]},
+  dummy:   {name:'Boneco de Treino', lvl:1, hp:50000, atk:0, def:0, xp:0, step:99999, as:99999, sight:0, col:'#c8a060', loot:[], dummy:true},
   rat:     {name:'Rato', lvl:1, hp:20, atk:5, def:1, xp:10, step:560, as:1600, sight:5, col:'#8a8580', loot:[['gold',.7,1,4],['rattail',.45,1,1]]},
   cobra:   {name:'Cobra', lvl:2, hp:40, atk:9, def:3, xp:22, step:520, as:1500, sight:5, col:'#5f8f3a', poison:{ch:.3,dmg:3,ticks:5}, loot:[['gold',.6,2,6],['fang',.5,1,1],['hp',.05,1,1]]},
   wolf:    {name:'Lobo', lvl:3, hp:45, atk:11, def:4, xp:25, step:340, as:1400, sight:6, col:'#7d7f86', loot:[['gold',.5,2,8],['pelt',.6,1,1]]},
@@ -1106,16 +1107,16 @@ const SET_STAT={atk:'ataque',mag:'magia',def:'defesa',hp:'vida',mp:'mana',crit:'
 const setBonusTxt=o=>Object.entries(o).map(([k,v])=>'+'+v+(k==='crit'||k==='atkspd'?'':' ')+SET_STAT[k]).join(', ');
 
 // ---- habilidades (skills)
-const SKILLS=[['ml','Nível mágico'],['fist','Punhos'],['club','Clava'],['sword','Espada'],['axe','Machado'],['dist','Distância']];
-const SKILL_RATE={ guerreiro:{ml:6,fist:3,club:1,sword:1,axe:1,dist:3}, cacador:{ml:2.5,fist:3,club:3,sword:3,axe:3,dist:1}, monge:{ml:2.5,fist:1,club:3,sword:3,axe:3,dist:3},
-  feiticeiro:{ml:1,fist:3,club:3,sword:3,axe:3,dist:3}, xama:{ml:1,fist:3,club:3,sword:3,axe:3,dist:3} };
+const SKILLS=[['ml','Nível mágico'],['melee','Armas'],['fist','Punhos'],['dist','Distância']];
+const SKILL_RATE={ guerreiro:{ml:6,melee:1,fist:3,dist:3}, cacador:{ml:2.5,melee:3,fist:3,dist:1}, monge:{ml:2.5,melee:3,fist:1,dist:3},
+  feiticeiro:{ml:1,melee:3,fist:3,dist:3}, xama:{ml:1,melee:3,fist:3,dist:3} };
 const SKILL_DEF=()=>Object.fromEntries(SKILLS.map(([k])=>[k,{lv:k==='ml'?0:10,p:0}]));
 const skillNeed=(k,lv)=>Math.round((k==='ml'?120*Math.pow(1.1,lv):30*Math.pow(1.1,lv-10))*((SKILL_RATE[player.cls]||SKILL_RATE.guerreiro)[k]||3));
 const skillLv=k=>player.skills?.[k]?.lv ?? (k==='ml'?0:10);
 const skillMul=k=>!k?1:(k==='ml'?1+skillLv('ml')*0.015:1+(skillLv(k)-10)*0.015);
 function weaponSkill(){ const d=ITEMS[player.eq.weapon?.id]; if(!d) return 'fist'; if(d.wk==='bow') return 'dist'; if(d.wk==='fist') return 'fist'; if(d.wk==='wand'||d.wk==='staff') return null;
-  if(d.icon==='axe') return 'axe'; if(d.icon==='club'||d.icon==='hammer'||d.icon==='mace') return 'club'; return 'sword'; }
-function mainSkill(){ const c=player.cls; if(MAGES.includes(c)) return 'ml'; if(c==='monge') return 'fist'; if(c==='cacador') return 'dist'; return weaponSkill()||'sword'; }
+  return 'melee'; }
+function mainSkill(){ const c=player.cls; if(MAGES.includes(c)) return 'ml'; if(c==='monge') return 'fist'; if(c==='cacador') return 'dist'; return weaponSkill()||'melee'; }
 let skillsDirty=true, castHealMul=1;
 function train(k, pts){ if(!k||!player.skills) return; const S=player.skills[k]; S.p+=pts; let up=false;
   while(S.p>=skillNeed(k,S.lv)){ S.p-=skillNeed(k,S.lv); S.lv++; up=true; }
@@ -1123,7 +1124,7 @@ function train(k, pts){ if(!k||!player.skills) return; const S=player.skills[k];
   skillsDirty=true; }
 function renderSkills(){ skillsDirty=false; const el=$('skills'); if(!el||!player.skills) return; const main=mainSkill(), w=weaponSkill();
   el.innerHTML=SKILLS.map(([k,nm])=>{ const S=player.skills[k], need=skillNeed(k,S.lv), pct=Math.min(99,Math.floor(S.p/need*100)); const hot=k===main||(k===w&&k!==main);
-    return `<div class="sk${hot?' hot':''}" title="${esc(nm)} ${S.lv}: ${pct}% para o próximo · ${k==='ml'?'sobe gastando mana':'sobe atacando com '+(k==='dist'?'arco':k==='fist'?'os punhos':k==='club'?'clavas e martelos':k==='axe'?'machados':'espadas')}"><span>${nm}</span><b>${S.lv}</b><i><u style="width:${pct}%"></u></i></div>`; }).join('')
+    return `<div class="sk${hot?' hot':''}" title="${esc(nm)} ${S.lv}: ${pct}% para o próximo · ${k==='ml'?'sobe gastando mana':'sobe atacando com '+(k==='dist'?'arco':k==='fist'?'os punhos':'espadas, machados e clavas')}"><span>${nm}</span><b>${S.lv}</b><i><u style="width:${pct}%"></u></i></div>`; }).join('')
     +`<p class="hint" style="margin:4px 0 0">Dano: +${Math.round((skillMul(main)-1)*100)}% (${SKILLS.find(s=>s[0]===main)[1].toLowerCase()}) · Cura: +${Math.round((skillMul('ml')-1)*100)}%</p>`; }
 
 // ---- bestiário
@@ -1135,7 +1136,7 @@ function monWhere(t){ return [...new Set(spawns.filter(s=>s.type===t).map(s=>MAP
 const chanceTxt=c=>c>=0.5?'comum':c>=0.15?'incomum':c>=0.04?'semi-raro':c>=0.01?'raro':'muito raro';
 let bestTab='over', bestSel=null;
 function openBestiary(){
-  const all=Object.keys(MON).filter(t=>spawns.some(s=>s.type===t)||bestKills(t)>0);
+  const all=Object.keys(MON).filter(t=>!MON[t].dummy).filter(t=>spawns.some(s=>s.type===t)||bestKills(t)>0);
   const R={over:'Pedraluz',fae:'Lunária',ash:'Cinzaforte'};
   const list=all.filter(t=>monRegion(t)===bestTab).sort((a,b)=>(MON[a].boss?1:0)-(MON[b].boss?1:0)||(MON[a].lvl||0)-(MON[b].lvl||0));
   const done=all.filter(t=>bestStage(t)===3).length, known=all.filter(t=>bestKills(t)>0).length;
@@ -1365,6 +1366,7 @@ function setupWorld(){
       {kind:'npc', id:'depot3', name:'Depósito', map:'fae', x:q.x0+4, y:q.y1-3, look:'chest'},
       {kind:'npc', id:'sage', name:'Mestra Sylva', map:'fae', x:q.x1-4, y:q.y1-3, look:'sage'}); }
   for(const n of npcs){ n.px=n.x; n.py=n.y; n.moving=false; n.mt=0; n.mdur=1; n.phase=R(); n.dir='down'; }
+  placeDummies();
 }
 let occ=new Map(), occMap=null;
 function rebuildOcc(){ occ=new Map(); occMap=cur.id; const W=cur.W; for(const m of monsters) if(!m.dead&&m.map===cur.id) occ.set(m.y*W+m.x,m); for(const n of npcs) if(n.map===cur.id) occ.set(n.y*W+n.x,n); if(!player.dead) occ.set(player.y*W+player.x,player); }
@@ -1488,7 +1490,8 @@ function randomGearId(lv){
 }
 function roll(atk,def){ if(R()<0.07) return {miss:true}; let d=atk*20/(20+def)*(0.85+R()*0.3); const crit=R()<0.06; if(crit) d*=1.6; return {d:Math.max(1,Math.round(d)),crit}; }
 function hitMonster(m, dmg, crit, color){
-  if(m.dead) return; if(bestStage(m.type)===3) dmg=Math.round(dmg*1.05);
+  if(m.dead) return;
+  if(m.def.dummy){ m.lastHit=now; m.hp=Math.max(1,m.hp-dmg); m.flash=110; floatAt(m, String(dmg), color||(crit?'#ffd54a':'#ffe0a0'), crit); burst(m,'#d8b878',crit?8:4,50); return; } if(bestStage(m.type)===3) dmg=Math.round(dmg*1.05);
   m.hp-=dmg; m.flash=110; floatAt(m, String(dmg), color||(crit?'#ffd54a':'#ff6a5a'), crit); blood(m,m.def.undead); burst(m, m.def.undead?'#d8d0bc':'#b02a20', crit?12:6);
   if(m.state==='idle'||m.state==='return'){ m.state='chase'; }
   if(crit) trauma=Math.min(1,trauma+0.1);
@@ -1659,7 +1662,16 @@ function cast(i){
 }
 
 // ============================================================ IA dos monstros
+function placeDummies(){
+  for(const id of ['over','ash','fae']){ const M=MAPS[id], rc=id==='over'?TOWN:M.townRect; if(!rc) continue; const sp={x:Math.round((rc.x0+rc.x1)/2), y:Math.round((rc.y0+rc.y1)/2)}; let best=null, bd=1e9;
+    const free=(x,y)=>passPlayer(M,x,y)&&!LINKS_T.has(tileAt(M,x,y))&&!M.links[y*M.W+x]&&!npcs.some(n=>n.map===id&&Math.abs(n.x-x)<=1&&Math.abs(n.y-y)<=1)&&!spawns.some(s=>s.map===id&&s.x===x&&s.y===y);
+    for(let y=rc.y0+1;y<=rc.y1-2;y++) for(let x=rc.x0+1;x<=rc.x1-5;x++){ const d=Math.abs(x+2-sp.x)+Math.abs(y-sp.y); if(d<3||d>=bd) continue;
+      let ok=true; for(let dx=0;dx<=4&&ok;dx++) for(let dy=0;dy<=1&&ok;dy++) if(!free(x+dx,y+dy)) ok=false; if(ok){ bd=d; best={x,y}; } }
+    if(!best) continue;
+    for(let i=0;i<3;i++){ const s0={map:id, type:'dummy', x:best.x+i*2, y:best.y, mon:null, timer:0}; spawns.push(s0); spawnMonster(s0); } }
+}
 function updateMonster(m, dt){
+  if(m.def.dummy){ m.flash-=dt; m.phase+=dt/900; if(now-(m.lastHit||-1e9)>4000) m.hp=m.maxHp; return; }
   m.phase += dt/(m.moving?300:800);
   if(m.dot){ m.dot.t-=dt; if(m.dot.t<=0){ const d0=m.dot; d0.t=1000; if(--d0.ticks<=0) m.dot=null; hitMonster(m,d0.dmg,false,'#7ad04a'); if(m.dead) return; } }
   if(m.moving){ m.mt+=dt; if(m.mt>=m.mdur) m.moving=false; }
@@ -1918,7 +1930,7 @@ function botTick(dt){
   { const fighting=!!(target&&!target.dead&&target.map===cur.id); const why=needRefill(fighting); if(why){ startRefill(why); return; }
     if(!(B.refill&&B.refill.on) && B.stopNoPots && potCount('hp')===0){ startRefill('acabaram as poções de vida', true); return; } }
   if(target && !target.dead && target.map===cur.id){ if(!botKite(B,st)) botStatus('Atacando: '+target.def.name); botCast(B,st); return; }
-  const foes=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(player,m)<=B.range&&los(cur,player,m)).sort((a,b)=>cheb(player,a)-cheb(player,b));
+  const foes=monsters.filter(m=>!m.dead&&!m.def.dummy&&m.map===cur.id&&cheb(player,m)<=B.range&&los(cur,player,m)).sort((a,b)=>cheb(player,a)-cheb(player,b));
   if(foes.length){ target=foes[0]; player.follow=true; player.path=null; player.pending=null; botStatus('Atacando: '+target.def.name); return; }
   const c=corpses.find(c=>c.map===cur.id&&!c.botDone&&!c.player&&cheb(player,c)<=B.range&&c.items.some(lootWanted));
   if(c){ if(cheb(player,c)<=1){ botLoot(c); return; } if((c.botTries=(c.botTries||0)+1)>45){ c.botDone=true; return; } if(!player.moving&&!(player.path&&player.path.length)){ botStatus('Indo saquear'); walkTo(c.x,c.y,true,null,4000,true); if(!player.path) c.botDone=true; } return; }
@@ -2501,6 +2513,9 @@ function drawTorch(sx,sy){ rect(ctx,'#4a3020',sx+15,sy+14,3,8); const f=Math.sin
 function drawMonster(c,m,x,y){
   const ph=m.phase, w=m.moving, d=m.def;
   switch(m.type){
+    case 'dummy': { shadow(c,x,y,10); rect(c,'#5a3a22',x+15,y+8,3,22); rect(c,'#6a4a2a',x+6,y+12,21,3); rect(c,'#c8a060',x+10,y+10,13,12); rect(c,'#a88440',x+10,y+19,13,3);
+      rect(c,'#d8b878',x+12,y+2,9,9); rect(c,'#a88440',x+12,y+9,9,2); rect(c,'#c0392b',x+14,y+13,5,5); rect(c,'#f0e6d0',x+15,y+14,3,3); rect(c,'#c0392b',x+16,y+15,1,1);
+      rect(c,'#c8a060',x+5,y+11,3,4); rect(c,'#c8a060',x+25,y+11,3,4); break; }
     case 'rat': drawBeast(c,x,y+4,d.col,m.face,ph,w,0.6,'rat'); break;
     case 'wolf': drawBeast(c,x,y,d.col,m.face,ph,w,1,'wolf'); break;
     case 'bear': drawBeast(c,x,y-2,d.col,m.face,ph,w,1.3,'bear'); break;
@@ -2988,7 +3003,7 @@ function applySave(s){
   player.eq.bag.items.push(...oldInv);
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
   player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm;
-  { const D=SKILL_DEF(); for(const k in (s.skills||{})) if(D[k]) D[k]={lv:+s.skills[k].lv||D[k].lv, p:+s.skills[k].p||0}; player.skills=D; player.bestiary=s.bestiary||{}; }
+  { const D=SKILL_DEF(), old=s.skills||{}; if(!old.melee&&(old.sword||old.axe||old.club)){ const b=['sword','axe','club'].map(k=>old[k]).filter(Boolean).sort((a,b)=>b.lv-a.lv||b.p-a.p)[0]; old.melee=b; } for(const k in old) if(D[k]) D[k]={lv:+s.skills[k].lv||D[k].lv, p:+s.skills[k].p||0}; player.skills=D; player.bestiary=s.bestiary||{}; }
   { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
   decFog(s.fog);
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
@@ -3043,7 +3058,7 @@ function openAdm(note){
    </fieldset>
    <fieldset><legend>Habilidades</legend>
     <div class="botrow">Nível mágico <input type="number" id="admMl" min="0" max="150" value="${skillLv('ml')}"></div>
-    <div class="botrow">${esc(SKILLS.find(x=>x[0]===(weaponSkill()||'sword'))[1])} <input type="number" id="admSk" min="10" max="150" value="${skillLv(weaponSkill()||'sword')}"><button data-act="skills" type="button">Definir</button></div>
+    <div class="botrow">${esc(SKILLS.find(x=>x[0]===(weaponSkill()||'melee'))[1])} <input type="number" id="admSk" min="10" max="150" value="${skillLv(weaponSkill()||'melee')}"><button data-act="skills" type="button">Definir</button></div>
     <div class="botrow"><button data-act="bestall" type="button">Completar bestiário</button></div>
    </fieldset>
    <fieldset><legend>Monstros e chefes</legend>
@@ -3061,7 +3076,7 @@ function openAdm(note){
     player.adm=true; let msg='';
     if(act==='lvl'){ const L=Math.max(1,Math.min(300,Math.floor(+v('admLvl')||1))); ADM.lvl=L; player.level=L; player.xp=totalXp(L); const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; buildActions(); msg='Nível '+L+'.'; }
     if(act==='gold'){ player.gold+=ADM.gold; msg='+'+ADM.gold+' de ouro.'; }
-    if(act==='skills'){ const ml=Math.max(0,Math.min(150,Math.floor(+v('admMl')||0))), sk=Math.max(10,Math.min(150,Math.floor(+v('admSk')||10))); player.skills.ml={lv:ml,p:0}; player.skills[weaponSkill()||'sword']={lv:sk,p:0}; skillsDirty=true; msg='Habilidades definidas.'; }
+    if(act==='skills'){ const ml=Math.max(0,Math.min(150,Math.floor(+v('admMl')||0))), sk=Math.max(10,Math.min(150,Math.floor(+v('admSk')||10))); player.skills.ml={lv:ml,p:0}; player.skills[weaponSkill()||'melee']={lv:sk,p:0}; skillsDirty=true; msg='Habilidades definidas.'; }
     if(act==='bestall'){ for(const t of Object.keys(MON)) player.bestiary[t]=Math.max(player.bestiary[t]||0, BEST_T(MON[t])[2]); msg='Bestiário completo.'; }
     if(act==='heal'){ const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; player.slowT=0; msg='Vida e mana cheias.'; }
     if(act==='god'){ player.god=!player.god; msg=player.god?'Modo deus ligado: você não recebe dano.':'Modo deus desligado.'; }
