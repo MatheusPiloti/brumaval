@@ -59,6 +59,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .ecog{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin:8px 0}.eco{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px}.eco small{grid-column:1;color:var(--muted)}.eco button{grid-row:1/4;grid-column:2}
 .pips{display:flex;gap:3px}.pips i{width:10px;height:10px;border-radius:50%;border:1px solid var(--line)}.pips i.on{background:var(--accent);border-color:var(--accent)}
 .cosg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin:6px 0 10px}.cos{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;text-align:left}.cos b{flex:1;font-weight:500}.cos.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.lookwrap{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start}.lookprev{position:sticky;top:0;display:grid;gap:4px;justify-items:center}.lookprev canvas{width:140px;height:140px;border:1px solid var(--line);border-radius:6px;image-rendering:pixelated}.lookprev small{color:var(--muted);text-align:center}.lookside{min-width:0;max-height:52vh;overflow-y:auto}
+@media (max-width:640px){.lookwrap{grid-template-columns:1fr}}
+.cos.on{border-color:var(--accent)}.cos small{width:100%;color:var(--muted);font-size:11px}.cos{flex-wrap:wrap}
 .sw{display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,.3);flex:none}
 .card h4{margin:10px 0 4px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .spbk{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:44vh;overflow-y:auto;margin-top:8px}
@@ -791,6 +794,23 @@ for(const D of [ICED,SEAD]) for(const ids of Object.values(D)) for(const id of i
 { const r=mulberry32(4242); for(const ids of Object.values(SEAD)) for(const id of ids){ const M=MAPS[id]; let n=Math.floor(M.W*M.H/230), tries=0;
   while(n>0&&tries++<4000){ const x=1+Math.floor(r()*(M.W-2)), y=1+Math.floor(r()*(M.H-2)), k=y*M.W+x, tt=M.t[k]; if(BLOCKS.has(tt)||LINKS_T.has(tt)||SAFE.has(tt)) continue;
     if(M.entry&&Math.abs(M.entry.x-x)+Math.abs(M.entry.y-y)<3) continue; if(M.exit&&Math.abs(M.exit.x-x)+Math.abs(M.exit.y-y)<3) continue; if(M.boss&&Math.abs(M.boss.x-x)+Math.abs(M.boss.y-y)<3) continue; M.t[k]=BUBBLE; n--; } } }
+// ---- cidades maiores: o muro cresce e entra uma fileira de 4 casinhas embaixo para os NPCs (vale para as cinco cidades)
+function expandTown(M, rc, cfg){ const W=M.W, H=M.H, t=M.t, set=(x,y,v)=>{ if(x>=0&&y>=0&&x<W&&y<H) t[y*W+x]=v; };
+  const CX=Math.round((rc.x0+rc.x1)/2), CY=Math.round((rc.y0+rc.y1)/2), X0=rc.x0-4, X1=rc.x1+4, Y0=rc.y0-2, Y1=rc.y1+3;
+  for(let y=Y0-2;y<=Y1+2;y++) for(let x=X0-2;x<=X1+2;x++){ if(x<0||y<0||x>=W||y>=H) continue; const k=t[y*W+x];
+    if(x<X0||x>X1||y<Y0||y>Y1){ if(BLOCKS.has(k)&&k!==BOAT) set(x,y,cfg.ground[(hash2(x*7+3,y*13+W)%100)<cfg.alt?1:0]); } else set(x,y,cfg.floor); }
+  for(let y=Y0;y<=Y1;y++) for(let x=X0;x<=X1;x++) if(x===X0||x===X1||y===Y0||y===Y1) set(x,y,cfg.wall);
+  for(let d=-1;d<=1;d++){ set(CX+d,Y0,cfg.floor); set(CX+d,Y1,cfg.floor); set(X0,CY+d,cfg.floor); set(X1,CY+d,cfg.floor); }
+  const B=(a,b,c,d,dx,dy)=>{ for(let y=b;y<=d;y++) for(let x=a;x<=c;x++) set(x,y,(x===a||x===c||y===b||y===d)?cfg.bwall:WOOD); set(dx,dy,DOOR); };
+  B(X0+1,Y0+1,X0+7,Y0+6, X0+4,Y0+6); B(X1-7,Y0+1,X1-1,Y0+6, X1-4,Y0+6);
+  for(const hx of [X0+1,X0+6,X0+14,X0+19]) B(hx,Y1-5,hx+4,Y1-1, hx+2,Y1-5);
+  for(const [dx,dy] of [[3,1],[4,1],[3,2],[4,2]]) set(CX+dx,CY+dy,cfg.pond);
+  rc.x0=X0; rc.x1=X1; rc.y0=Y0; rc.y1=Y1; if(rc.cx!=null){ rc.cx=CX; rc.cy=CY; } if(M.spawn){ M.spawn.x=X0+4; M.spawn.y=Y0+3; } }
+expandTown(MAPS.over, TOWN, {ground:[G,FLOW], alt:8, floor:STONE, wall:WALL, bwall:WALL, pond:WATER});
+expandTown(MAPS.ash, MAPS.ash.townRect, {ground:[ASH,CRACK], alt:10, floor:BASALT, wall:BWALL, bwall:BWALL, pond:LAVA});
+expandTown(MAPS.fae, MAPS.fae.townRect, {ground:[MOSS,FFLOW], alt:15, floor:FSTONE, wall:HEDGE, bwall:LOGW, pond:WATER});
+expandTown(MAPS.ice, MAPS.ice.townRect, {ground:[SNOW,DRIFT], alt:10, floor:STONE, wall:WALL, bwall:WALL, pond:ICEF});
+expandTown(MAPS.sea, MAPS.sea.townRect, {ground:[SANDF,KELP], alt:8, floor:NACRE, wall:REEFW, bwall:REEFW, pond:BUBBLE});
 for(const m of Object.values(MAPS)) m.explored = new Uint8Array(m.W*m.H);
 const tileAt=(m,x,y)=>(x<0||y<0||x>=m.W||y>=m.H)?(m.oob??(m.dark?CWALL:TREE)):m.t[y*m.W+x];
 function arrivalNear(m,x,y){ for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){ const nx=x+dx,ny=y+dy, tt=tileAt(m,nx,ny); if(!BLOCKS.has(tt)&&!LINKS_T.has(tt)) return {x:nx,y:ny}; } return {x,y:y+1}; }
@@ -1976,14 +1996,14 @@ function setupWorld(){
   npcs=[
     {kind:'npc', id:'priest', name:'Irmã Lúcia', map:'over', x:x0+4, y:y0+2, look:'priest'},
     {kind:'npc', id:'merchant', name:'Doran, o Mercador', map:'over', x:x1-4, y:y0+2, look:'merchant'},
-    {kind:'npc', id:'guard', name:'Capitão Bento', map:'over', x:TOWN.cx-1, y:y0+9, look:'guard'},
+    {kind:'npc', id:'guard', name:'Capitão Bento', map:'over', x:TOWN.cx-3, y:y0+7, look:'guard'},
   ];
   { const O=MAPS.over, A=MAPS.ash, r=A.townRect;
     npcs.push({kind:'npc', id:'boat', name:'Capitã Odila', map:'over', x:O.boatman.x, y:O.boatman.y, look:'boatman'},
       {kind:'npc', id:'boat2', name:'Capitão Brás', map:'ash', x:A.boatman.x, y:A.boatman.y, look:'boatman'},
       {kind:'npc', id:'priest2', name:'Irmã Brasa', map:'ash', x:r.x0+4, y:r.y0+2, look:'firepriest', town:'Cinzaforte'},
       {kind:'npc', id:'merchant2', name:'Varga, a Ferreira', map:'ash', x:r.x1-4, y:r.y0+2, look:'smith'},
-      {kind:'npc', id:'depot', name:'Depósito', map:'over', x:TOWN.cx-4, y:TOWN.cy+4, look:'chest'},
+      {kind:'npc', id:'depot', name:'Depósito', map:'over', x:TOWN.x0+21, y:TOWN.y1-3, look:'chest'},
       {kind:'npc', id:'depot2', name:'Depósito', map:'ash', x:r.x0+4, y:r.y1-3, look:'chest'},
       {kind:'npc', id:'firesage', name:'Mestre Ígnio', map:'ash', x:r.x1-4, y:r.y1-3, look:'firesage'}); }
   { const F=MAPS.fae, q=F.townRect;
@@ -1999,11 +2019,12 @@ function setupWorld(){
       {kind:'npc', id:'merchant'+n, name:merch, map:reg, x:q.x1-4, y:q.y0+2, look:'merchant'},
       {kind:'npc', id:'depot'+n, name:'Depósito', map:reg, x:q.x0+4, y:q.y1-3, look:'chest'},
       {kind:'npc', id:'spellmaster'+n, name:reg==='ice'?'Arquimaga Hrefna':'Oráculo Maréleo', map:reg, x:q.x1-4, y:q.y1-3, look:reg==='ice'?'icemage':'seamage'}); }
-  { const sp=freeSpot('over',TOWN.x1-4,TOWN.y1-3); npcs.push({kind:'npc', id:'spellmaster', name:'Mestre Aldric, o Arcanista', map:'over', x:sp.x, y:sp.y, look:'mage'}); }
-  { const p=freeSpot('over',TOWN.cx+3,TOWN.cy-1); npcs.push({kind:'npc', id:'towerportal', name:'Torre das Brumas', map:'over', x:p.x, y:p.y, look:'portal'});
-    const a=freeSpot('over',TOWN.x0+4,TOWN.y1-3); npcs.push({kind:'npc', id:'tailor', name:'Celina, a Alfaiate', map:'over', x:a.x, y:a.y, look:'tailor'});
-    const b=freeSpot('over',TOWN.x0+8,TOWN.y1-3); npcs.push({kind:'npc', id:'forger', name:'Bruna, a Forjadora', map:'over', x:b.x, y:b.y, look:'smith'}); }
-  for(const n of npcs) if(n.id.startsWith('spellmaster')){ const p=freeSpot(n.map,n.x,n.y); n.x=p.x; n.y=p.y; }
+  npcs.push({kind:'npc', id:'spellmaster', name:'Mestre Aldric, o Arcanista', map:'over', x:TOWN.x0+16, y:TOWN.y1-3, look:'mage'},
+    {kind:'npc', id:'towerportal', name:'Torre das Brumas', map:'over', x:TOWN.cx, y:TOWN.cy, look:'portal'},
+    {kind:'npc', id:'tailor', name:'Celina, a Alfaiate', map:'over', x:TOWN.x0+3, y:TOWN.y1-3, look:'tailor'},
+    {kind:'npc', id:'forger', name:'Bruna, a Forjadora', map:'over', x:TOWN.x0+8, y:TOWN.y1-3, look:'smith'});
+  for(const [reg,n,tl,fg] of [['ash',2,'Cinzia, a Costureira','Fornalho, o Forjador'],['fae',3,'Lírio, o Tecelão','Tálio, o Forjador'],['ice',4,'Sigrid, a Peleteira','Bjorn, o Forjador'],['sea',5,'Nácar, a Tecelã','Coralino, o Forjador']]){ const q=MAPS[reg].townRect;
+    npcs.push({kind:'npc', id:'forger'+n, name:fg, map:reg, x:q.x0+8, y:q.y1-3, look:'smith'}, {kind:'npc', id:'tailor'+n, name:tl, map:reg, x:q.x0+16, y:q.y1-3, look:'tailor'}); }
   for(const n of npcs){ n.px=n.x; n.py=n.y; n.moving=false; n.mt=0; n.mdur=1; n.phase=R(); n.dir='down'; }
   placeDummies();
 }
@@ -3198,9 +3219,9 @@ const ECO=[
   {k:'saber', n:'Erudição', d:'+10% de chance de grimório nos chefes', max:5, ic:'focus'},
 ];
 const TBLESS=[
-  {k:'dmg', n:'Fúria da Bruma', d:'+15% de dano'}, {k:'def', n:'Pele de Névoa', d:'+15% de defesa'}, {k:'hp', n:'Vigor Antigo', d:'+10% de vida máxima'},
-  {k:'crit', n:'Olhar Afiado', d:'+5% de chance de crítico'}, {k:'as', n:'Mãos Rápidas', d:'+10% de velocidade de ataque'}, {k:'leech', n:'Sede', d:'+5% de roubo de vida'},
-  {k:'kheal', n:'Colheita', d:'recupera 4% da vida a cada abate'}, {k:'mana', n:'Fonte Clara', d:'magias custam 15% menos mana'}, {k:'cd', n:'Tempo Curto', d:'recarga das magias 15% menor'},
+  {k:'dmg', n:'Fúria da Bruma', d:'+10% de dano'}, {k:'def', n:'Pele de Névoa', d:'+10% de defesa'}, {k:'hp', n:'Vigor Antigo', d:'+8% de vida máxima'},
+  {k:'crit', n:'Olhar Afiado', d:'+4% de chance de crítico'}, {k:'as', n:'Mãos Rápidas', d:'+8% de velocidade de ataque'}, {k:'leech', n:'Sede', d:'+3% de roubo de vida'},
+  {k:'kheal', n:'Colheita', d:'recupera 3% da vida a cada abate'}, {k:'mana', n:'Fonte Clara', d:'magias custam 10% menos mana'}, {k:'cd', n:'Tempo Curto', d:'recarga das magias 10% menor'},
 ];
 const TCURSE=[
   {k:'fast', n:'Pressa Sombria', d:'monstros andam e atacam 30% mais rápido'}, {k:'tough', n:'Carne de Pedra', d:'monstros com +40% de vida'},
@@ -3209,12 +3230,15 @@ const TCURSE=[
 const TITLES=[{k:'t5',n:'Curioso da Torre',need:5},{k:'t10',n:'Escalador da Bruma',need:10},{k:'t25',n:'Desafiante da Torre',need:25},{k:'t50',n:'Senhor da Bruma',need:50},{k:'t75',n:'Terror das Alturas',need:75},{k:'t100',n:'Lenda da Torre',need:100}];
 // bônus permanentes (Árvore de Ecos) e da subida atual (bênçãos), aplicados em stats()
 function applyMods(s){
-  s.maxHp=Math.round(s.maxHp*(1+eco('vigor')*0.02+tBless('hp')*0.10)); s.maxMp=Math.round(s.maxMp*(1+eco('mente')*0.02));
-  s.def=Math.round(s.def*(1+eco('couro')*0.02+tBless('def')*0.15)); s.crit+=eco('olho')+tBless('crit')*5; s.atkspd+=eco('pressa')*2+tBless('as')*10; s.lifesteal+=tBless('leech')*5; }
-const modDmg=()=>(1+eco('furia')*0.02)*(1+tBless('dmg')*0.15);
-const manaMul=()=>Math.pow(0.85,tBless('mana')), cdMul=()=>Math.pow(0.85,tBless('cd'));
+  s.maxHp=Math.round(s.maxHp*(1+eco('vigor')*0.02+tBless('hp')*0.08)); s.maxMp=Math.round(s.maxMp*(1+eco('mente')*0.02));
+  s.def=Math.round(s.def*(1+eco('couro')*0.02+tBless('def')*0.10)); s.crit+=eco('olho')+tBless('crit')*4; s.atkspd+=eco('pressa')*2+tBless('as')*8; s.lifesteal+=tBless('leech')*3; }
+const modDmg=()=>(1+eco('furia')*0.02)*(1+tBless('dmg')*0.10);
+const manaMul=()=>Math.pow(0.9,tBless('mana')), cdMul=()=>Math.pow(0.9,tBless('cd'));
+const BLESS_MAX=2;
 const goldMul=()=>1+eco('fortuna')*0.04;
-const towerMult=f=>1+(f-1)*0.09;
+// cada andar equivale a um nível de monstro (andar 10 ≈ 20, 50 ≈ 84, 100 ≈ 164); vida, ataque e defesa seguem as curvas dos monstros do jogo
+const towerLvl=f=>4+f*1.6;
+const towerMult=f=>Math.pow(towerLvl(f)/5,1.344);
 
 // ---- mapa do andar (uma sala com pilares; muda a cada andar)
 function makeTowerMap(f){ const W=21,H=17,t=new Uint8Array(W*H).fill(CFL), rn=mulberry32(9000+f*7);
@@ -3228,17 +3252,18 @@ function makeTowerMap(f){ const W=21,H=17,t=new Uint8Array(W*H).fill(CFL), rn=mu
 let TPOOL=null, TBOSS=null;
 function towerPool(){ if(TPOOL) return TPOOL; TPOOL=Object.keys(MON).filter(t=>{ const d=MON[t]; return !d.boss&&!d.dummy&&!d.life&&monRegion(t)==='over'; }).sort((a,b)=>MON[a].lvl-MON[b].lvl);
   TBOSS=Object.keys(MON).filter(t=>MON[t].boss&&monRegion(t)==='over').sort((a,b)=>MON[a].lvl-MON[b].lvl); return TPOOL; }
-function towerSpawn(type, x, y, k, elite){ const m=spawnMonster({map:'tower', type, x, y, temp:true, tower:true, mon:null, timer:0}); const d=m.def;
-  const hp=k*(TW.curse==='tough'?1.4:1)*(elite?2.6:1); m.hp=m.maxHp=Math.round(d.hp*hp); m.atk=Math.round(d.atk*k*(elite?1.3:1)); m.dfn=Math.round(d.def*(1+(k-1)*0.5)); m.mult=k;
+function towerSpawn(type, x, y, f, elite, boss){ const m=spawnMonster({map:'tower', type, x, y, temp:true, tower:true, mon:null, timer:0}); const d=m.def;
+  const r=Math.max(1, towerLvl(f)*(boss?1.08:1)/(d.lvl||1)), ka=Math.pow(r,1.344)*1.15*(elite?1.3:1);
+  m.hp=m.maxHp=Math.round(d.hp*Math.pow(r,1.145)*1.3*(TW.curse==='tough'?1.4:1)*(elite?2.6:1)); m.atk=Math.round(d.atk*ka); m.dfn=Math.round(d.def*Math.pow(r,0.897)); m.mult=ka;
   if(elite||TW.curse==='fast') m.def={...d, name:elite?'Eco de '+d.name:d.name, step:d.step*(TW.curse==='fast'?0.7:1), as:d.as*(TW.curse==='fast'?0.7:1)};
   m.state='chase'; m.react=0; m.sp.respawn=false; return m; }
-function towerFloorSpawn(f){ const pool=towerPool(), M=MAPS.tower, k=towerMult(f), idx=Math.min(pool.length-1, Math.floor((f-1)/3));
+function towerFloorSpawn(f){ const pool=towerPool(), M=MAPS.tower, idx=Math.min(pool.length-1, Math.floor((f-1)/3));
   const free=[]; for(let y=1;y<M.H-1;y++) for(let x=1;x<M.W-1;x++) if(passMon(M,x,y)&&Math.max(Math.abs(x-player.x),Math.abs(y-player.y))>=4) free.push({x,y});
   const take=()=>free.splice(Math.floor(R()*free.length),1)[0];
-  if(f%10===0&&TBOSS.length){ const b=TBOSS[(f/10-1)%TBOSS.length], p=take(); towerSpawn(b,p.x,p.y,k*(1+Math.floor((f/10-1)/TBOSS.length)*0.6)); floatAt(player,'CHEFE DO ANDAR!','#ff8a7a',true); }
+  if(f%10===0&&TBOSS.length){ const b=TBOSS[(f/10-1)%TBOSS.length], p=take(); towerSpawn(b,p.x,p.y,f,false,true); floatAt(player,'CHEFE DO ANDAR!','#ff8a7a',true); }
   const n=Math.min(10, 3+Math.floor(f/3)) - (f%10===0?2:0);
-  for(let i=0;i<n&&free.length;i++){ const t=pool[Math.max(0, idx-Math.floor(R()*3))], p=take(); towerSpawn(t,p.x,p.y,k); }
-  if(f%5===0&&f%10!==0&&free.length){ const p=take(); towerSpawn(pool[idx],p.x,p.y,k,true); floatAt(player,'Um eco poderoso surge!','#c8a8ff',true); } }
+  for(let i=0;i<n&&free.length;i++){ const t=pool[Math.max(0, idx-Math.floor(R()*3))], p=take(); towerSpawn(t,p.x,p.y,f); }
+  if(f%5===0&&f%10!==0&&free.length){ const p=take(); towerSpawn(pool[idx],p.x,p.y,f,true); floatAt(player,'Um eco poderoso surge!','#c8a8ff',true); } }
 
 // ---- subida
 function startTower(from){ const D=towerData(); D.runs++; TW={on:true, floor:from-1, start:from, deaths:0, bless:[], curse:null, frags:0, choosing:false, spawned:false, ecosGot:0}; towerNext(); }
@@ -3254,13 +3279,13 @@ function towerTick(dt){ if(!TW.on) return;
   if(TW.choosing){ if(dlg.hidden) towerChoose(); return; }
   if(TW.spawned&&!monsters.some(m=>m.map==='tower'&&!m.dead)) towerCleared(); }
 function towerCleared(){ const D=towerData(), f=TW.floor; TW.spawned=false;
-  const fr=(1+Math.floor(f/5))*(TW.curse?2:1); D.frags+=fr; TW.frags+=fr; let extra='';
+  const fr=(1+(f%10===0?3:0))*(TW.curse?2:1); D.frags+=fr; TW.frags+=fr; let extra='';
   if(f>D.best){ if(Math.floor(f/5)>Math.floor(D.best/5)){ const n=Math.floor(f/5)-Math.floor(D.best/5); D.ecos+=n; TW.ecosGot+=n; extra+=' +'+n+' Eco'+(n>1?'s':'')+'!'; } D.best=f; }
   for(const T of TITLES) if(D.best>=T.need&&!D.titles.includes(T.k)){ D.titles.push(T.k); log('Título conquistado: "'+T.n+'". Escolha em Visual → Título.','lvl'); floatAt(player,'Título: '+T.n,'#ffd54a',true); }
   log('Andar '+f+' concluído! +'+fr+' Fragmentos.'+extra,'lvl'); burst(player,'#c8a8ff',26,100); fx('column',player.x,player.y,{el:'arcane',life:900}); save(); TW.choosing=true; TW.pick=null; towerChoose(); }
-function towerChoose(){ if(!TW.pick){ const pool=[...TBLESS]; TW.pick=[]; for(let i=0;i<3;i++) TW.pick.push(pool.splice(Math.floor(R()*pool.length),1)[0]); }
+function towerChoose(){ if(!TW.pick){ const pool=TBLESS.filter(b=>TW.bless.filter(x=>x===b.k).length<BLESS_MAX); TW.pick=[]; for(let i=0;i<3&&pool.length;i++) TW.pick.push(pool.splice(Math.floor(R()*pool.length),1)[0]); }
   const have=TW.bless.length?'<p class="hint">Bênçãos desta subida: '+TW.bless.map(k=>TBLESS.find(b=>b.k===k).n).join(', ')+'</p>':'';
-  openDialog(player,'Andar '+TW.floor+' concluído',`<p>Escolha uma bênção para o próximo andar. Ela vale até você sair da torre.</p>${have}<div class="tbl">${TW.pick.map(b=>`<button type="button" class="tb" data-act="bless" data-k="${b.k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>
+  openDialog(player,'Andar '+TW.floor+' concluído',`<p>Escolha uma bênção para o próximo andar. Ela vale até você sair da torre (cada uma acumula no máximo 2 vezes).</p>${have}<div class="tbl">${TW.pick.map(b=>`<button type="button" class="tb" data-act="bless" data-k="${b.k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>
     <p class="hint">Fragmentos nesta subida: ${TW.frags} · total: ${towerData().frags} · recorde: andar ${towerData().best}</p><div class="row"><button type="button" data-act="out">Sair da torre</button></div>`,(act,ds)=>{
       if(act==='bless'&&TW.choosing){ TW.bless.push(ds.k); closeDialog(); towerNext(); } else if(act==='out'){ closeDialog(); exitTower(); } else closeDialog(); }); }
 const reviveCost=()=>Math.round((150+TW.floor*60)*Math.pow(2,TW.deaths));
@@ -3273,7 +3298,7 @@ function towerDeathDialog(){ const c=reviveCost();
 function towerDie(src){ player.dead=true; target=null; player.path=null; player.follow=false; player.poison=null; closeDialog(); log('Você caiu na torre ('+src+').','dmg'); uiDirty=true; towerDeathDialog(); }
 function exitTower(){ const f=TW.floor, fr=TW.frags, ec=TW.ecosGot; TW.on=false; for(const m of [...monsters]) if(m.map==='tower') removeMon(m);
   const st=stats(); player.dead=false; player.hp=Math.max(player.hp,1); if(player.hp<=1) player.hp=st.maxHp; const P=towerPortal();
-  changeMap('over', P.x, P.y+1, 'Você sai da Torre das Brumas.'); log('Subida encerrada no andar '+f+'. Ganhou '+fr+' Fragmentos'+(ec?' e '+ec+' Eco'+(ec>1?'s':''):'')+'.','lvl'); save(); }
+  { const q=freeSpot('over',P.x,P.y+1); changeMap('over', q.x, q.y, 'Você sai da Torre das Brumas.'); } log('Subida encerrada no andar '+f+'. Ganhou '+fr+' Fragmentos'+(ec?' e '+ec+' Eco'+(ec>1?'s':''):'')+'.','lvl'); save(); }
 const towerPortal=()=>npcs.find(n=>n.id==='towerportal')||MAPS.over.spawn;
 
 // ---- portal: subir, Árvore de Ecos, loja de Fragmentos, títulos e ranking
@@ -3282,7 +3307,7 @@ function openTower(){ const D=towerData(), tabs=[['subir','Subir'],['ecos','Árv
   let body='';
   if(towerTab==='subir'){ const starts=[1]; for(let f=11;f<=D.best+1;f+=10) starts.push(f);
     body=`<p>Uma torre que não tem fim. Cada andar é uma sala com monstros; vença todos para subir. A cada 5 andares surge um eco poderoso e a cada 10, um chefe.</p>
-      <ul class="tlist"><li><b>Não dá XP nem itens.</b> Dá <b>Fragmentos</b> (loja de visual), <b>Ecos</b> a cada 5 andares de recorde (Árvore de Ecos) e <b>títulos</b>.</li><li>Entre os andares você escolhe uma <b>bênção</b>. Andares <b>amaldiçoados</b> pagam o dobro.</li><li>Morrer aqui não tira nada; dá para pagar ouro para continuar.</li></ul>
+      <ul class="tlist"><li><b>Não dá XP nem itens.</b> Dá <b>Fragmentos</b> (1 por andar, 4 nos andares de chefe), <b>Ecos</b> a cada 5 andares de recorde (Árvore de Ecos) e <b>títulos</b>.</li><li>Cada andar é mais forte: o andar 10 equivale a monstros de nível 20, o 50 a nível 84 e o 100 a nível 164.</li><li>Entre os andares você escolhe uma <b>bênção</b>. Andares <b>amaldiçoados</b> pagam o dobro.</li><li>Morrer aqui não tira nada; dá para pagar ouro para continuar.</li></ul>
       <div class="bankrow"><div><small>Seu recorde</small><b>andar ${D.best}</b></div><div><small>Fragmentos</small><b>${D.frags}</b></div></div>
       ${player.level<TOWER_LVL?`<p class="bad">A torre libera no nível ${TOWER_LVL}.</p>`:`<div class="row">${starts.map(f=>`<button type="button" class="${f===starts[starts.length-1]?'primary':''}" data-act="go" data-f="${f}">Começar no andar ${f}</button>`).join('')}</div>`}`; }
   if(towerTab==='ecos'){ const spent=Object.values(D.ecoSpent).reduce((a,b)=>a+b,0), cost=2000+spent*1500;
@@ -3306,26 +3331,26 @@ function towerRanking(){ const out=[]; const me={name:player.name, cls:player.cl
 // ============================================================ visual: roupas, montarias (ouro) e auras, cor do nome e das magias (Fragmentos)
 const COS_CAT={outfit:'Roupas',mount:'Montarias',aura:'Auras',name:'Cor do nome',tint:'Cor das magias',title:'Título'};
 const COS=[
-  {k:'o_explorer',cat:'outfit',n:'Traje de Explorador',gold:2500,lvl:5,look:{body:'#7a6a42',legs:'#3e3424',boots:'#2a1e12',band:'#c8a050'},col:'#7a6a42'},
-  {k:'o_sailor',cat:'outfit',n:'Roupa de Marinheiro',gold:5000,lvl:10,look:{body:'#e8ecf2',legs:'#2a4a7a',boots:'#1a1a22',band:'#2a4a7a'},col:'#e8ecf2'},
-  {k:'o_druid',cat:'outfit',n:'Manto de Druida',gold:8000,lvl:15,look:{body:'#3a6a3a',legs:'#2a4a2a',boots:'#3a2a1a',hood:'#4a7a3a'},col:'#3a6a3a'},
-  {k:'o_noble',cat:'outfit',n:'Traje de Nobre',gold:15000,lvl:25,look:{body:'#7a1a2a',legs:'#1e1418',boots:'#120c0a',wizhat:null,band:'#d8b04a'},col:'#7a1a2a'},
-  {k:'o_shadow',cat:'outfit',n:'Manto Sombrio',gold:30000,lvl:40,look:{body:'#221c2c',legs:'#141018',boots:'#0c0a10',hood:'#2e2640'},col:'#221c2c'},
-  {k:'o_royal',cat:'outfit',n:'Veste Real',gold:80000,lvl:60,look:{body:'#d8b04a',legs:'#6a1a1a',boots:'#3a1a0a',helm:'#ffd54a'},col:'#d8b04a'},
-  {k:'m_wolf',cat:'mount',n:'Lobo Cinzento',gold:6000,lvl:15,type:'wolf',col:'#8a8e96'},
-  {k:'m_bear',cat:'mount',n:'Urso Pardo',gold:18000,lvl:30,type:'bear',col:'#6a4a2a'},
-  {k:'m_stag',cat:'mount',n:'Cervo de Cristal',gold:35000,lvl:40,type:'crystalstag',col:'#c8b090'},
-  {k:'m_sala',cat:'mount',n:'Salamandra',gold:60000,lvl:55,type:'salamander',col:'#e0602a'},
-  {k:'m_frost',cat:'mount',n:'Lobo das Neves',gold:90000,lvl:70,type:'frostwolf',col:'#e8f0f8'},
-  {k:'m_hell',cat:'mount',n:'Cão Infernal',gold:140000,lvl:85,type:'hellhound',col:'#8a1a10'},
-  {k:'m_drake',cat:'mount',n:'Dragonete',gold:250000,lvl:100,type:'dragonling',col:'#c0402a'},
-  {k:'a_gold',cat:'aura',n:'Aura Dourada',frags:20,el:'holy',col:'#ffd54a'},{k:'a_mist',cat:'aura',n:'Aura de Bruma',frags:20,el:'wind',col:'#e0f4ff'},
-  {k:'a_ember',cat:'aura',n:'Aura de Brasas',frags:35,el:'fire',col:'#ff7a2a'},{k:'a_frost',cat:'aura',n:'Aura Gélida',frags:35,el:'ice',col:'#a8dcff'},
-  {k:'a_leaf',cat:'aura',n:'Aura da Floresta',frags:35,el:'nature',col:'#7ad04a'},{k:'a_void',cat:'aura',n:'Aura do Vazio',frags:60,el:'shadow',col:'#8a3aba'},
-  {k:'n_gold',cat:'name',n:'Nome Dourado',frags:15,c:'#ffd54a',col:'#ffd54a'},{k:'n_sky',cat:'name',n:'Nome Celeste',frags:15,c:'#7ac8ff',col:'#7ac8ff'},
-  {k:'n_rose',cat:'name',n:'Nome Rosado',frags:15,c:'#ff9ad0',col:'#ff9ad0'},{k:'n_violet',cat:'name',n:'Nome Violeta',frags:25,c:'#c89aff',col:'#c89aff'},{k:'n_white',cat:'name',n:'Nome Prateado',frags:25,c:'#f4f4f4',col:'#f4f4f4'},
-  {k:'t_holy',cat:'tint',n:'Magias Douradas',frags:40,el:'holy',col:'#fff0a0'},{k:'t_shadow',cat:'tint',n:'Magias Sombrias',frags:40,el:'shadow',col:'#8a3aba'},
-  {k:'t_ice',cat:'tint',n:'Magias de Gelo',frags:40,el:'ice',col:'#a8dcff'},{k:'t_nature',cat:'tint',n:'Magias da Floresta',frags:40,el:'nature',col:'#7ad04a'},{k:'t_arcane',cat:'tint',n:'Magias Arcanas',frags:40,el:'arcane',col:'#c07aff'},
+  {k:'o_explorer',cat:'outfit',n:'Traje de Explorador',gold:5000,lvl:5,look:{body:'#7a6a42',legs:'#3e3424',boots:'#2a1e12',band:'#c8a050'},col:'#7a6a42'},
+  {k:'o_sailor',cat:'outfit',n:'Roupa de Marinheiro',gold:10000,lvl:10,look:{body:'#e8ecf2',legs:'#2a4a7a',boots:'#1a1a22',band:'#2a4a7a'},col:'#e8ecf2'},
+  {k:'o_druid',cat:'outfit',n:'Manto de Druida',gold:16000,lvl:15,look:{body:'#3a6a3a',legs:'#2a4a2a',boots:'#3a2a1a',hood:'#4a7a3a'},col:'#3a6a3a'},
+  {k:'o_noble',cat:'outfit',n:'Traje de Nobre',gold:30000,lvl:25,look:{body:'#7a1a2a',legs:'#1e1418',boots:'#120c0a',wizhat:null,band:'#d8b04a'},col:'#7a1a2a'},
+  {k:'o_shadow',cat:'outfit',n:'Manto Sombrio',gold:60000,lvl:40,look:{body:'#221c2c',legs:'#141018',boots:'#0c0a10',hood:'#2e2640'},col:'#221c2c'},
+  {k:'o_royal',cat:'outfit',n:'Veste Real',gold:160000,lvl:60,look:{body:'#d8b04a',legs:'#6a1a1a',boots:'#3a1a0a',helm:'#ffd54a'},col:'#d8b04a'},
+  {k:'m_wolf',cat:'mount',n:'Lobo Cinzento',gold:12000,lvl:15,type:'wolf',col:'#8a8e96'},
+  {k:'m_bear',cat:'mount',n:'Urso Pardo',gold:36000,lvl:30,type:'bear',col:'#6a4a2a'},
+  {k:'m_stag',cat:'mount',n:'Cervo de Cristal',gold:70000,lvl:40,type:'crystalstag',col:'#c8b090'},
+  {k:'m_sala',cat:'mount',n:'Salamandra',gold:120000,lvl:55,type:'salamander',col:'#e0602a'},
+  {k:'m_frost',cat:'mount',n:'Lobo das Neves',gold:180000,lvl:70,type:'frostwolf',col:'#e8f0f8'},
+  {k:'m_hell',cat:'mount',n:'Cão Infernal',gold:280000,lvl:85,type:'hellhound',col:'#8a1a10'},
+  {k:'m_drake',cat:'mount',n:'Dragonete',gold:500000,lvl:100,type:'dragonling',col:'#c0402a'},
+  {k:'a_gold',cat:'aura',n:'Aura Dourada',frags:80,el:'holy',col:'#ffd54a'},{k:'a_mist',cat:'aura',n:'Aura de Bruma',frags:80,el:'wind',col:'#e0f4ff'},
+  {k:'a_ember',cat:'aura',n:'Aura de Brasas',frags:120,el:'fire',col:'#ff7a2a'},{k:'a_frost',cat:'aura',n:'Aura Gélida',frags:120,el:'ice',col:'#a8dcff'},
+  {k:'a_leaf',cat:'aura',n:'Aura da Floresta',frags:120,el:'nature',col:'#7ad04a'},{k:'a_void',cat:'aura',n:'Aura do Vazio',frags:200,el:'shadow',col:'#8a3aba'},
+  {k:'n_gold',cat:'name',n:'Nome Dourado',frags:50,c:'#ffd54a',col:'#ffd54a'},{k:'n_sky',cat:'name',n:'Nome Celeste',frags:50,c:'#7ac8ff',col:'#7ac8ff'},
+  {k:'n_rose',cat:'name',n:'Nome Rosado',frags:50,c:'#ff9ad0',col:'#ff9ad0'},{k:'n_violet',cat:'name',n:'Nome Violeta',frags:80,c:'#c89aff',col:'#c89aff'},{k:'n_white',cat:'name',n:'Nome Prateado',frags:80,c:'#f4f4f4',col:'#f4f4f4'},
+  {k:'t_holy',cat:'tint',n:'Magias Douradas',frags:150,el:'holy',col:'#fff0a0'},{k:'t_shadow',cat:'tint',n:'Magias Sombrias',frags:150,el:'shadow',col:'#8a3aba'},
+  {k:'t_ice',cat:'tint',n:'Magias de Gelo',frags:150,el:'ice',col:'#a8dcff'},{k:'t_nature',cat:'tint',n:'Magias da Floresta',frags:150,el:'nature',col:'#7ad04a'},{k:'t_arcane',cat:'tint',n:'Magias Arcanas',frags:150,el:'arcane',col:'#c07aff'},
 ];
 const COSK=Object.fromEntries(COS.map(c=>[c.k,c]));
 function cosData(){ const c=player.cos||(player.cos={}); c.owned??=[]; return c; }
@@ -3336,26 +3361,49 @@ const mountSpeed=()=>cosOn('mount')&&!inTower()?0.9:1;
 function drawCosAura(c,x,y){ const A=cosOn('aura'); if(!A) return; const E=EL[A.el]; c.save(); c.globalCompositeOperation='lighter';
   const p=0.55+Math.sin(now/400)*0.15; c.globalAlpha=p; c.strokeStyle=E[1]; c.lineWidth=1.5; c.beginPath(); c.ellipse(x+16,y+28,13,4.5,0,0,7); c.stroke(); glowDot(c,x+16,y+27,14,E[0],0.3*p);
   for(let i=0;i<3;i++){ const q=((now/1400+i/3)%1); c.globalAlpha=(1-q)*0.8; glowDot(c,x+8+i*8+Math.sin(now/300+i)*2,y+26-q*26,2.2,E[2],1); } c.restore(); }
+const riderCv=document.createElement('canvas'); riderCv.width=32; riderCv.height=48; const riderG=riderCv.getContext('2d');
+// montado: desenha só da cintura para cima e as pernas abertas dos dois lados do animal
+function drawRider(c,x,y,o){ riderG.clearRect(0,0,32,48); drawHuman(riderG,0,12,o,player.phase,false);
+  c.drawImage(riderCv,0,0,32,33,x,y-12,32,33); const L=o.legs||'#3a3028', Bt=o.boots||'#2a1e14';
+  rect(c,L,x+7,y+18,4,4); rect(c,Bt,x+6,y+21,4,3); rect(c,L,x+21,y+18,4,4); rect(c,Bt,x+22,y+21,4,3); rect(c,'rgba(0,0,0,.25)',x+9,y+20,14,1); }
 function drawMount(c,x,y){ const M=cosOn('mount'); if(!M) return 0; drawCreatureArt(c,{type:M.type, phase:player.phase*0.7, face:player.face||1},x,y+3); return 9; }
 
 // ---- loja de roupas e montarias (ouro) e guarda-roupa
+let prevTry=null, prevRaf=0;
+const lookPrevHTML=()=>'<div class="lookprev"><canvas id="lookPrev" width="140" height="140" aria-label="Prévia do visual"></canvas><small id="lookPrevTxt"></small></div>';
+function runLookPreview(){ cancelAnimationFrame(prevRaf); const loop=()=>{ const cv2=document.getElementById('lookPrev'); if(!cv2||dlg.hidden){ prevTry=null; return; }
+  const g=cv2.getContext('2d'); g.setTransform(1,0,0,1,0,0); const bg=g.createRadialGradient(70,96,4,70,80,80); bg.addColorStop(0,'#3e3428'); bg.addColorStop(1,'#120e0a'); g.fillStyle=bg; g.fillRect(0,0,140,140);
+  g.fillStyle='rgba(255,255,255,.05)'; g.beginPath(); g.ellipse(70,112,44,10,0,0,7); g.fill(); g.imageSmoothingEnabled=false;
+  const C=cosData(), saved={...C}, D=towerData(), st=D.title; if(prevTry){ if(prevTry.cat==='title') D.title=prevTry.k; else C[prevTry.cat]=prevTry.k; }
+  const sv=player.dir; player.dir='down';
+  try{ g.setTransform(2.8,0,0,2.8,0,0); drawPlayer(g,9,14);
+    const T=cosOn('tint'); if(T){ const E=EL[T.el]; g.globalCompositeOperation='lighter'; for(let i=0;i<3;i++){ const q=now/500+i*2.1; glowDot(g,25+Math.cos(q)*15,40+Math.sin(q)*4,3,E[1],0.9); } g.globalCompositeOperation='source-over'; }
+    g.setTransform(1,0,0,1,0,0); g.textAlign='center'; g.font='600 12px "Pixelify Sans", monospace'; const nc=COSK[C.name]?.c||'#9fe08a'; g.fillStyle='#000'; g.fillText(player.name,71,17); g.fillStyle=nc; g.fillText(player.name,70,16);
+    const tn=titleName(); if(tn){ g.font='italic 500 10px "Pixelify Sans", monospace'; g.fillStyle='#e7c86a'; g.fillText('« '+tn+' »',70,30); }
+  } finally { for(const k of Object.keys(C)) delete C[k]; Object.assign(C,saved); D.title=st; player.dir=sv; }
+  const t=document.getElementById('lookPrevTxt'); if(t) t.textContent=prevTry?'Provando: '+(COSK[prevTry.k]?.n||TITLES.find(x=>x.k===prevTry.k)?.n||'nada'):'Seu visual agora';
+  prevRaf=requestAnimationFrame(loop); }; prevRaf=requestAnimationFrame(loop); }
 function openTailor(n){ const own=cosOwned();
-  const row=c=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><span class="sw" style="background:${c.col}"></span><div class="meta"><b>${c.n}</b><small>${c.cat==='mount'?'+10% de velocidade ao andar (fora da torre) · ':''}nível ${c.lvl}</small></div><div class="btns">${own.includes(c.k)?'<span class="good">Seu</span>':`<button class="primary" data-act="buy" data-k="${c.k}" ${player.gold<c.gold||player.level<c.lvl?'disabled':''}>${fmtN(c.gold)} ouro</button>`}</div></div>`;
-  openDialog(n,n.name,`<p>"Roupa nova e uma boa montaria: é assim que se chega a Pedraluz com estilo."</p><h4>Roupas</h4><div class="list">${COS.filter(c=>c.cat==='outfit').map(row).join('')}</div><h4>Montarias</h4><div class="list">${COS.filter(c=>c.cat==='mount').map(row).join('')}</div><p class="hint">Depois de comprar, vista em <b>Visual</b> (botão no topo).</p><div class="row"><button data-act="wardrobe">Abrir Visual</button><button data-act="close">Até logo</button></div>`,(act,ds)=>{
-    if(act==='buy'){ const c=COSK[ds.k]; if(c&&player.gold>=c.gold&&player.level>=c.lvl&&!own.includes(c.k)){ player.gold-=c.gold; own.push(c.k); cosData()[c.cat]=c.k; log('Você comprou '+c.n+' e já está usando.','lvl'); uiDirty=true; save(); } return openTailor(n); }
-    if(act==='wardrobe') return openWardrobe(); closeDialog(); }); }
+  const row=c=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><span class="sw" style="background:${c.col}"></span><div class="meta"><b>${c.n}</b><small>${c.cat==='mount'?'+10% de velocidade ao andar (fora da torre) · ':''}nível ${c.lvl}</small></div><div class="btns"><button data-act="try" data-k="${c.k}" aria-pressed="${prevTry?.k===c.k}">Provar</button>${own.includes(c.k)?'<span class="good">Seu</span>':`<button class="primary" data-act="buy" data-k="${c.k}" ${player.gold<c.gold||player.level<c.lvl?'disabled':''}>${fmtN(c.gold)} ouro</button>`}</div></div>`;
+  openDialog(n,n.name,`<div class="lookwrap">${lookPrevHTML()}<div class="lookside"><p>"Roupa nova e uma boa montaria: é assim que se chega com estilo. Prove à vontade."</p><h4>Roupas</h4><div class="list">${COS.filter(c=>c.cat==='outfit').map(row).join('')}</div><h4>Montarias</h4><div class="list">${COS.filter(c=>c.cat==='mount').map(row).join('')}</div></div></div><p class="hint">Depois de comprar, troque quando quiser em <b>Visual</b> (botão no topo).</p><div class="row"><button data-act="wardrobe">Abrir Visual</button><button data-act="close">Até logo</button></div>`,(act,ds)=>{
+    if(act==='try'){ const c=COSK[ds.k]; prevTry=prevTry?.k===c.k?null:{cat:c.cat,k:c.k}; const keep=prevTry; openTailor(n); prevTry=keep; return; }
+    if(act==='buy'){ const c=COSK[ds.k]; if(c&&player.gold>=c.gold&&player.level>=c.lvl&&!own.includes(c.k)){ player.gold-=c.gold; own.push(c.k); cosData()[c.cat]=c.k; prevTry=null; log('Você comprou '+c.n+' e já está usando.','lvl'); uiDirty=true; save(); } return openTailor(n); }
+    if(act==='wardrobe'){ prevTry=null; return openWardrobe(); } prevTry=null; closeDialog(); });
+  runLookPreview(); }
 let wardTab='outfit';
 function openWardrobe(){ const C=cosData(), own=C.owned, D=towerData();
-  const opts = wardTab==='title' ? [{k:null,n:'Sem título'},...TITLES.filter(t=>D.titles.includes(t.k))] : [{k:null,n:wardTab==='outfit'?'Equipamento (padrão)':'Nenhum'},...COS.filter(c=>c.cat===wardTab&&own.includes(c.k))];
+  const all = wardTab==='title' ? TITLES.map(t=>({...t, have:D.titles.includes(t.k), how:'andar '+t.need+' da torre'})) : COS.filter(c=>c.cat===wardTab).map(c=>({...c, have:own.includes(c.k), how:c.gold?fmtN(c.gold)+' ouro · alfaiate':c.frags+' Fragmentos · portal da torre'}));
   const curK = wardTab==='title' ? D.title : C[wardTab]||null;
-  const locked = wardTab==='title' ? TITLES.filter(t=>!D.titles.includes(t.k)).map(t=>t.n+' (andar '+t.need+')') : COS.filter(c=>c.cat===wardTab&&!own.includes(c.k)).map(c=>c.n);
+  const none={k:'',n:wardTab==='outfit'?'Equipamento (padrão)':wardTab==='title'?'Sem título':'Nenhum',have:true};
+  const card=o=>`<div class="cos${(o.k||null)===curK?' on':''}">${o.col?`<span class="sw" style="background:${o.col}"></span>`:''}<b>${o.n}</b>${o.have?`<button type="button" data-act="wear" data-k="${o.k}" aria-pressed="${(o.k||null)===curK}">${(o.k||null)===curK?'Usando':'Usar'}</button>`:`<button type="button" data-act="try" data-k="${o.k}" title="${esc(o.how)}" aria-pressed="${prevTry?.k===o.k}">Provar</button>`}${o.have?'':`<small>${esc(o.how)}</small>`}</div>`;
   openDialog(player,'Visual',`<div class="tabs">${Object.entries(COS_CAT).map(([k,l])=>`<button type="button" data-act="wtab" data-t="${k}" aria-pressed="${wardTab===k}">${l}</button>`).join('')}</div>
-    <div class="cosg">${opts.map(o=>`<button type="button" class="cos pick" data-act="wear" data-k="${o.k||''}" aria-pressed="${(o.k||null)===curK}">${o.col?`<span class="sw" style="background:${o.col}"></span>`:''}<b>${o.n}</b></button>`).join('')}</div>
-    ${locked.length?`<p class="hint">Ainda não tem: ${locked.map(esc).join(', ')}. ${wardTab==='outfit'||wardTab==='mount'?'Compre com Celina, a Alfaiate, em Pedraluz.':wardTab==='title'?'Conquiste subindo a Torre das Brumas.':'Compre com Fragmentos no portal da Torre das Brumas.'}</p>`:''}
+    <div class="lookwrap">${lookPrevHTML()}<div class="lookside"><div class="cosg">${[none,...all].map(card).join('')}</div></div></div>
     <div class="row"><button data-act="close">Fechar</button></div>`,(act,ds)=>{
-      if(act==='wtab'){ wardTab=ds.t; return openWardrobe(); }
-      if(act==='wear'){ const k=ds.k||null; if(wardTab==='title') D.title=k; else C[wardTab]=k; uiDirty=true; save(); return openWardrobe(); }
-      closeDialog(); }); }
+      if(act==='wtab'){ wardTab=ds.t; prevTry=null; return openWardrobe(); }
+      if(act==='try'){ const k=ds.k; const keep=prevTry?.k===k?null:{cat:wardTab,k}; openWardrobe(); prevTry=keep; return; }
+      if(act==='wear'){ const k=ds.k||null; if(wardTab==='title') D.title=k; else C[wardTab]=k; prevTry=null; uiDirty=true; save(); return openWardrobe(); }
+      prevTry=null; closeDialog(); });
+  runLookPreview(); }
 
 // ---- reforja (ferreira de Pedraluz): sorteia de novo os atributos de um item raro
 const reforgeCost=it=>Math.round(200+(ITEMS[it.id].lvl||1)*80*(it.r||1));
@@ -3421,8 +3469,8 @@ function talk(n){
   if(n.id.startsWith('spellmaster')){ openTrainer(n); return; }
   if(n.id==='towerportal'){ openTower(); return; }
   if(n.id==='towerexit'){ openDialog(n,'Portal de saída',`<p>Sair da torre agora? Você fica com os ${TW.frags||0} Fragmentos desta subida.</p><div class="row"><button class="primary" data-act="out">Sair</button><button data-act="close">Ficar</button></div>`,act=>{ closeDialog(); if(act==='out') exitTower(); }); return; }
-  if(n.id==='tailor'){ openTailor(n); return; }
-  if(n.id==='forger'){ openForge(n); return; }
+  if(/^tailor\d?$/.test(n.id)){ openTailor(n); return; }
+  if(/^forger\d?$/.test(n.id)){ openForge(n); return; }
   if(n.id==='sage'||n.id==='firesage'){
     const k=n.id==='sage'?'fae':'ash', q=quests[k], R=LEARNQ[k];
     const sp=classSpells().filter(s=>s.learn===k), names=sp.map(s=>`<b>${s.name}</b>`).join(' e ');
@@ -4404,7 +4452,7 @@ function drawPlayer(c,x,y){
   const o={dir:player.dir, skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:I(e.armor)?.look||'#6a6a5a',
     helm:I(e.helmet)?.look, shield:I(e.shield)?.ok==='shield'?I(e.shield).look:null, weapon:I(e.weapon)?.look, legs:I(e.legs)?.look||'#3e3428', wk:I(e.weapon)?.icon==='quarter'?'staff':I(e.weapon)?.wk, boots:I(e.boots)?.look};
   { const OF=cosOn('outfit'); if(OF) Object.assign(o,OF.look); }
-  drawHuman(c,x,y,o,player.phase,player.moving&&!cosOn('mount')); drawAuras(c,x,y,true);
+  if(cosOn('mount')) drawRider(c,x,y,o); else drawHuman(c,x,y,o,player.phase,player.moving); drawAuras(c,x,y,true);
   if(player.flash>0){ c.globalAlpha=.32; c.fillStyle='#ff4a30'; c.beginPath(); c.ellipse(x+16,y+17,10,13,0,0,7); c.fill(); c.globalAlpha=1; }
 }
 function drawCorpse(c,co,x,y){
@@ -4517,7 +4565,7 @@ function render(){
   // barras e nomes por cima
   ctx.textAlign='center'; ctx.font='500 10px "Pixelify Sans", monospace';
   for(const [e] of [...rows.values()].flat()){
-    const r=rpos(e), sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y)-(e.def?.boss?(BOSS_ART[e.type]?58:16):0);
+    const r=rpos(e), sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y)-(e.def?.boss?(BOSS_ART[e.type]?58:16):0)-(e===player&&cosOn('mount')?10:0);
     const showName = e.kind==='npc' || e===target || e.def?.boss || e===player;
     if(e.kind!=='npc'){ const st=e===player?stats():null, mh=e===player?st.maxHp:e.maxHp, hp=Math.max(0,e.hp), k=clamp(hp/mh,0,1);
       rect(ctx,'#000',sx+3,sy-5,26,4); rect(ctx,k>0.5?'#4caf50':k>0.25?'#e0b030':'#e04a3a',sx+4,sy-4,Math.round(24*k),2); }
@@ -4922,7 +4970,7 @@ function applySave(s){
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
   if(s.corpse){ const left=s.corpse.left-(Date.now()-s.corpse.at); if(left>0&&MAPS[s.corpse.map]) corpses.push({map:s.corpse.map,x:s.corpse.x,y:s.corpse.y,player:true,name:s.name,items:(s.corpse.items||[]).filter(it=>ITEMS[it.id]).map(fix),t:0,life:left}); }
   Object.assign(quests.wolves, s.quests?.wolves||{}); Object.assign(quests.king, s.quests?.king||{});
-  const m=(s.map!=='tower'&&MAPS[s.map])||MAPS.over; cur=m; let x=s.x, y=s.y; if(s.map==='tower'){ const P=towerPortal(); x=P.x; y=P.y+1; }
+  const m=(s.map!=='tower'&&MAPS[s.map])||MAPS.over; cur=m; let x=s.x, y=s.y; if(s.map==='tower'){ const P=towerPortal(), q=freeSpot('over',P.x,P.y+1); x=q.x; y=q.y; }
   if(!passPlayer(m,x,y)||occupied(m.id,x,y)){ cur=MAPS.over; x=MAPS.over.spawn.x; y=MAPS.over.spawn.y; }
   player.x=player.px=x; player.y=player.py=y;
   const st=stats(); player.hp=clamp(s.hp||st.maxHp,1,st.maxHp); player.mp=clamp(s.mp??st.maxMp,0,st.maxMp);
