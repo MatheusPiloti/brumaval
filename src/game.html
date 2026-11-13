@@ -1117,6 +1117,31 @@ const AMMO={
   shock: {txt:'18% de chance de atordoar o alvo por 1,2 s (+30% de dano)', col:'#fff07a'},
 };
 const canUseAmmo=d=>!d.cls||d.cls.includes(player.cls);
+function arrowFx(ak, tg, D, base, st){
+      if(ak==='poison') tg.dot={dmg:Math.max(1,Math.round(D*0.25)), ticks:5, t:1000, col:'#7ad04a'};
+      if(ak==='fire'){ tg.dot={dmg:Math.max(1,Math.round(D*0.35)), ticks:4, t:1000, col:'#ff9a3a'}; burst(tg,'#ff7a2a',6,50); }
+      if(ak==='frost'&&!tg.def.dummy){ tg.slowT=Math.max(tg.slowT||0, tg.def.boss?1200:2500); floatAt(tg,'LENTO','#9ad8ff'); }
+      if(ak==='drain'){ const v=Math.round(D*0.2); if(v>0){ player.hp=Math.min(st.maxHp,player.hp+v); floatAt(player,'+'+v,'#c0304a'); } }
+      if(ak==='blast'){ for(const m of monsters.filter(m=>m!==tg&&!m.dead&&m.map===cur.id&&cheb(m,tg)<=1)){ const r2=rollP(base*0.45, m.dfn, st, 0, false); hitMonster(m,r2.d,r2.crit,'#ffb02a'); }
+        const c=rpos(tg); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2; particles.push({map:cur.id,x:c.x*T+16,y:c.y*T+16,vx:Math.cos(a)*100,vy:Math.sin(a)*100,t:0,life:300,color:i%2?'#ffb02a':'#ff5a2a',size:3}); } }
+  if(ak==='shock'&&!tg.dead&&!tg.def.dummy&&arrowFx.spell&&R()<0.18){ const t=tg.def.boss?600:1200; tg.rootT=Math.max(tg.rootT||0,t); tg.cd=Math.max(tg.cd,0)+t; tg.rcd=Math.max(tg.rcd||0,t); floatAt(tg,'ATORDOADO!','#ffd54a'); }
+}
+function spellArrow(tg, mul, st, x0, y0, delay=0){
+  const go=()=>{ if(tg.dead||tg.map!==cur.id) return; const am=ammoId(), ak=am?ITEMS[am].ammo:null; if(am){ takeItem(am,1); if(countItem(am)<=0){ log('Acabou o estoque de '+ITEMS[am].name+'. Usando flechas comuns.','sys'); player.ammo=null; } }
+    const a=x0!=null?{x:x0,y:y0}:rpos(player), b=rpos(tg), base=st.atk*mul*(st.spMul||1)*(ak==='silver'&&tg.def.undead?1.35:1);
+    projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:b.x*T+16,y1:b.y*T+14,t:0,dur:170,color:ak?AMMO[ak].col:'#e8c890',arrow:true,onHit:()=>{ if(tg.dead) return;
+      const r=rollP(base, tg.dfn*(ak==='pierce'?AMMO.pierce.pen:1), st, 0, false); hitMonster(tg, r.d, r.crit, r.crit?'#ffd54a':(ak?AMMO[ak].col:'#e8c890')); leech(r.d,st); if(ak&&!tg.dead){ arrowFx.spell=true; arrowFx(ak,tg,r.d,base,st); arrowFx.spell=false; } }}); };
+  if(delay>0) timers.push({t:delay, fn:go}); else go(); }
+function fanLanes(){ const tg=target&&!target.dead&&target.map===cur.id?target:null; let dx, dy;
+  if(tg){ dx=Math.sign(tg.x-player.x); dy=Math.sign(tg.y-player.y); } if(!dx&&!dy){ const D={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[player.dir]||[0,1]; [dx,dy]=D; }
+  const px=-dy, py=dx, lanes=[];
+  for(const o of [-1,0,1]){ const sx=player.x+px*o, sy=player.y+py*o; const L=[];
+    for(let k=1;k<=6;k++){ const x=sx+dx*k, y=sy+dy*k; if(BLOCKS.has(tileAt(cur,x,y))) break; L.push({x,y}); } lanes.push(L); }
+  return {lanes, dx, dy}; }
+function fanVolley(st, mul){ const {lanes}=fanLanes(); let hits=0;
+  for(const L of lanes){ if(!L.length) continue; const end=L[L.length-1], a=rpos(player); projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:end.x*T+16,y1:end.y*T+14,t:0,dur:220,color:'#e8c890',arrow:true,onHit:()=>{}});
+    for(const m of monsters.filter(m=>!m.dead&&m.map===cur.id&&!m.def.dummy&&L.some(q=>q.x===m.x&&q.y===m.y))){ hits++; const d=Math.max(1,Math.abs(m.x-player.x),Math.abs(m.y-player.y)); timers.push({t:30*d, fn:()=>{ if(!m.dead) spellHit(m, st.atk*mul, st, {color:'#ffe08a'}); }}); } }
+  return hits; }
 function ammoId(){ const id=player.ammo; return id&&ITEMS[id]?.ammo&&countItem(id)>0?id:null; }
 function setAmmo(id){ if(id&&!ITEMS[id]?.ammo) return; if(id&&player.level<(ITEMS[id].lvl||1)){ log(ITEMS[id].name+' exige nível '+ITEMS[id].lvl+'.','sys'); return; }
   player.ammo=id||null; log(id?'Flecha ativa: '+ITEMS[id].name+' ('+countItem(id)+').':'Flecha ativa: comum (infinita).','sys'); uiDirty=true; renderBot(); save(); }
@@ -1633,14 +1658,14 @@ const SPELLS = {
   ],
   cacador:[
     {name:'Curativo', mana:15, cd:1500, lvl:1, kind:'cura', desc:'Recupera vida', run:(st,L)=>healSpell(20+L*4)},
-    {name:'Flecha Certeira', mana:15, cd:2000, lvl:1, kind:'ataque', desc:'Tiro forte com +25% de crítico', run:(st)=>shoot(6, st.atk*1.9, st, {crit:25, color:'#e8c890', arrow:true})},
+    {name:'Disparo Triplo', mana:15, cd:2000, lvl:1, kind:'ataque', desc:'Três flechas muito rápidas no alvo (usam a flecha ativa)', run:(st)=>{ const tg=needTarget(6); if(!tg) return false; for(let i=0;i<3;i++) spellArrow(tg, 0.8, st, null, null, i*110); return true; }},
     {name:'Chuva de Flechas', mana:45, cd:5000, lvl:5, kind:'ataque', desc:'Área de 2 quadrados em volta do alvo', run:(st)=>{ const tg=needTarget(6); if(!tg) return false; const r=rpos(tg);
         for(let i=0;i<26;i++) particles.push({map:cur.id,x:r.x*T+16+ri(-64,64),y:r.y*T-70+ri(-30,10),vx:0,vy:520,t:0,life:160+R()*120,color:'#e8c890',size:2});
         return area(tg,2,st.atk*1.3,st,{colors:['#e8c890','#a07a4a']}); }},
     {name:'Olho de Águia', mana:30, cd:20000, lvl:8, kind:'suporte', desc:'+20% de chance de crítico por 10 s', run:()=>buff('eagle',10000,'#ffd54a','Sua mira fica afiada.')},
     {name:'Flecha Envenenada', mana:30, cd:3000, lvl:25, learn:'fae', kind:'ataque', desc:'Dano e veneno por 5 s', run:(st)=>shoot(6, st.atk*1.4, st, {color:'#7ad04a', arrow:true, onHit:m=>{ m.dot={dmg:Math.round(st.atk*0.45), ticks:5, t:1000}; }})},
     {name:'Vento Ágil', mana:40, cd:25000, lvl:25, learn:'fae', kind:'suporte', desc:'+40% de velocidade de ataque por 10 s', run:()=>buff('haste',10000,'#a0e0ff','O vento acelera suas flechas.')},
-    {name:'Flecha Explosiva', mana:60, cd:5000, lvl:45, learn:'ash', kind:'ataque', desc:'Explosão em 1 quadrado em volta do alvo', run:(st)=>{ const tg=needTarget(6); if(!tg) return false; return area(tg,1,st.atk*2.6,st,{colors:['#ff7a2a','#ffd54a']}); }},
+    {name:'Leque de Flechas', mana:60, cd:5000, lvl:45, learn:'ash', kind:'ataque', desc:'Duas rajadas de 3 flechas para a frente; atravessam e acertam todos no caminho (6 quadrados)', run:(st)=>{ fanVolley(st,1.3); timers.push({t:260, fn:()=>{ if(!player.dead) fanVolley(st,1.3); }}); return true; }},
     {name:'Instinto de Sobrevivência', mana:60, cd:30000, lvl:45, learn:'ash', kind:'cura', desc:'Recupera 30% da vida e reduz o dano recebido por 5 s', run:()=>{ if(!healSpell(stats().maxHp*0.3)) return false; player.buffs.arcshield=5000; return true; }},
   ],
   feiticeiro:[
@@ -1716,13 +1741,7 @@ function autoAttack(st, rg){
   const r=rollP(base*(bash&&!shock?BLADE.club.bashMul:1)*amul, magic? tg.dfn*0.5 : tg.dfn*(bk==='sword'?BLADE.sword.pen:1)*(ak==='pierce'?AMMO.pierce.pen:1), st);
   const apply=()=>{ if(tg.dead) return; if(r.miss){ floatAt(tg,'errou','#bbb'); return; }
     hitMonster(tg,r.d,r.crit||bash, bash?'#ffd54a':undefined); leech(r.d,st);
-    if(ak && !tg.dead){ const D=r.d;
-      if(ak==='poison') tg.dot={dmg:Math.max(1,Math.round(D*0.25)), ticks:5, t:1000, col:'#7ad04a'};
-      if(ak==='fire'){ tg.dot={dmg:Math.max(1,Math.round(D*0.35)), ticks:4, t:1000, col:'#ff9a3a'}; burst(tg,'#ff7a2a',6,50); }
-      if(ak==='frost'&&!tg.def.dummy){ tg.slowT=Math.max(tg.slowT||0, tg.def.boss?1200:2500); floatAt(tg,'LENTO','#9ad8ff'); }
-      if(ak==='drain'){ const v=Math.round(D*0.2); if(v>0){ player.hp=Math.min(st.maxHp,player.hp+v); floatAt(player,'+'+v,'#c0304a'); } }
-      if(ak==='blast'){ for(const m of monsters.filter(m=>m!==tg&&!m.dead&&m.map===cur.id&&cheb(m,tg)<=1)){ const r2=rollP(base*0.45, m.dfn, st, 0, false); hitMonster(m,r2.d,r2.crit,'#ffb02a'); }
-        const c=rpos(tg); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2; particles.push({map:cur.id,x:c.x*T+16,y:c.y*T+16,vx:Math.cos(a)*100,vy:Math.sin(a)*100,t:0,life:300,color:i%2?'#ffb02a':'#ff5a2a',size:3}); } } }
+    if(ak && !tg.dead) arrowFx(ak, tg, r.d, base, st);
     if(bash && !tg.dead && !tg.def.dummy){ const t=shock?(tg.def.boss?600:1200):(tg.def.boss?BLADE.club.stun/2:BLADE.club.stun); tg.rootT=Math.max(tg.rootT||0,t); tg.cd=Math.max(tg.cd,0)+t; tg.rcd=Math.max(tg.rcd||0,t); floatAt(tg,'ATORDOADO!','#ffd54a'); burst(tg,'#ffd54a',10,70); }
     else if(bash) floatAt(tg,'ATORDOADO!','#ffd54a');
     if(bk==='axe'){ const near=monsters.filter(m=>m!==tg&&!m.dead&&m.map===cur.id&&cheb(m,tg)<=1);
@@ -1903,8 +1922,8 @@ function drawChest(c,x,y){
 const SPELL_ICON = {
   'Bandagem':['cross','#7ee07a'],'Golpe Pesado':['sword','#e8e8e8'],'Golpe Giratório':['whirl','#c8ccd8'],'Fúria':['flame','#ff5a3a'],
   'Pele de Ferro':['shield','#c8ccd8'],'Lâmina Sísmica':['quake','#c8a070'],'Segundo Fôlego':['heart','#7ee07a'],'Fúria dos Titãs':['boom','#ff9a2a'],
-  'Curativo':['cross','#7ee07a'],'Flecha Certeira':['arrow','#e8c890'],'Chuva de Flechas':['rain','#e8c890'],'Olho de Águia':['eye','#ffd54a'],
-  'Flecha Envenenada':['drop','#7ad04a'],'Vento Ágil':['wind','#a0e0ff'],'Flecha Explosiva':['boom','#ff7a2a'],'Instinto de Sobrevivência':['heart','#7ee07a'],
+  'Curativo':['cross','#7ee07a'],'Disparo Triplo':['arrow','#e8c890'],'Chuva de Flechas':['rain','#e8c890'],'Olho de Águia':['eye','#ffd54a'],
+  'Flecha Envenenada':['drop','#7ad04a'],'Vento Ágil':['wind','#a0e0ff'],'Leque de Flechas':['rain','#ffd54a'],'Instinto de Sobrevivência':['heart','#7ee07a'],
   'Cura Arcana':['cross','#9ad0ff'],'Bola de Fogo':['flame','#ff7a2a'],'Tempestade de Raios':['bolt','#fff07a'],'Escudo Arcano':['shield','#9ad0ff'],
   'Raio Encadeado':['chain','#c8e8ff'],'Concentração':['focus','#c06aff'],'Meteoro':['meteor','#ff5a1a'],'Inferno':['flame','#ff3a1a'],
   'Toque Curativo':['cross','#7ee07a'],'Lança de Gelo':['ice','#9ad8ff'],'Raízes Ancestrais':['roots','#8ad06a'],'Bênção da Floresta':['leaf','#9fe08a'],
@@ -1982,9 +2001,9 @@ $('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
 // ============================================================ caça automática por rota
 const BOT_DEF=()=>({how:'route', routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true, dist:0, refill:{on:true,minHp:5,hp:100,minMp:0,mp:50,full:true,strong:false,ammo:500,minAmmo:0}});
 let bot={on:false, wp:0, mark:false, msg:'', lastLootFail:-1e9, think:0, stuck:0, mode:'hunt', sub:'', huntMap:null, town:null, fullAt:-1e9};
-const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Flecha Certeira':6,'Chuva de Flechas':6,'Flecha Envenenada':6,'Flecha Explosiva':6,
+const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Disparo Triplo':6,'Chuva de Flechas':6,'Flecha Envenenada':6,
   'Bola de Fogo':6,'Raio Encadeado':6,'Meteoro':6,'Lança de Gelo':6,'Chuva de Granizo':6};
-const SELFR={'Golpe Giratório':1,'Lâmina Sísmica':2,'Fúria dos Titãs':2,'Tempestade de Raios':3,'Inferno':3,'Raízes Ancestrais':3,'Tempestade Glacial':3,'Chute Giratório':1};
+const SELFR={'Leque de Flechas':3,'Golpe Giratório':1,'Lâmina Sísmica':2,'Fúria dos Titãs':2,'Tempestade de Raios':3,'Inferno':3,'Raízes Ancestrais':3,'Tempestade Glacial':3,'Chute Giratório':1};
 const BUFF_OF=name=>Object.keys(BUFFS).find(k=>BUFFS[k]===name);
 const route=()=>{ const B=player.bot; return B.routes[cur.id]||(B.routes[cur.id]=[]); };
 function lootWanted(it){ const L=player.bot.loot, d=ITEMS[it.id]; if(it.id==='gold') return L.gold; if(d.heal||d.mana) return L.pots; if(d.slot==='bag') return L.bags; if(d.slot) return (it.r||0)>=L.rar; return L.mats; }
@@ -3396,7 +3415,7 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
-window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
