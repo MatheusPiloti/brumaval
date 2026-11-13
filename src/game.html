@@ -915,6 +915,7 @@ function statLines(it){
   if(d.hp) s.push('Vida +'+d.hp); if(d.mp) s.push('Mana +'+d.mp); if(d.crit) s.push('Crítico +'+d.crit+'%'); if(d.speed) s.push('Velocidade +'+d.speed); if(d.slots) s.push('Capacidade: '+d.slots+' itens'); if(d.hands===2) s.push('Duas mãos'); if(d.atkspd) s.push('Vel. de ataque '+(d.atkspd>0?'+':'')+d.atkspd+'%'); if(d.regen) s.push('Regeneração +'+d.regen);
   if(d.heal) s.push('Cura '+d.heal); if(d.mana) s.push('Mana +'+d.mana);
   if(bladeKind(d)) s.push(BLADE_TXT[bladeKind(d)]);
+  if(d.ammo){ s.push('Flecha: '+AMMO[d.ammo].txt); s.push('Só Caçador · nível '+(d.lvl||1)+' · gasta 1 por tiro'); s.push(player.ammo===it.id?'Ativa (clique para voltar à comum)':'Clique para usar'); }
   if(d.set&&SETS[d.set]){ const S=SETS[d.set], have=Object.values(player.eq||{}).filter(x=>x&&ITEMS[x.id]?.set===d.set).length; s.push(S.name+' ('+have+'/4)'); s.push('2 peças: '+setBonusTxt(S.b2)); s.push('4 peças: '+setBonusTxt(S.b4)); }
   return s;
 }
@@ -960,6 +961,7 @@ function iconURL(id){
     case 'shield': r('#2a2018',4,3,16,18); r(L,5,4,14,15); r(L,7,19,10,2); r('#e0d6b8',11,6,2,11); break;
     case 'helmet': r(L,5,7,14,10); r(L,7,5,10,3); r('#13100d',8,13,8,3); r('#fff',8,7,3,1); break;
     case 'boots': r(L,5,6,5,13); r(L,5,16,9,4); r(L,13,6,5,13); r(L,13,16,9,4); r('#000',5,19,17,1); break;
+    case 'arrow': for(let i=0;i<13;i++) r('#8a6a3a',4+i,19-i,2,2); r(L,15,3,6,2); r(L,19,3,2,6); r(L,17,5,2,2); r('#e8e0cc',3,17,2,4); r('#e8e0cc',5,19,4,2); r('#c8b890',2,20,3,2); break;
     case 'potion': r('#d8d0bc',10,3,4,4); r('#6a4a2a',10,2,4,2); r('#e8e4dc',6,7,12,13); r(L,7,10,10,9); r('#ffffff',8,10,2,4); break;
     case 'tail': g.strokeStyle='#d88a9a'; g.lineWidth=2; g.beginPath(); g.moveTo(4,20); g.quadraticCurveTo(20,20,14,8); g.quadraticCurveTo(10,2,18,4); g.stroke(); break;
     case 'fang': g.fillStyle=d.look||'#f2ecd8'; g.beginPath(); g.moveTo(7,4); g.lineTo(17,4); g.lineTo(12,21); g.fill(); r('#c8bfa8',7,4,10,2); break;
@@ -1093,6 +1095,31 @@ Object.assign(ITEMS, {
   dragonaxe: {name:'Machado Dracônico', slot:'weapon', wk:'blade', atk:54, sell:8000, lvl:75, icon:'axe', look:'#ff5a3a'},
   dragonmaul:{name:'Martelo Dracônico', slot:'weapon', wk:'blade', atk:55, sell:8000, lvl:75, icon:'hammer', look:'#c0301a'},
 });
+const C_ONLY=['cacador'];
+Object.assign(ITEMS, {
+  arrow_poison:{name:'Flecha de Veneno', stack:true, ammo:'poison', lvl:5,  price:3,  cls:C_ONLY, icon:'arrow', look:'#7ad04a'},
+  arrow_pierce:{name:'Flecha Perfurante', stack:true, ammo:'pierce', lvl:8,  price:3,  cls:C_ONLY, icon:'arrow', look:'#d8dce4'},
+  arrow_frost: {name:'Flecha de Gelo',    stack:true, ammo:'frost',  lvl:12, price:4,  cls:C_ONLY, icon:'arrow', look:'#9ad8ff'},
+  arrow_silver:{name:'Flecha de Prata',   stack:true, ammo:'silver', lvl:15, price:4,  cls:C_ONLY, icon:'arrow', look:'#f0f0ff'},
+  arrow_fire:  {name:'Flecha Incendiária',stack:true, ammo:'fire',   lvl:20, price:6,  cls:C_ONLY, icon:'arrow', look:'#ff7a2a'},
+  arrow_drain: {name:'Flecha Sanguessuga',stack:true, ammo:'drain',  lvl:25, price:7,  cls:C_ONLY, icon:'arrow', look:'#c0304a'},
+  arrow_blast: {name:'Flecha de Pólvora',  stack:true, ammo:'blast',  lvl:35, price:10, cls:C_ONLY, icon:'arrow', look:'#ffb02a'},
+  arrow_shock: {name:'Flecha de Trovão',  stack:true, ammo:'shock',  lvl:45, price:12, cls:C_ONLY, icon:'arrow', look:'#fff07a'},
+});
+const AMMO={
+  poison:{txt:'envenena: 5 de dano por segundo durante 5 s (25% do golpe cada)', col:'#7ad04a'},
+  pierce:{txt:'ignora 50% da defesa do alvo', col:'#d8dce4', pen:0.5},
+  frost: {txt:'deixa o alvo lento por 2,5 s', col:'#9ad8ff'},
+  silver:{txt:'+35% de dano contra mortos-vivos', col:'#f0f0ff'},
+  fire:  {txt:'queima: 4 s de fogo (35% do golpe por segundo)', col:'#ff7a2a'},
+  drain: {txt:'cura você em 20% do dano causado', col:'#c0304a'},
+  blast: {txt:'explode e acerta quem está em volta do alvo (45%)', col:'#ffb02a'},
+  shock: {txt:'18% de chance de atordoar o alvo por 1,2 s (+30% de dano)', col:'#fff07a'},
+};
+const canUseAmmo=d=>!d.cls||d.cls.includes(player.cls);
+function ammoId(){ const id=player.ammo; return id&&ITEMS[id]?.ammo&&countItem(id)>0?id:null; }
+function setAmmo(id){ if(id&&!ITEMS[id]?.ammo) return; if(id&&player.level<(ITEMS[id].lvl||1)){ log(ITEMS[id].name+' exige nível '+ITEMS[id].lvl+'.','sys'); return; }
+  player.ammo=id||null; log(id?'Flecha ativa: '+ITEMS[id].name+' ('+countItem(id)+').':'Flecha ativa: comum (infinita).','sys'); uiDirty=true; renderBot(); save(); }
 // ---- tipos de arma do guerreiro: espada (penetra armadura), clava (golpe atordoante), machado (acerta em volta)
 const bladeKind=d=>!d||d.wk!=='blade'?null:(d.icon==='axe'?'axe':(d.icon==='club'||d.icon==='hammer')?'club':'sword');
 const BLADE={sword:{pen:0.5}, club:{bashCh:0.22, bashMul:1.7, stun:1300}, axe:{splash:0.55}};
@@ -1272,6 +1299,7 @@ function useItem(it){
   if(!it||player.dead) return; const d=ITEMS[it.id], st=stats();
   if(isBag(it)){ toggleWin(it); return; }
   if(d.slot){ equipItem(it); return; }
+  if(d.ammo){ if(!canUseAmmo(d)) { log('Só o Caçador usa flechas especiais.','sys'); return; } setAmmo(player.ammo===it.id?null:it.id); return; }
   if(d.heal){ if(player.potCd>0) return; if(player.hp>=st.maxHp){ log('Sua vida já está cheia.','sys'); return; } player.potCd=1000; heal(d.heal); removeOne(it); sess.used.hp++; burst(player,'#e05050',8); return; }
   if(d.mana){ if(player.potCd>0) return; if(player.mp>=st.maxMp){ log('Sua mana já está cheia.','sys'); return; } player.potCd=1000; sess.used.mp++; player.mp=Math.min(st.maxMp,player.mp+d.mana); floatAt(player,'+'+d.mana,'#7aa8ff'); removeOne(it); burst(player,'#5080e0',8); return; }
   log(d.name+': vende por '+sellPrice(it)+' ouro nos mercadores.','sys');
@@ -1680,17 +1708,28 @@ function autoAttack(st, rg){
   const tg=target, wd=ITEMS[player.eq.weapon?.id], wk=wd?.wk, magic=wk==='wand'||wk==='staff', bk=bladeKind(wd);
   const wsk=weaponSkill(); train(magic?null:wsk,1);
   const base=(magic? st.atk+st.mag : st.atk)*(magic&&player.buffs.focus>0?1.3:1)*skillMul(magic?'ml':wsk);
-  const bash=bk==='club'&&R()<BLADE.club.bashCh;
-  const r=rollP(base*(bash?BLADE.club.bashMul:1), magic? tg.dfn*0.5 : tg.dfn*(bk==='sword'?BLADE.sword.pen:1), st);
+  const am=wk==='bow'?ammoId():null, ak=am?ITEMS[am].ammo:null;
+  if(am){ takeItem(am,1); if(countItem(am)<=0){ log('Acabou o estoque de '+ITEMS[am].name+'. Usando flechas comuns.','sys'); player.ammo=null; } }
+  const shock=ak==='shock'&&R()<0.18;
+  const bash=(bk==='club'&&R()<BLADE.club.bashCh)||shock;
+  const amul=(ak==='silver'&&tg.def.undead?1.35:1)*(shock?1.3:1);
+  const r=rollP(base*(bash&&!shock?BLADE.club.bashMul:1)*amul, magic? tg.dfn*0.5 : tg.dfn*(bk==='sword'?BLADE.sword.pen:1)*(ak==='pierce'?AMMO.pierce.pen:1), st);
   const apply=()=>{ if(tg.dead) return; if(r.miss){ floatAt(tg,'errou','#bbb'); return; }
     hitMonster(tg,r.d,r.crit||bash, bash?'#ffd54a':undefined); leech(r.d,st);
-    if(bash && !tg.dead && !tg.def.dummy){ const t=tg.def.boss?BLADE.club.stun/2:BLADE.club.stun; tg.rootT=Math.max(tg.rootT||0,t); tg.cd=Math.max(tg.cd,0)+t; tg.rcd=Math.max(tg.rcd||0,t); floatAt(tg,'ATORDOADO!','#ffd54a'); burst(tg,'#ffd54a',10,70); }
+    if(ak && !tg.dead){ const D=r.d;
+      if(ak==='poison') tg.dot={dmg:Math.max(1,Math.round(D*0.25)), ticks:5, t:1000, col:'#7ad04a'};
+      if(ak==='fire'){ tg.dot={dmg:Math.max(1,Math.round(D*0.35)), ticks:4, t:1000, col:'#ff9a3a'}; burst(tg,'#ff7a2a',6,50); }
+      if(ak==='frost'&&!tg.def.dummy){ tg.slowT=Math.max(tg.slowT||0, tg.def.boss?1200:2500); floatAt(tg,'LENTO','#9ad8ff'); }
+      if(ak==='drain'){ const v=Math.round(D*0.2); if(v>0){ player.hp=Math.min(st.maxHp,player.hp+v); floatAt(player,'+'+v,'#c0304a'); } }
+      if(ak==='blast'){ for(const m of monsters.filter(m=>m!==tg&&!m.dead&&m.map===cur.id&&cheb(m,tg)<=1)){ const r2=rollP(base*0.45, m.dfn, st, 0, false); hitMonster(m,r2.d,r2.crit,'#ffb02a'); }
+        const c=rpos(tg); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2; particles.push({map:cur.id,x:c.x*T+16,y:c.y*T+16,vx:Math.cos(a)*100,vy:Math.sin(a)*100,t:0,life:300,color:i%2?'#ffb02a':'#ff5a2a',size:3}); } } }
+    if(bash && !tg.dead && !tg.def.dummy){ const t=shock?(tg.def.boss?600:1200):(tg.def.boss?BLADE.club.stun/2:BLADE.club.stun); tg.rootT=Math.max(tg.rootT||0,t); tg.cd=Math.max(tg.cd,0)+t; tg.rcd=Math.max(tg.rcd||0,t); floatAt(tg,'ATORDOADO!','#ffd54a'); burst(tg,'#ffd54a',10,70); }
     else if(bash) floatAt(tg,'ATORDOADO!','#ffd54a');
     if(bk==='axe'){ const near=monsters.filter(m=>m!==tg&&!m.dead&&m.map===cur.id&&cheb(m,tg)<=1);
       for(const m of near){ const r2=rollP(base*BLADE.axe.splash, m.dfn, st, 0, false); hitMonster(m,r2.d,r2.crit,'#ffb07a'); }
       if(near.length){ const c=rpos(tg); for(let i=0;i<14;i++){ const a=i/14*Math.PI*2; particles.push({map:cur.id,x:c.x*T+16,y:c.y*T+16,vx:Math.cos(a)*90,vy:Math.sin(a)*90,t:0,life:260,color:i%2?'#e8e8e8':'#ffb07a',size:2}); } } } };
   if(rg>1){ const a=rpos(player), b=rpos(tg);
-    projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:b.x*T+16,y1:b.y*T+14,t:0,dur:200,color:wk==='bow'?'#e8c890':wk==='wand'?'#ff8a3a':'#9ad8ff',arrow:wk==='bow',onHit:apply}); }
+    projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:b.x*T+16,y1:b.y*T+14,t:0,dur:200,color:ak?AMMO[ak].col:wk==='bow'?'#e8c890':wk==='wand'?'#ff8a3a':'#9ad8ff',arrow:wk==='bow',onHit:apply}); }
   else apply();
 }
 function cast(i){
@@ -1716,7 +1755,7 @@ function placeDummies(){
 function updateMonster(m, dt){
   if(m.def.dummy){ m.flash-=dt; m.phase+=dt/900; if(now-(m.lastHit||-1e9)>4000) m.hp=m.maxHp; return; }
   m.phase += dt/(m.moving?300:800);
-  if(m.dot){ m.dot.t-=dt; if(m.dot.t<=0){ const d0=m.dot; d0.t=1000; if(--d0.ticks<=0) m.dot=null; hitMonster(m,d0.dmg,false,'#7ad04a'); if(m.dead) return; } }
+  if(m.dot){ m.dot.t-=dt; if(m.dot.t<=0){ const d0=m.dot; d0.t=1000; if(--d0.ticks<=0) m.dot=null; hitMonster(m,d0.dmg,false,d0.col||'#7ad04a'); if(m.dead) return; } }
   if(m.moving){ m.mt+=dt; if(m.mt>=m.mdur) m.moving=false; }
   m.cd-=dt; m.flash-=dt; m.think-=dt; m.rcd-=dt; m.slowT=(m.slowT||0)-dt; m.rootT=(m.rootT||0)-dt;
   const d=cheb(m,player); const sees = !player.dead && d<=m.def.sight && los(cur,m,player);
@@ -1941,7 +1980,7 @@ addEventListener('keydown',e=>{ if(!capturing) return; e.preventDefault(); e.sto
 $('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
 
 // ============================================================ caça automática por rota
-const BOT_DEF=()=>({how:'route', routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true, dist:0, refill:{on:true,minHp:5,hp:100,minMp:0,mp:50,full:true,strong:false}});
+const BOT_DEF=()=>({how:'route', routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true, dist:0, refill:{on:true,minHp:5,hp:100,minMp:0,mp:50,full:true,strong:false,ammo:500,minAmmo:0}});
 let bot={on:false, wp:0, mark:false, msg:'', lastLootFail:-1e9, think:0, stuck:0, mode:'hunt', sub:'', huntMap:null, town:null, fullAt:-1e9};
 const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Flecha Certeira':6,'Chuva de Flechas':6,'Flecha Envenenada':6,'Flecha Explosiva':6,
   'Bola de Fogo':6,'Raio Encadeado':6,'Meteoro':6,'Lança de Gelo':6,'Chuva de Granizo':6};
@@ -2010,7 +2049,9 @@ function renderBot(){
     <h3>Distância</h3>
     <label class="botrow">Atacar monstros a até <input type="number" min="3" max="10" data-k="range" value="${B.range}"> quadrados</label>
     <label class="botrow">Manter <input type="number" min="0" max="5" data-k="dist" value="${B.dist|0}"> quadrados longe dos monstros</label>
-    <p class="hint" style="margin:2px 0 0">0 = chega perto. Para Feiticeiro, Caçador e Xamã, 3 ou 4 mantém os monstros longe enquanto ataca.</p>`;
+    <p class="hint" style="margin:2px 0 0">0 = chega perto. Para Feiticeiro, Caçador e Xamã, 3 ou 4 mantém os monstros longe enquanto ataca.</p>
+    ${player.cls==='cacador'?`<h3>Flecha</h3><label class="botrow"><select data-k="ammo"><option value="">Comum (infinita)</option>${Object.keys(ITEMS).filter(id=>ITEMS[id].ammo).map(id=>`<option value="${id}" ${player.ammo===id?'selected':''} ${player.level<ITEMS[id].lvl?'disabled':''}>${esc(ITEMS[id].name)} · nv ${ITEMS[id].lvl} · ${countItem(id)}</option>`).join('')}</select></label>
+    <p class="hint" style="margin:2px 0 0">${player.ammo?esc(AMMO[ITEMS[player.ammo].ammo].txt):'Sem efeito especial.'}</p>`:''}`;
   if(botTab==='cura') body=`<p class="hint" style="margin:6px 0 4px">Funciona sempre, com ou sem a caça ligada.</p>`;
   if(botTab==='saque') body=`
     <h3>O que pegar dos corpos</h3>
@@ -2025,6 +2066,7 @@ function renderBot(){
     <label class="botrow"><input type="checkbox" data-r="full" ${B.refill.full?'checked':''}> Ir também quando a mochila encher</label>
     <label class="botrow">Comprar até ter <input type="number" min="0" max="2000" step="10" data-r="hp" value="${B.refill.hp}"> de vida e <input type="number" min="0" max="2000" step="10" data-r="mp" value="${B.refill.mp}"> de mana</label>
     <label class="botrow"><input type="checkbox" data-r="strong" ${B.refill.strong?'checked':''}> Comprar poções fortes (Cinzaforte e Lunária)</label>
+    ${player.cls==='cacador'?`<label class="botrow">Comprar até ter <input type="number" min="0" max="5000" step="50" data-r="ammo" value="${B.refill.ammo??500}"> da flecha ativa</label><label class="botrow">Ir quando restarem <input type="number" min="0" max="2000" step="10" data-r="minAmmo" value="${B.refill.minAmmo??0}"> flechas <small class="hint" style="margin:0">(0 = não importa)</small></label>`:''}
     <p class="hint" style="margin:4px 0 0">Guarda no depósito o ouro e os itens que não são poções nem mochilas, saca o que precisa, compra as poções e volta para onde estava caçando.</p></div>
     ${B.refill.on?'':`<label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''}> Sem reabastecer: voltar para a cidade e parar quando acabarem as poções de vida</label>`}`;
   el.innerHTML=head+`<div class="botbody">${body}</div>`;
@@ -2046,6 +2088,7 @@ $('botui').addEventListener('change',e=>{ const t=e.target, B=player.bot; if(!B)
   if(t.dataset.k==='range') B.range=clamp(+t.value||7,3,10);
   if(t.dataset.k==='dist') B.dist=clamp(Math.floor(+t.value||0),0,5);
   if(t.dataset.k==='rar') B.loot.rar=+t.value;
+  if(t.dataset.k==='ammo') setAmmo(t.value||null);
   if(t.dataset.k==='stopNoPots') B.stopNoPots=t.checked;
   if(t.dataset.r){ const F=B.refill, r=t.dataset.r; if(t.type==='checkbox') F[r]=t.checked; else F[r]=clamp(Math.floor(+t.value||0),0,+t.max||2000); if(r==='on') renderBot(); }
   save(); });
@@ -2062,6 +2105,7 @@ function bagFull(){ return !freeContainer(); }
 function needRefill(fighting){ const F=player.bot.refill; if(!F||!F.on) return '';
   if(potCount('hp')<=F.minHp) return 'poções de vida acabando';
   if(F.mp>0 && F.minMp>0 && potCount('mp')<=F.minMp) return 'poções de mana acabando';
+  if(player.cls==='cacador' && player.ammo && (F.minAmmo|0)>0 && countItem(player.ammo)<=F.minAmmo) return 'flechas acabando';
   if(!fighting && F.full && bagFull() && now-bot.fullAt<20000) return 'mochila cheia';
   return ''; }
 function startRefill(why, flee){
@@ -2097,15 +2141,16 @@ function botTravel(B,st){
     botBuy(B,n); if(potCount('hp')<=B.refill.minHp){ toggleBot(false,'Caça automática parou na cidade: não há ouro suficiente para comprar poções de vida.'); return; } bot.mode='return'; bot.stuck=0; log('Caça automática: reabastecido. Voltando para '+MAPS[bot.huntMap].name+'.','sys'); save(); return; }
   bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática: de volta à caçada.','sys'); renderBot(); }
 function botDeposit(B){ const D=player.depot; let n=0, full=false;
-  for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
+  for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana||d.ammo) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
   const cost=refillCost(B); const total=player.gold+D.gold; const keep=Math.min(cost,total); D.gold=total-keep; player.gold=keep;
   log('Caça automática guardou '+n+' ite'+(n===1?'m':'ns')+' e o ouro no depósito'+(full?' (o depósito encheu; alguns ficaram na mochila)':'')+'.','loot'); uiDirty=true; save(); }
 function potBuyId(B,k){ const strong=B.refill.strong&&bot.town!=='over'; return k==='hp'?(strong?'hp2':'hp'):(strong?'mp2':'mp'); }
-function refillCost(B){ const F=B.refill; let c=0; for(const k of ['hp','mp']){ const want=k==='hp'?F.hp:F.mp, need=Math.max(0,want-potCount(k)); c+=need*ITEMS[potBuyId(B,k)].price; } return c; }
+function refillCost(B){ const F=B.refill; let c=0; for(const k of ['hp','mp']){ const want=k==='hp'?F.hp:F.mp, need=Math.max(0,want-potCount(k)); c+=need*ITEMS[potBuyId(B,k)].price; } const a=player.ammo; if(a&&ITEMS[a]) c+=Math.max(0,(F.ammo??500)-countItem(a))*ITEMS[a].price; return c; }
 function botBuy(B,n){ const F=B.refill; let msg=[];
   for(const k of ['hp','mp']){ const id=potBuyId(B,k), d=ITEMS[id], want=k==='hp'?F.hp:F.mp; let need=Math.max(0,want-potCount(k));
     need=Math.min(need, Math.floor(player.gold/d.price)); if(need<=0) continue;
     if(addItem({id,n:need,r:0,a:[]})){ player.gold-=need*d.price; msg.push(need+' '+d.name); } }
+  { const a=player.ammo, d=ITEMS[a]; if(a&&d){ let need=Math.min(Math.max(0,(F.ammo??500)-countItem(a)), Math.floor(player.gold/d.price)); if(need>0&&addItem({id:a,n:need,r:0,a:[]})){ player.gold-=need*d.price; msg.push(need+' '+d.name); } } }
   if(player.gold>0){ player.depot.gold+=player.gold; player.gold=0; }
   log(msg.length?'Caça automática comprou '+msg.join(' e ')+'.':'Caça automática: sem ouro para comprar poções.','loot'); uiDirty=true; }
 
@@ -2269,7 +2314,7 @@ const shopQty={};
 function openShop(n, tab){
   const tabs = `<div class="tabs"><button data-act="tab" data-t="buy" aria-pressed="${tab==='buy'}">Comprar</button><button data-act="tab" data-t="sell" aria-pressed="${tab==='sell'}">Vender</button><span class="spacer"></span></div>`;
   let body='';
-  if(tab==='buy') body = Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id], L=d.lvl||0, pot=['hp','mp','hp2','mp2'].includes(id), tier=L>=35?2:L>=20?1:0; return d.price && (!d.slot || canUse(d)) && (pot ? (id==='hp'||id==='mp'||n.id!=='merchant') : tier===({merchant:0,merchant3:1,merchant2:2}[n.id])); })
+  if(tab==='buy') body = Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id], L=d.lvl||0, pot=['hp','mp','hp2','mp2'].includes(id), tier=L>=35?2:L>=20?1:0; return d.price && (!d.slot || canUse(d)) && (!d.ammo || canUseAmmo(d)) && (pot ? (id==='hp'||id==='mp'||n.id!=='merchant') : tier===({merchant:0,merchant3:1,merchant2:2}[n.id])); })
       .sort((a,b)=>{ const A=ITEMS[a], B=ITEMS[b]; return (A.slot?1+SLOT_ORDER[A.slot]:0)-(B.slot?1+SLOT_ORDER[B.slot]:0) || A.price-B.price; })
       .map(id=>{ const it={id,n:1,r:0,a:[]}, d=ITEMS[id];
         if(d.stack) return itemRow(it, itemSub(it)+` · <span class="price">${d.price} ouro cada</span>`, `<input class="qty" type="number" min="1" max="1000" data-q="${id}" value="${shopQty[id]||100}" aria-label="Quantidade"><button data-act="buy" data-id="${id}" ${player.gold<d.price?'disabled':''}>Comprar</button>`);
@@ -2867,6 +2912,7 @@ function renderCond(){
   if(player.poison) cond.push(player.poison.fire?'Queimando':'Envenenado'); if(player.slowT>0) cond.push('Lento');
   for(const k in player.buffs) if(player.buffs[k]>0&&BUFFS[k]) cond.push(BUFFS[k]+' '+Math.ceil(player.buffs[k]/1000)+'s');
   if(st.lifesteal) cond.push('Roubo de vida '+st.lifesteal+'%');
+  if(player.cls==='cacador'){ const a=ammoId(); cond.unshift(a?'Flecha: '+ITEMS[a].name.replace('Flecha ','')+' ×'+countItem(a):'Flecha: comum'); }
   const key=cond.join(' · '); if(key!==condKey){ condKey=key; $('cond').textContent=key; }
 }
 // ---- janelas de mochila
@@ -3052,7 +3098,7 @@ function frame(t){
 // ============================================================ salvar / carregar
 function encFog(){ const o={}; for(const m of Object.values(MAPS)){ const E=m.explored; let any=false, runs=[], v=0, n=0; for(let i=0;i<E.length;i++){ const b=E[i]?1:0; if(b) any=true; if(b===v) n++; else { runs.push(n.toString(36)); v=b; n=1; } } runs.push(n.toString(36)); if(any) o[m.id]=runs.join('.'); } return o; }
 function decFog(o){ for(const [id,str] of Object.entries(o||{})){ const m=MAPS[id]; if(!m||typeof str!=='string') continue; let i=0, v=0; for(const r of str.split('.')){ const n=parseInt(r,36)||0; if(v) m.explored.fill(1,i,Math.min(i+n,m.explored.length)); i+=n; v^=1; } } miniDirty=true; }
-function serialize(){ return {v:10, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
+function serialize(){ return {v:10, ammo:player.ammo||null, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
 function save(){ if(!running) return; const d=serialize();
   if(Cloud.on&&Cloud.charId){ Cloud.queue(d); try{ localStorage.setItem(SAVE_KEY+':'+Cloud.charId, JSON.stringify(d)); }catch(e){} return; }
   if(!localSlot) localSlot='c'+Date.now().toString(36);
@@ -3080,7 +3126,7 @@ function applySave(s){
   if(!player.eq.bag.items) player.eq.bag.items=[];
   player.eq.bag.items.push(...oldInv);
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
-  player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm;
+  player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm; player.ammo=ITEMS[s.ammo]?.ammo?s.ammo:null;
   { const D=SKILL_DEF(), old=s.skills||{}; if(!old.melee&&(old.sword||old.axe||old.club)){ const b=['sword','axe','club'].map(k=>old[k]).filter(Boolean).sort((a,b)=>b.lv-a.lv||b.p-a.p)[0]; old.melee=b; } for(const k in old) if(D[k]) D[k]={lv:+s.skills[k].lv||D[k].lv, p:+s.skills[k].p||0}; player.skills=D; player.bestiary=s.bestiary||{}; }
   { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
   decFog(s.fog);
@@ -3195,7 +3241,7 @@ function begin(fromSave, forcedName){
     player.eq={}; for(const id of C.start) player.eq[ITEMS[id].slot]=makeItem(id,0);
     player.eq.legs=makeItem('leatherlegs',0);
     player.eq.bag={id:'basicbag',n:1,r:0,a:[],items:[{id:'hp',n:3,r:0,a:[]}]}; if(C.mpLv>10) player.eq.bag.items.push({id:'mp',n:3,r:0,a:[]});
-    player.learned={fae:false,ash:false}; player.bot=BOT_DEF(); player.adm=false; player.skills=SKILL_DEF(); player.bestiary={};
+    player.learned={fae:false,ash:false}; player.bot=BOT_DEF(); player.adm=false; player.ammo=null; player.skills=SKILL_DEF(); player.bestiary={};
     quests.wolves={state:0,count:0}; quests.king={state:0}; quests.fae={state:0,base:0}; quests.ash={state:0,base:0};
     cur=MAPS.over; const s=MAPS.over.spawn; player.x=player.px=s.x; player.y=player.py=s.y;
     const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp;
@@ -3350,7 +3396,7 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
-window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
