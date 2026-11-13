@@ -75,6 +75,11 @@ $DOMAIN {
 EOF
 
 if command -v ufw >/dev/null && ufw status | grep -q active; then ufw allow 80/tcp; ufw allow 443/tcp; fi
+# Imagens Ubuntu da Oracle Cloud vêm com iptables bloqueando tudo menos SSH
+if [ -f /etc/iptables/rules.v4 ] && command -v iptables >/dev/null; then
+  for p in 80 443; do iptables -C INPUT -p tcp --dport "$p" -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -p tcp --dport "$p" -j ACCEPT; done
+  command -v netfilter-persistent >/dev/null && netfilter-persistent save >/dev/null 2>&1 || true
+fi
 
 systemctl daemon-reload
 systemctl enable --now brumaval

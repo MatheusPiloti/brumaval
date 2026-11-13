@@ -51,7 +51,7 @@ Abra http://localhost:8080 em duas abas, crie duas contas e ande com as duas.
 
 ## Colocar na VPS
 
-1. **Contrate uma VPS** com Ubuntu 22.04 ou 24.04. 1 GB de RAM sobra para o teste.
+1. **Contrate uma VPS** com Ubuntu 22.04 ou 24.04. 1 GB de RAM sobra para o teste. De graça: Oracle Cloud Always Free (região São Paulo ou Vinhedo); o instalador já abre o firewall interno que as máquinas da Oracle trazem.
 2. **Libere as portas 80 e 443.** Se a empresa da VPS tem firewall no painel (Oracle, AWS, Google Cloud), libere essas portas lá também.
 3. **Entre por SSH** e rode, trocando `seuusuario` pelo usuário do jogo que vai ser ADM:
 
