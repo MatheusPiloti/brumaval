@@ -141,9 +141,9 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 input[type=text],input[type=number],input[type=email],input[type=password]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px}
 .keys{font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:12px}
 .keys b{color:var(--ink);font-weight:500}
-.actionbar{display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start}
-.actionbar .act{position:relative;width:42px;height:42px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px}
-.actionbar .act .ic{width:34px;height:34px;image-rendering:pixelated;border-radius:3px;display:block}
+.actionbar{display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:3px;flex:none}
+.actionbar .act{position:relative;width:auto;height:auto;aspect-ratio:1;min-width:0;max-height:60px;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px}
+.actionbar .act .ic{width:min(82%,48px);height:auto;aspect-ratio:1;image-rendering:pixelated;border-radius:3px;display:block}
 .actionbar .act:disabled .ic{filter:grayscale(1) brightness(.55)}
 .actionbar .act .k{position:absolute;top:1px;left:1px;font-size:9px;background:rgba(0,0,0,.78);padding:0 2px;border-radius:2px;line-height:11px;color:var(--ink)}
 .actionbar .act .c{position:absolute;right:1px;bottom:1px;font-size:9px;font-family:var(--mono);background:rgba(0,0,0,.78);padding:0 2px;border-radius:2px;line-height:11px;color:var(--ink)}
@@ -250,6 +250,13 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .cls b{font-family:var(--display);font-size:15px;font-weight:500;color:var(--accent)}
 .cls small{color:var(--muted);font-size:12px;line-height:1.25}
 .zoom{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:4px}
+@media (max-width:880px){.actionbar{grid-template-columns:repeat(10,minmax(0,1fr))}}
+.hud{position:absolute;top:8px;left:8px;right:84px;display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:2;pointer-events:none}
+.hud .bar{margin:0;height:18px;box-shadow:0 1px 4px rgba(0,0,0,.7)}.hud .bar span{line-height:16px;font-size:12px}
+.grip{cursor:grab;color:var(--muted);font-size:14px;line-height:1;padding:0 2px;user-select:none;opacity:.55;flex:none}.grip:hover{opacity:1;color:var(--accent)}.grip:active{cursor:grabbing}
+.who .grip{margin-right:6px}.panel.dragging{opacity:.4}
+.dropline{height:4px;border-radius:2px;background:var(--accent);flex:none;box-shadow:0 0 8px var(--accent)}
+.side.droptarget{outline:2px dashed var(--line);outline-offset:-2px}
 .zoom button{width:30px;height:30px;padding:0;font-size:18px;line-height:1;background:rgba(20,16,12,.7);border-color:rgba(255,255,255,.15)}
 @media (max-width:880px){.app{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"top" "game" "right";height:auto}.side-r{overflow:visible}.viewport{flex:none;height:min(68vh,640px);height:min(68dvh,640px)}.side{overflow:visible;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -283,6 +290,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
   <main class="game-col" id="gameCol">
     <div class="viewport" id="viewport">
       <canvas id="cv" width="544" height="416" aria-label="Mundo do jogo"></canvas>
+      <div class="hud" id="hud" aria-hidden="true"><div class="bar hp"><i id="thpFill"></i><span id="thpTxt"></span></div><div class="bar mp"><i id="tmpFill"></i><span id="tmpTxt"></span></div></div>
       <div class="zoom"><button type="button" id="zOut" aria-label="Afastar a câmera" title="Afastar (tecla -)">−</button><button type="button" id="zIn" aria-label="Aproximar a câmera" title="Aproximar (tecla +)">+</button></div>
       <div id="afk" hidden role="dialog" aria-label="Painel AFK"><div class="afkw">
         <div class="afkh"><h2>Painel da caçada</h2><span class="afkst" id="afkState"></span><div class="spacer"></div><button type="button" id="afkBot">Caça automática</button><button type="button" id="afkReset">Zerar contadores</button><button type="button" class="primary" id="afkClose">Voltar ao jogo</button></div>
@@ -4365,7 +4373,7 @@ fitMini();
 
 // ============================================================ UI lateral
 let uiDirty=true; const lastBars={};
-function setBar(id, v, max, label){ const k=`${v}/${max}/${label}`; if(lastBars[id]===k) return; lastBars[id]=k; $(id+'Fill').style.width=(clamp(v/max,0,1)*100)+'%'; $(id+'Txt').textContent=label; }
+function setBar(id, v, max, label){ const k=`${v}/${max}/${label}`; if(lastBars[id]===k) return; lastBars[id]=k; $(id+'Fill').style.width=(clamp(v/max,0,1)*100)+'%'; $(id+'Txt').textContent=label; const tf=$('t'+id+'Fill'); if(tf){ tf.style.width=$(id+'Fill').style.width; $('t'+id+'Txt').textContent=label; } }
 function updateBars(){
   const st=stats(); const L=player.level, a=totalXp(L), b=totalXp(L+1);
   setBar('hp', player.hp, st.maxHp, `Vida ${Math.ceil(player.hp)} / ${st.maxHp}`);
@@ -4529,6 +4537,29 @@ for(const sec of document.querySelectorAll('section.panel[data-p]')){ const h=se
 function placeSide(){ const L=$('sideL'), slot=$('sideLslot'), narrow=innerWidth<1280;
   if(narrow && L.parentElement!==slot) slot.appendChild(L); else if(!narrow && L.parentElement===slot) $('app').insertBefore(L,$('gameCol')); }
 addEventListener('resize',placeSide); placeSide();
+// ---- painéis laterais: arraste pelo ⠿ para trocar de lado ou de ordem (fica salvo neste navegador)
+const LAYOUT_KEY='brumaval-layout';
+const sideOf=k=>k==='L'?$('sideL'):$('sideR');
+const panelsIn=side=>[...side.children].filter(e=>e.matches('section.panel[data-p]'));
+function placePanel(sec, side, before){ if(side.id==='sideR'&&!before) before=$('sideLslot'); if(before===$('containers')) before=before.nextElementSibling;
+  side.insertBefore(sec, before||null); if(sec.dataset.p==='items') side.insertBefore($('containers'), sec); }
+function layoutNow(){ return {L:panelsIn($('sideL')).map(e=>e.dataset.p), R:panelsIn($('sideR')).map(e=>e.dataset.p)}; }
+const LAYOUT_DEF=layoutNow();
+function applyLayout(L){ for(const k of ['L','R']) for(const p of L[k]||[]){ const sec=document.querySelector(`section.panel[data-p="${p}"]`); if(sec) placePanel(sec, sideOf(k), null); } }
+try{ const L=JSON.parse(localStorage.getItem(LAYOUT_KEY)||'null'); if(L) applyLayout(L); }catch(e){}
+function saveLayout(){ try{ localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutNow())); }catch(e){} }
+function resetLayout(){ applyLayout(LAYOUT_DEF); try{ localStorage.removeItem(LAYOUT_KEY); }catch(e){} }
+let dragSec=null, dropLine=document.createElement('div'); dropLine.className='dropline';
+for(const sec of document.querySelectorAll('section.panel[data-p]')){ const head=sec.querySelector('h2')||sec.querySelector('.who'); if(!head) continue;
+  const g=document.createElement('span'); g.className='grip'; g.textContent='⠿'; g.draggable=true; g.title='Arraste para mover este painel (para o outro lado ou para cima/baixo)';
+  head.prepend(g); g.addEventListener('click',e=>e.stopPropagation());
+  g.addEventListener('dragstart',e=>{ dragSec=sec; sec.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain',sec.dataset.p); e.dataTransfer.setDragImage(sec,20,12); }catch(_){} });
+  g.addEventListener('dragend',()=>{ sec.classList.remove('dragging'); dragSec=null; dropLine.remove(); for(const s of document.querySelectorAll('.side')) s.classList.remove('droptarget'); }); }
+function dropSpot(side, y){ for(const p of panelsIn(side)){ if(p===dragSec) continue; const r=p.getBoundingClientRect(); if(y<r.top+r.height/2) return p; } return null; }
+for(const side of [$('sideL'),$('sideR')]){
+  side.addEventListener('dragover',e=>{ if(!dragSec) return; e.preventDefault(); e.stopPropagation(); for(const s of document.querySelectorAll('.side')) s.classList.toggle('droptarget',s===side);
+    const b=dropSpot(side,e.clientY); const ref=b&&b.dataset.p==='items'?$('containers'):b; side.insertBefore(dropLine, ref||(side.id==='sideR'?$('sideLslot'):null)); });
+  side.addEventListener('drop',e=>{ if(!dragSec) return; e.preventDefault(); e.stopPropagation(); placePanel(dragSec, side, dropSpot(side,e.clientY)); dropLine.remove(); side.classList.remove('droptarget'); saveLayout(); battleKey=null; uiDirty=true; }); }
 
 let actEls={};
 const spellReady = s => player.level>=s.lvl && (!s.learn || !!player.learned?.[s.learn]);
@@ -4672,8 +4703,9 @@ $('btnHelp').addEventListener('click',()=>{ if(!running) return; openDialog(play
   <b>Clique no chão</b><span>andar até lá</span><b>Clique num monstro</b><span>atacar (ataque automático quando estiver ao lado)</span>
   <b>Clique num NPC</b><span>conversar</span><b>Clique num corpo</b><span>ver o saque (marcado com um ponto amarelo)</span>
   <b>WASD / setas</b><span>andar (duas teclas juntas, como W+D, andam na diagonal; o teclado numérico também)</span><b>Espaço</b><span>alternar entre inimigos próximos</span>
-  <b>Atalhos</b><span>40 quadradinhos embaixo do mapa. Do 1 ao 0 vêm prontos; os outros (Q E R F G Z X C V T e mais 20 sem tecla) você monta. Clique num vazio ou use o botão direito para escolher a magia, poção ou item; o botão "Atalhos" muda as teclas</span><b>Caça automática</b><span>marque pontos da rota no andar (aqui ou no minimapa), escolha magias e o que pegar, e ligue</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span></div>
-  <p style="margin-top:10px">O jogo salva sozinho neste navegador a cada 15 segundos.</p><div class="row"><button data-act="close">Fechar</button></div>`,()=>closeDialog()); });
+  <b>Atalhos</b><span>40 quadradinhos embaixo do mapa. Do 1 ao 0 vêm prontos; os outros (Q E R F G Z X C V T e mais 20 sem tecla) você monta. Clique num vazio ou use o botão direito para escolher a magia, poção ou item; o botão "Atalhos" muda as teclas</span><b>Caça automática</b><span>marque pontos da rota no andar (aqui ou no minimapa), escolha magias e o que pegar, e ligue</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span>
+  <b>Painéis dos lados</b><span>arraste pelo ⠿ para mudar de lado ou de ordem; clique no título para abrir ou fechar</span></div>
+  <p style="margin-top:10px">O jogo salva sozinho neste navegador a cada 15 segundos.</p><div class="row"><button data-act="layout">Restaurar painéis</button><button data-act="close">Fechar</button></div>`,act=>{ if(act==='layout') resetLayout(); closeDialog(); }); });
 $('btnRespawn').addEventListener('click',respawn);
 
 // ============================================================ trocar de personagem
