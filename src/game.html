@@ -4212,6 +4212,17 @@ if(window.ResizeObserver) new ResizeObserver(()=>fitCanvas()).observe(vpEl);
 addEventListener('resize',fitCanvas);
 fitCanvas();
 let now=0;
+// contorno claro onde a parede encontra o chão, para enxergar o caminho nas cavernas escuras
+function drawWallEdges(m,x0,y0,x1,y1){ const px=player.x, py=player.y; ctx.save(); ctx.lineCap='square';
+  const open=(x,y)=>!BLOCKS.has(tileAt(m,x,y));
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!BLOCKS.has(tileAt(m,x,y))) continue;
+    const d=Math.hypot(x-px,y-py), a=d<5?0.85:Math.max(0.22,0.85-(d-5)*0.07); const sx=x*T-cam.x, sy=y*T-cam.y;
+    const S=open(x,y+1), N=open(x,y-1), E=open(x+1,y), Wd=open(x-1,y);
+    ctx.fillStyle='rgba(0,0,0,'+(0.5*Math.max(a,0.6))+')'; ctx.fillRect(sx,sy,T,T); if(!(S||N||E||Wd)) continue;
+    ctx.strokeStyle='rgba(236,214,170,'+a+')'; ctx.lineWidth=2; ctx.beginPath();
+    if(S){ ctx.moveTo(sx+1,sy+T-1); ctx.lineTo(sx+T-1,sy+T-1); } if(N){ ctx.moveTo(sx+1,sy+1); ctx.lineTo(sx+T-1,sy+1); }
+    if(E){ ctx.moveTo(sx+T-1,sy+1); ctx.lineTo(sx+T-1,sy+T-1); } if(Wd){ ctx.moveTo(sx+1,sy+1); ctx.lineTo(sx+1,sy+T-1); } ctx.stroke(); }
+  ctx.restore(); }
 function render(){
   const m=cur; ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
   const pr=rpos(player);
@@ -4252,15 +4263,16 @@ function render(){
   for(const p of particles){ if(p.map!==m.id) continue; ctx.globalAlpha=clamp(1-p.t/p.life,0,1); ctx.fillStyle=p.color; ctx.fillRect(Math.round(p.x-cam.x),Math.round(p.y-cam.y),p.size,p.size); }
   ctx.globalAlpha=1;
   if(m.dark){
-    dctx.globalCompositeOperation='source-over'; dctx.clearRect(0,0,dark.width,dark.height); dctx.fillStyle='rgba(4,3,2,'+(m.darkA||.93)+')'; dctx.fillRect(0,0,dark.width,dark.height);
+    dctx.globalCompositeOperation='source-over'; dctx.clearRect(0,0,dark.width,dark.height); dctx.fillStyle='rgba(4,3,2,'+Math.min(0.84,(m.darkA||.93)-0.08)+')'; dctx.fillRect(0,0,dark.width,dark.height);
     dctx.globalCompositeOperation='destination-out';
     const hole=(x,y,r)=>{ const g=dctx.createRadialGradient(x,y,r*0.25,x,y,r); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)'); dctx.fillStyle=g; dctx.beginPath(); dctx.arc(x,y,r,0,7); dctx.fill(); };
-    hole(pr.x*T-cam.x+16, pr.y*T-cam.y+16, 150+Math.sin(now/130)*4);
+    hole(pr.x*T-cam.x+16, pr.y*T-cam.y+16, 190+Math.sin(now/130)*4);
     for(const p of projectiles) if(p.map===m.id){ const q=projPos(p); hole(q.x-cam.x, q.y-cam.y, 50); }
     for(const v of vfx) if(v.map===m.id&&v.t>=0&&!v.ground&&v.kind!=='beam') hole(v.x*T-cam.x+16, v.y*T-cam.y+16, 46);
     for(const fd of fields) if(fd.map===m.id&&fd.t>=fd.warn) hole(fd.x*T-cam.x+16,fd.y*T-cam.y+16,55);
     for(const l of m.lights||[]){ const lx=l.x*T-cam.x+16, ly=l.y*T-cam.y+16; if(lx>-120&&ly>-120&&lx<cv.width+120&&ly<cv.height+120) hole(lx,ly,l.r+Math.sin(now/120+l.x)*3); }
     ctx.drawImage(dark,0,0);
+    drawWallEdges(m,x0,y0,x1,y1);
     if(m.boss&&m.glow){ const bx=m.boss.x*T-cam.x+16, by=m.boss.y*T-cam.y+16; const g=ctx.createRadialGradient(bx,by,10,bx,by,140); g.addColorStop(0,m.glow+'.22)'); g.addColorStop(1,m.glow+'0)'); ctx.fillStyle=g; ctx.fillRect(bx-140,by-140,280,280); }
   }
   if(m.region==='ice'&&!m.dark){ ctx.fillStyle='rgba(255,255,255,.85)'; for(let i=0;i<70;i++){ const sx=((hash2(i,7)%1000)/1000*cv.width+now*0.012*(1+i%3))%cv.width, sy=((hash2(i,3)%1000)/1000*cv.height+now*0.035*(1+(i%4)*0.3))%cv.height; const z=i%5?2:3; ctx.fillRect(sx|0,sy|0,z,z); } }
