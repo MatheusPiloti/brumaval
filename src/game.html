@@ -34,6 +34,23 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .panel.collapsed h2{margin-bottom:0}
 .battle{display:flex;flex-direction:column;gap:4px;height:226px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:2px}
 .battle .bl{flex:0 0 auto}
+.skills{display:flex;flex-direction:column;gap:3px}
+.sk{display:grid;grid-template-columns:1fr auto;column-gap:8px;font-size:13px;color:var(--muted)}
+.sk b{font-family:var(--mono);color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.sk i{grid-column:1/3;display:block;height:3px;background:#0c0a08;border-radius:2px;overflow:hidden}.sk i u{display:block;height:100%;background:#8fbf4a}
+.sk.hot span{color:var(--ink)}.sk.hot i u{background:#9fd0ff}
+.bst{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:52vh;overflow-y:auto;margin-top:8px}
+.bst-i{display:grid;grid-template-columns:1fr auto;text-align:left;padding:6px 8px;gap:2px;background:var(--panel-2)}
+.bst-i .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bst-i small{color:var(--muted)}
+.bst-i .st{grid-row:1/3;grid-column:2;display:flex;gap:3px;align-items:center}.bst-i .st i{width:8px;height:8px;border-radius:50%;border:1px solid var(--line)}.bst-i .st i.on{background:var(--accent);border-color:var(--accent)}
+.bst-i.done{border-color:var(--accent)}
+.bst-d h3{font-family:var(--display);font-weight:500;margin:4px 0}.bst-d h4{font-size:13px;color:var(--muted);margin:10px 0 4px;font-weight:500}
+.bst-bar{position:relative;height:6px;background:#0c0a08;border-radius:3px;margin:8px 0 12px}.bst-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.bst-bar b{position:absolute;top:-3px;width:2px;height:12px;background:var(--line);transform:translateX(-1px)}.bst-bar b.on{background:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px}.kv span{color:var(--muted)}.kv b{font-weight:500}
+.bst-loot{display:flex;flex-wrap:wrap;gap:6px}.bst-loot span{display:inline-flex;align-items:center;gap:4px;font-size:13px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:2px 6px}.bst-loot img{width:18px;height:18px;image-rendering:pixelated}.bst-loot small{color:var(--muted)}
+.good{color:#8fd47a}
+.qty{width:62px;padding:3px 5px;font:inherit;font-size:13px}
 .admg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
 .admg fieldset{border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:0;min-width:0}
 .admg legend{font-family:var(--display);font-size:13px;color:var(--muted);padding:0 4px}
@@ -204,6 +221,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <button id="btnLogout" type="button" hidden>Sair da conta</button>
     <button id="btnAdm" type="button" hidden>ADM</button>
     <button id="btnChars" type="button" title="Salvar e voltar para a lista de personagens">Personagens</button>
+    <button id="btnBest" type="button">Bestiário</button>
     <button id="btnAfk" type="button" title="Tela de acompanhamento da caçada">AFK</button>
     <button id="btnKeys" type="button">Atalhos</button>
     <button id="btnHelp" type="button">Controles</button>
@@ -282,6 +300,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
       </div>
       <div class="cond" id="cond"></div>
     </section>
+    <section class="panel" data-p="skills"><h2>Habilidades</h2><div class="pbody"><div class="skills" id="skills"></div></div></section>
     <section class="panel" data-p="equip"><h2>Equipamento</h2><div class="pbody"><div class="equip" id="equip"></div></div></section>
     <div id="containers"></div>
     <section class="panel" data-p="items"><h2>Itens</h2><div class="pbody">
@@ -887,6 +906,7 @@ function statLines(it){
   if(d.atk) s.push('Ataque +'+d.atk); if(d.mag) s.push('Magia +'+d.mag); if(d.def) s.push('Defesa +'+d.def);
   if(d.hp) s.push('Vida +'+d.hp); if(d.mp) s.push('Mana +'+d.mp); if(d.crit) s.push('Crítico +'+d.crit+'%'); if(d.speed) s.push('Velocidade +'+d.speed); if(d.slots) s.push('Capacidade: '+d.slots+' itens'); if(d.hands===2) s.push('Duas mãos'); if(d.atkspd) s.push('Vel. de ataque '+(d.atkspd>0?'+':'')+d.atkspd+'%'); if(d.regen) s.push('Regeneração +'+d.regen);
   if(d.heal) s.push('Cura '+d.heal); if(d.mana) s.push('Mana +'+d.mana);
+  if(d.set&&SETS[d.set]){ const S=SETS[d.set], have=Object.values(player.eq||{}).filter(x=>x&&ITEMS[x.id]?.set===d.set).length; s.push(S.name+' ('+have+'/4)'); s.push('2 peças: '+setBonusTxt(S.b2)); s.push('4 peças: '+setBonusTxt(S.b4)); }
   return s;
 }
 const affLine = a => '+'+a.v+(AFF[a.k].pct?'%':'')+' '+AFF[a.k].l;
@@ -1047,6 +1067,96 @@ let trauma = 0, running = false, hover = null, dialogRef = null, saveT = 0;
 const keys = new Set();
 
 
+// ---- conjuntos (sets) por classe: 3 por classe, 4 peças cada, com bônus de 2 e 4 peças
+const SETS={};
+{ const T=[15,40,70], tier=(a,t)=>a[t-1];
+  const DEF={heavy:{helmet:[5,11,16],armor:[11,21,30],legs:[6,12,17],boots:[3,7,10]}};
+  const mulDef={guerreiro:1, cacador:0.8, monge:0.75, feiticeiro:0.45, xama:0.5};
+  const NAMES={guerreiro:{helmet:'Elmo',armor:'Peitoral',legs:'Grevas',boots:'Botas'}, cacador:{helmet:'Capuz',armor:'Colete',legs:'Calças',boots:'Botas'},
+    feiticeiro:{helmet:'Chapéu',armor:'Manto',legs:'Calças',boots:'Sapatos'}, xama:{helmet:'Coroa',armor:'Manto',legs:'Calças',boots:'Sandálias'}, monge:{helmet:'Faixa',armor:'Gi',legs:'Calças',boots:'Sandálias'}};
+  const ICON={helmet:'helmet',armor:'armor',legs:'legs',boots:'boots'};
+  const EXTRA={
+    guerreiro:{helmet:{hp:[10,25,50]}, armor:{hp:[20,50,100]}},
+    cacador:{helmet:{crit:[1,2,3]}, armor:{atk:[2,4,7]}, legs:{atk:[1,3,5]}},
+    feiticeiro:{helmet:{mag:[2,5,8]}, armor:{mag:[4,9,15],mp:[20,50,90]}, legs:{mag:[2,4,7]}},
+    xama:{helmet:{mag:[2,4,7]}, armor:{mag:[3,8,13],mp:[15,40,70]}, legs:{hp:[15,35,60]}, boots:{regen:[1,1,2]}},
+    monge:{helmet:{atk:[1,2,4]}, armor:{atk:[2,5,8]}, legs:{atkspd:[3,5,8]}}};
+  const BONUS={
+    guerreiro:[{def:[2,4,6]},{hp:[40,100,180],def:[3,6,10]}],
+    cacador:[{crit:[2,3,4]},{atk:[4,8,14],crit:[2,3,5]}],
+    feiticeiro:[{mag:[3,6,10]},{mag:[5,10,18],mp:[50,120,220]}],
+    xama:[{mag:[2,5,8]},{mag:[4,9,15],hp:[40,90,160],regen:[1,2,3]}],
+    monge:[{atk:[2,4,6]},{atk:[4,8,14],atkspd:[6,10,15]}]};
+  const LIST={
+    guerreiro:[['vanguarda','da Vanguarda','#b8bec8'],['bastiao','do Bastião Rubro','#a83a30'],['tita','do Titã Estelar','#8ab0ff']],
+    cacador:[['batedor','do Batedor','#6a7a3a'],['falcoeiro','do Falcoeiro','#b08a4a'],['tempestade','do Caçador das Tormentas','#5ac0d0']],
+    feiticeiro:[['pirologo','do Pirólogo','#b04a2a'],['raios','do Tecelão de Raios','#e0c040'],['eclipse','do Arquimago do Eclipse','#7a4ac0']],
+    xama:[['andarilho','do Andarilho do Bosque','#4a8a4a'],['mares','do Guardião das Marés','#3a8ab0'],['oraculo','do Oráculo da Geada','#b0e0ff']],
+    monge:[['novico','do Noviço do Templo','#d8c8a0'],['jade','do Punho de Jade','#3ab07a'],['sol','do Mestre do Sol Nascente','#ffb03a']]};
+  const PRICE={helmet:900,armor:1400,legs:1000,boots:800}, SELL={helmet:[0,1400,4200],armor:[0,2600,7500],legs:[0,1700,5000],boots:[0,1300,4000]};
+  for(const [cls,sets] of Object.entries(LIST)) sets.forEach(([key,of,col],ti)=>{ const t=ti+1, sid=cls+'_'+key, pieces=[];
+    for(const slot of ['helmet','armor','legs','boots']){ const id='set_'+sid+'_'+slot, d={name:NAMES[cls][slot]+' '+of, slot, def:Math.max(1,Math.round(tier(DEF.heavy[slot],t)*mulDef[cls])), lvl:T[ti], cls:[cls], icon:(slot==='armor'&&MAGES.includes(cls))?'robe':ICON[slot], look:col, set:sid};
+      if(slot==='boots') d.speed=[10,20,30][ti];
+      for(const [k,v] of Object.entries(EXTRA[cls][slot]||{})) d[k]=tier(v,t);
+      if(t===1) d.price=PRICE[slot]; else d.sell=SELL[slot][ti];
+      ITEMS[id]=d; pieces.push(id); }
+    const b=BONUS[cls].map(o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,tier(v,t)])));
+    SETS[sid]={name:'Conjunto '+of.replace(/^(da|do|de) /,''), cls, lvl:T[ti], pieces, b2:b[0], b4:b[1]}; }); }
+const SET_STAT={atk:'ataque',mag:'magia',def:'defesa',hp:'vida',mp:'mana',crit:'% crítico',atkspd:'% vel. de ataque',regen:'regeneração'};
+const setBonusTxt=o=>Object.entries(o).map(([k,v])=>'+'+v+(k==='crit'||k==='atkspd'?'':' ')+SET_STAT[k]).join(', ');
+
+// ---- habilidades (skills)
+const SKILLS=[['ml','Nível mágico'],['fist','Punhos'],['club','Clava'],['sword','Espada'],['axe','Machado'],['dist','Distância']];
+const SKILL_RATE={ guerreiro:{ml:6,fist:3,club:1,sword:1,axe:1,dist:3}, cacador:{ml:2.5,fist:3,club:3,sword:3,axe:3,dist:1}, monge:{ml:2.5,fist:1,club:3,sword:3,axe:3,dist:3},
+  feiticeiro:{ml:1,fist:3,club:3,sword:3,axe:3,dist:3}, xama:{ml:1,fist:3,club:3,sword:3,axe:3,dist:3} };
+const SKILL_DEF=()=>Object.fromEntries(SKILLS.map(([k])=>[k,{lv:k==='ml'?0:10,p:0}]));
+const skillNeed=(k,lv)=>Math.round((k==='ml'?120*Math.pow(1.1,lv):30*Math.pow(1.1,lv-10))*((SKILL_RATE[player.cls]||SKILL_RATE.guerreiro)[k]||3));
+const skillLv=k=>player.skills?.[k]?.lv ?? (k==='ml'?0:10);
+const skillMul=k=>!k?1:(k==='ml'?1+skillLv('ml')*0.015:1+(skillLv(k)-10)*0.015);
+function weaponSkill(){ const d=ITEMS[player.eq.weapon?.id]; if(!d) return 'fist'; if(d.wk==='bow') return 'dist'; if(d.wk==='fist') return 'fist'; if(d.wk==='wand'||d.wk==='staff') return null;
+  if(d.icon==='axe') return 'axe'; if(d.icon==='club'||d.icon==='hammer'||d.icon==='mace') return 'club'; return 'sword'; }
+function mainSkill(){ const c=player.cls; if(MAGES.includes(c)) return 'ml'; if(c==='monge') return 'fist'; if(c==='cacador') return 'dist'; return weaponSkill()||'sword'; }
+let skillsDirty=true, castHealMul=1;
+function train(k, pts){ if(!k||!player.skills) return; const S=player.skills[k]; S.p+=pts; let up=false;
+  while(S.p>=skillNeed(k,S.lv)){ S.p-=skillNeed(k,S.lv); S.lv++; up=true; }
+  if(up){ const nm=SKILLS.find(s=>s[0]===k)[1]; log('Você avançou para '+nm.toLowerCase()+' '+S.lv+'.','lvl'); floatAt(player,nm+' '+S.lv+'!','#9fd0ff',true); }
+  skillsDirty=true; }
+function renderSkills(){ skillsDirty=false; const el=$('skills'); if(!el||!player.skills) return; const main=mainSkill(), w=weaponSkill();
+  el.innerHTML=SKILLS.map(([k,nm])=>{ const S=player.skills[k], need=skillNeed(k,S.lv), pct=Math.min(99,Math.floor(S.p/need*100)); const hot=k===main||(k===w&&k!==main);
+    return `<div class="sk${hot?' hot':''}" title="${esc(nm)} ${S.lv}: ${pct}% para o próximo · ${k==='ml'?'sobe gastando mana':'sobe atacando com '+(k==='dist'?'arco':k==='fist'?'os punhos':k==='club'?'clavas e martelos':k==='axe'?'machados':'espadas')}"><span>${nm}</span><b>${S.lv}</b><i><u style="width:${pct}%"></u></i></div>`; }).join('')
+    +`<p class="hint" style="margin:4px 0 0">Dano: +${Math.round((skillMul(main)-1)*100)}% (${SKILLS.find(s=>s[0]===main)[1].toLowerCase()}) · Cura: +${Math.round((skillMul('ml')-1)*100)}%</p>`; }
+
+// ---- bestiário
+const BEST_T=d=>d.boss?[1,3,5]:[10,100,500];
+const bestKills=t=>player.bestiary?.[t]||0;
+const bestStage=t=>{ const T=BEST_T(MON[t]), k=bestKills(t); return k>=T[2]?3:k>=T[1]?2:k>=T[0]?1:0; };
+function monRegion(t){ const sp=spawns.find(s=>s.type===t); if(!sp) return 'other'; const M=MAPS[sp.map]; return M.region==='ash'||sp.map==='ash'?'ash':M.region==='fae'||sp.map==='fae'?'fae':'over'; }
+function monWhere(t){ return [...new Set(spawns.filter(s=>s.type===t).map(s=>MAPS[s.map].name.replace(/ \(.*\)$/,'')))].join(', ')||'invocado por chefes'; }
+const chanceTxt=c=>c>=0.5?'comum':c>=0.15?'incomum':c>=0.04?'semi-raro':c>=0.01?'raro':'muito raro';
+let bestTab='over', bestSel=null;
+function openBestiary(){
+  const all=Object.keys(MON).filter(t=>spawns.some(s=>s.type===t)||bestKills(t)>0);
+  const R={over:'Pedraluz',fae:'Lunária',ash:'Cinzaforte'};
+  const list=all.filter(t=>monRegion(t)===bestTab).sort((a,b)=>(MON[a].boss?1:0)-(MON[b].boss?1:0)||(MON[a].lvl||0)-(MON[b].lvl||0));
+  const done=all.filter(t=>bestStage(t)===3).length, known=all.filter(t=>bestKills(t)>0).length;
+  let body;
+  if(bestSel){ const t=bestSel, d=MON[t], st=bestStage(t), T=BEST_T(d), k=bestKills(t);
+    body=`<div class="bst-d"><h3>${k?esc(d.name):'???'}${d.boss?' <small class="rn r4">Chefe</small>':''}</h3>
+      <p class="hint" style="margin:0 0 6px">${k} morto${k===1?'':'s'} · etapas: ${T.join(' / ')}</p>
+      <div class="bst-bar"><i style="width:${Math.min(100,k/T[2]*100)}%"></i>${T.map((x,i)=>`<b style="left:${x/T[2]*100}%" class="${k>=x?'on':''}"></b>`).join('')}</div>
+      ${st>=1?`<div class="kv"><span>Nível</span><b>${d.lvl}</b><span>Vida</span><b>${fmtN(d.hp)}</b><span>Experiência</span><b>${fmtN(d.xp)}</b><span>Onde vive</span><b>${esc(monWhere(t))}</b></div>`:`<p class="hint">Derrote ${T[0]} para ver nível, vida, experiência e onde vive.</p>`}
+      ${st>=2?`<h4>Saque</h4><div class="bst-loot">${d.loot.map(([id,ch])=>`<span><img alt="" src="${iconURL(id)}">${esc(ITEMS[id].name)} <small>${chanceTxt(ch)}</small></span>`).join('')}</div>`:(st>=1?`<p class="hint">Derrote ${T[1]} para ver o saque.</p>`:'')}
+      ${st>=3?`<p class="good" style="margin-top:8px">Completo: você causa +5% de dano a esta criatura.</p>`:`<p class="hint">Complete (${T[2]}) para causar +5% de dano a esta criatura.</p>`}
+      <div class="row"><button data-act="back" type="button">Voltar à lista</button></div></div>`;
+  } else body=`<div class="tabs">${Object.entries(R).map(([k,l])=>`<button data-act="btab" data-t="${k}" aria-pressed="${bestTab===k}">${l}</button>`).join('')}</div>
+    <div class="bst">${list.map(t=>{ const d=MON[t], k=bestKills(t), st=bestStage(t), T=BEST_T(d), nx=st<3?T[st]:T[2];
+      return `<button type="button" class="bst-i${st===3?' done':''}" data-act="bsel" data-t="${t}"><span class="nm">${k?esc(d.name):'???'}${d.boss?' ★':''}</span><small>${k?'nível '+d.lvl+' · ':''}${k}/${nx}</small><span class="st">${[1,2,3].map(i=>`<i class="${st>=i?'on':''}"></i>`).join('')}</span></button>`; }).join('')}</div>`;
+  openDialog(player,'Bestiário',`<p class="hint" style="margin-top:0">Conhecidas: ${known}/${all.length} · completas: ${done}. Cada criatura tem 3 etapas: informações, saque e completo (+5% de dano contra ela).</p>${body}<div class="row"><button data-act="close" type="button">Fechar</button></div>`,(act,ds)=>{
+    if(act==='close'){ bestSel=null; return closeDialog(); }
+    if(act==='btab'){ bestTab=ds.t; bestSel=null; } if(act==='bsel') bestSel=ds.t; if(act==='back') bestSel=null; openBestiary(); });
+}
+function bestiaryKill(t){ if(!player.bestiary) player.bestiary={}; const before=bestStage(t); player.bestiary[t]=(player.bestiary[t]||0)+1; const now2=bestStage(t);
+  if(now2>before) log(now2===3?'Bestiário: '+MON[t].name+' completo! +5% de dano contra essa criatura.':'Bestiário: nova etapa de '+MON[t].name+' ('+now2+'/3).','lvl'); }
 const totalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
 function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
@@ -1054,6 +1164,8 @@ function stats(){
   for(const k in player.eq){ const it=player.eq[k]; if(!it) continue; const d=ITEMS[it.id];
     for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal','atkspd']) if(d[f]) s[f]+=d[f];
     for(const a of it.a||[]) s[a.k]+=a.v; }
+  { const cnt={}; for(const k in player.eq){ const d=ITEMS[player.eq[k]?.id]; if(d?.set) cnt[d.set]=(cnt[d.set]||0)+1; }
+    for(const [sid,n] of Object.entries(cnt)){ const S=SETS[sid]; if(!S) continue; if(n>=2) for(const [k,v] of Object.entries(S.b2)) s[k]+=v; if(n>=4) for(const [k,v] of Object.entries(S.b4)) s[k]+=v; } }
   const B=player.buffs||{}; if(B.fury>0) s.def=Math.round(s.def*1.2); if(B.ironskin>0) s.def=Math.round(s.def*1.5); if(B.bark>0) s.def=Math.round(s.def*1.4);
   if(B.eagle>0) s.crit+=20; if(B.tiger>0){ s.atkspd+=35; s.crit+=5; } if(B.haste>0) s.atkspd+=40; if(B.balance>0) s.lifesteal+=15;
   s.maxHp=C.hp0+L*C.hpLv+s.hp; s.maxMp=C.mp0+L*C.mpLv+s.mp; s.critCh=Math.min(60,s.crit);
@@ -1376,14 +1488,14 @@ function randomGearId(lv){
 }
 function roll(atk,def){ if(R()<0.07) return {miss:true}; let d=atk*20/(20+def)*(0.85+R()*0.3); const crit=R()<0.06; if(crit) d*=1.6; return {d:Math.max(1,Math.round(d)),crit}; }
 function hitMonster(m, dmg, crit, color){
-  if(m.dead) return;
+  if(m.dead) return; if(bestStage(m.type)===3) dmg=Math.round(dmg*1.05);
   m.hp-=dmg; m.flash=110; floatAt(m, String(dmg), color||(crit?'#ffd54a':'#ff6a5a'), crit); blood(m,m.def.undead); burst(m, m.def.undead?'#d8d0bc':'#b02a20', crit?12:6);
   if(m.state==='idle'||m.state==='return'){ m.state='chase'; }
   if(crit) trauma=Math.min(1,trauma+0.1);
   if(m.hp<=0) killMonster(m);
 }
 function killMonster(m){
-  m.dead=true; m.sp.mon=null; sess.kills++; m.sp.timer = m.def.respawn || (25000+R()*15000);
+  m.dead=true; m.sp.mon=null; sess.kills++; bestiaryKill(m.type); m.sp.timer = m.def.respawn || (25000+R()*15000);
   monsters.splice(monsters.indexOf(m),1);
   if(target===m){ target=null; player.follow=false; }
   const lv=m.def.lvl+Math.round((m.mult-1)*10), items=[];
@@ -1503,14 +1615,14 @@ const SPELLS = {
   ],
 };
 const classSpells = () => SPELLS[player.cls] || SPELLS.guerreiro;
-function healSpell(n){ const st=stats(); if(player.hp>=st.maxHp){ log('Sua vida já está cheia.','sys'); return false; } heal(Math.round(n*(0.9+R()*0.2))); burst(player,'#9fe08a',14,70); return true; }
+function healSpell(n){ const st=stats(); if(player.hp>=st.maxHp){ log('Sua vida já está cheia.','sys'); return false; } heal(Math.round(n*castHealMul*(0.9+R()*0.2))); burst(player,'#9fe08a',14,70); return true; }
 function needTarget(range){
   const tg=target; if(!tg){ log('Escolha um alvo primeiro (clique ou Espaço).','sys'); return null; }
   if(cheb(player,tg)>range){ log(range===1?'Fique ao lado do alvo.':'O alvo está longe demais.','sys'); return null; }
   if(range>1 && !los(cur,player,tg)){ log('Algo bloqueia a visão do alvo.','sys'); return null; }
   return tg;
 }
-function spellHit(m, base, st, o={}){ if(m.dead) return; if(o.magic&&player.buffs.focus>0) base*=1.3; const r=rollP(base, o.magic? m.dfn*0.4 : m.dfn, st, o.crit||0, false); hitMonster(m, r.d, r.crit, r.crit?'#ffd54a':o.color); if(o.onHit && !m.dead) o.onHit(m); }
+function spellHit(m, base, st, o={}){ if(m.dead) return; base*=st.spMul||1; if(o.magic&&player.buffs.focus>0) base*=1.3; const r=rollP(base, o.magic? m.dfn*0.4 : m.dfn, st, o.crit||0, false); hitMonster(m, r.d, r.crit, r.crit?'#ffd54a':o.color); if(o.onHit && !m.dead) o.onHit(m); }
 function shoot(range, base, st, o){
   const tg=needTarget(range); if(!tg) return false; const a=rpos(player), b=rpos(tg);
   projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:b.x*T+16,y1:b.y*T+14,t:0,dur:240,color:o.color,big:o.big,arrow:o.arrow,onHit:()=>spellHit(tg,base,st,o)});
@@ -1528,7 +1640,8 @@ function area(c, rad, base, st, o){
 }
 function autoAttack(st, rg){
   const tg=target, wk=ITEMS[player.eq.weapon?.id]?.wk, magic=wk==='wand'||wk==='staff';
-  const r=rollP((magic? st.atk+st.mag : st.atk)*(magic&&player.buffs.focus>0?1.3:1), magic? tg.dfn*0.5 : tg.dfn, st);
+  const wsk=weaponSkill(); train(magic?null:wsk,1);
+  const r=rollP((magic? st.atk+st.mag : st.atk)*(magic&&player.buffs.focus>0?1.3:1)*skillMul(magic?'ml':wsk), magic? tg.dfn*0.5 : tg.dfn, st);
   const apply=()=>{ if(tg.dead) return; if(r.miss) floatAt(tg,'errou','#bbb'); else { hitMonster(tg,r.d,r.crit); leech(r.d,st); } };
   if(rg>1){ const a=rpos(player), b=rpos(tg);
     projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:b.x*T+16,y1:b.y*T+14,t:0,dur:200,color:wk==='bow'?'#e8c890':wk==='wand'?'#ff8a3a':'#9ad8ff',arrow:wk==='bow',onHit:apply}); }
@@ -1540,8 +1653,9 @@ function cast(i){
   if(player.level<s.lvl){ log(s.name+' exige nível '+s.lvl+'.','sys'); return; }
   if((player.spellCd[i]||0)>0) return;
   if(player.mp<s.mana){ log('Mana insuficiente.','sys'); floatAt(player,'sem mana','#7aa8ff'); return; }
-  const st=stats(); if(s.run(st, player.level)===false) return;
-  player.mp-=s.mana; player.spellCd[i]=s.cd; uiDirty=true;
+  const st0=stats(), st={...st0, spMul:skillMul(mainSkill())}; castHealMul=skillMul('ml');
+  const ok=s.run(st, player.level); castHealMul=1; if(ok===false) return;
+  player.mp-=s.mana; player.spellCd[i]=s.cd; uiDirty=true; train('ml', s.mana);
 }
 
 // ============================================================ IA dos monstros
@@ -1797,12 +1911,13 @@ function botTick(dt){
   if(!bot.on||!running) return; if(player.dead){ toggleBot(false,'Caça automática parou: você morreu.'); return; }
   bot.think-=dt; if(bot.think>0) return; bot.think=180;
   const B=player.bot, st=stats();
-  if(B.stopNoPots && !(B.refill&&B.refill.on) && countItem('hp')+countItem('hp2')===0 && player.hp<st.maxHp*0.5){ toggleBot(false,'Caça automática parou: acabaram as poções de vida.'); return; }
+  if(false && countItem('hp')+countItem('hp2')===0 && player.hp<st.maxHp*0.5){ toggleBot(false,'Caça automática parou: acabaram as poções de vida.'); return; }
   if(!dlg.hidden && dialogRef && dialogRef.items) closeDialog();
   if(bot.mode!=='hunt'){ botTravel(B,st); return; }
   for(const c of corpses) if(c.map===cur.id&&!c.botDone&&!c.player&&cheb(player,c)<=1&&c.items.some(lootWanted)) botLoot(c);
+  { const fighting=!!(target&&!target.dead&&target.map===cur.id); const why=needRefill(fighting); if(why){ startRefill(why); return; }
+    if(!(B.refill&&B.refill.on) && B.stopNoPots && potCount('hp')===0){ startRefill('acabaram as poções de vida', true); return; } }
   if(target && !target.dead && target.map===cur.id){ if(!botKite(B,st)) botStatus('Atacando: '+target.def.name); botCast(B,st); return; }
-  { const why=needRefill(); if(why){ startRefill(why); return; } }
   const foes=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(player,m)<=B.range&&los(cur,player,m)).sort((a,b)=>cheb(player,a)-cheb(player,b));
   if(foes.length){ target=foes[0]; player.follow=true; player.path=null; player.pending=null; botStatus('Atacando: '+target.def.name); return; }
   const c=corpses.find(c=>c.map===cur.id&&!c.botDone&&!c.player&&cheb(player,c)<=B.range&&c.items.some(lootWanted));
@@ -1836,7 +1951,7 @@ function renderBot(){
     <label class="botrow">Comprar até ter <input type="number" min="0" max="2000" step="10" data-r="hp" value="${B.refill.hp}"> de vida e <input type="number" min="0" max="2000" step="10" data-r="mp" value="${B.refill.mp}"> de mana</label>
     <label class="botrow"><input type="checkbox" data-r="strong" ${B.refill.strong?'checked':''}> Comprar poções fortes (Cinzaforte e Lunária)</label>
     <p class="hint" style="margin:4px 0 0">Na cidade da região, guarda no depósito todo o ouro e os itens que não são poções nem mochilas, saca o que precisa, compra as poções e volta para o último andar de caça.</p>
-    <label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''} ${B.refill.on?'disabled':''}> Parar se acabarem as poções de vida (quando não reabastece)</label>
+    <label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''} ${B.refill.on?'disabled':''}> Sem reabastecer: voltar para a cidade e parar quando acabarem as poções de vida</label>
     <p class="hint" style="margin:4px 0 0">A cura usa o painel "Cura automática". Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
 }
 $('botui').addEventListener('click',e=>{ const b=e.target.closest('[data-b]'); if(!b||!running||!player.bot) return; const R=route();
@@ -1866,14 +1981,14 @@ function mapPath(from,to){ if(from===to) return [from]; const prev={[from]:null}
   while(q.length){ const a=q.shift(); for(const l of Object.values(MAPS[a].links||{})){ const b=l.map; if(b in prev||!MAPS[b]) continue; prev[b]=a; if(b===to){ const p=[b]; let c=a; while(c!=null){ p.unshift(c); c=prev[c]; } return p; } q.push(b); } }
   return null; }
 function bagFull(){ return !freeContainer(); }
-function needRefill(){ const F=player.bot.refill; if(!F||!F.on) return '';
+function needRefill(fighting){ const F=player.bot.refill; if(!F||!F.on) return '';
   if(potCount('hp')<=F.minHp) return 'poções de vida acabando';
   if(F.mp>0 && F.minMp>0 && potCount('mp')<=F.minMp) return 'poções de mana acabando';
-  if(F.full && bagFull() && now-bot.lastLootFail<20000) return 'mochila cheia';
+  if(!fighting && F.full && bagFull() && now-bot.fullAt<20000) return 'mochila cheia';
   return ''; }
-function startRefill(why){
-  bot.mode='refill'; bot.sub='depot'; bot.huntMap=cur.id; bot.town=townOf(cur.id); bot.stuck=0; target=null; player.follow=false; player.path=null;
-  sess.trips++; log('Caça automática: '+why+'. Indo para a cidade reabastecer.','sys'); renderBot(); }
+function startRefill(why, flee){
+  bot.flee=!!flee; bot.blocker=null; bot.mode='refill'; bot.sub='depot'; bot.huntMap=cur.id; bot.town=townOf(cur.id); bot.stuck=0; target=null; player.follow=false; player.path=null;
+  sess.trips++; log('Caça automática: '+why+'. '+(flee?'Voltando para a cidade.':'Indo para a cidade reabastecer.'),'sys'); renderBot(); }
 const botDanger=()=>monsters.filter(m=>!m.dead&&m.map===cur.id&&m.state==='chase'&&cheb(player,m)<=3).sort((a,b)=>cheb(player,a)-cheb(player,b));
 function botCast(B,st){
   if(player.mp/st.maxMp*100<B.minMana) return; const sp=classSpells();
@@ -1885,11 +2000,12 @@ function botGo(x,y,adjacent){ if(player.moving||(player.path&&player.path.length
   { const fn=adjacent?(a,b)=>Math.max(Math.abs(a-x),Math.abs(b-y))<=1:(a,b)=>a===x&&b===y, pass=(m,a,b)=>passPlayer(m,a,b)&&(!m.links[b*m.W+a]||(a===x&&b===y));
     const P=findPath(cur,player.x,player.y,fn,x,y,pass,40000,player,true,true);
     const blk=P&&P.map(s=>monsters.find(m=>!m.dead&&m.map===cur.id&&m.x===s.x&&m.y===s.y)).find(Boolean);
-    if(blk){ target=blk; player.follow=true; botStatus('Abrindo caminho: '+blk.def.name); bot.stuck=0; return; } }
+    if(blk){ target=blk; bot.blocker=blk; player.follow=true; botStatus('Abrindo caminho: '+blk.def.name); bot.stuck=0; return; } }
   { if(++bot.stuck>12){ toggleBot(false,'Caça automática parou: não achei caminho até '+(bot.mode==='return'?'a caçada':'a cidade')+'.'); } } }
 function botTravel(B,st){
-  if(target&&!target.dead&&target.map===cur.id){ botStatus('Defendendo-se: '+target.def.name); botCast(B,st); return; }
-  const foes=botDanger(); if(foes.length){ target=foes[0]; player.follow=true; player.path=null; return; }
+  if(target&&!target.dead&&target.map===cur.id&&(bot.mode==='return'||target===bot.blocker)){ botStatus((target===bot.blocker?'Abrindo caminho: ':'Defendendo-se: ')+target.def.name); botCast(B,st); return; }
+  if(bot.mode==='refill'&&target&&target!==bot.blocker){ target=null; player.follow=false; }
+  const foes=bot.mode==='return'?botDanger():[]; if(foes.length){ target=foes[0]; player.follow=true; player.path=null; return; }
   const dest=bot.mode==='return'?bot.huntMap:bot.town;
   if(cur.id!==dest){ const P=mapPath(cur.id,dest); if(!P){ toggleBot(false,'Caça automática parou: não sei o caminho até '+MAPS[dest].name+'.'); return; }
     const next=P[1]; let best=null, bd=1e9;
@@ -1898,8 +2014,9 @@ function botTravel(B,st){
     botStatus((bot.mode==='return'?'Voltando à caçada':'Indo para a cidade')+' · '+MAPS[next].name); botGo(best.x,best.y,false); return; }
   if(bot.mode==='refill'){ const [dId,mId]=TOWN_NPC[bot.town]; const n=npcs.find(n=>n.id===(bot.sub==='depot'?dId:mId)); if(!n){ bot.mode='return'; return; }
     if(cheb(player,n)>1){ botStatus(bot.sub==='depot'?'Indo ao depósito':'Indo ao mercador'); botGo(n.x,n.y,true); return; }
+    if(bot.flee){ toggleBot(false,'Caça automática: você voltou para a cidade porque acabaram as poções. Compre mais e ligue de novo.'); return; }
     if(bot.sub==='depot'){ botDeposit(B); bot.sub='shop'; return; }
-    botBuy(B,n); bot.mode='return'; bot.stuck=0; log('Caça automática: reabastecido. Voltando para '+MAPS[bot.huntMap].name+'.','sys'); save(); return; }
+    botBuy(B,n); if(potCount('hp')<=B.refill.minHp){ toggleBot(false,'Caça automática parou na cidade: não há ouro suficiente para comprar poções de vida.'); return; } bot.mode='return'; bot.stuck=0; log('Caça automática: reabastecido. Voltando para '+MAPS[bot.huntMap].name+'.','sys'); save(); return; }
   bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática: de volta à caçada.','sys'); renderBot(); }
 function botDeposit(B){ const D=player.depot; let n=0, full=false;
   for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
@@ -2070,18 +2187,24 @@ function talk(n){
     openDialog(n, n.name, html, fn);
   }
 }
+const shopQty={};
 function openShop(n, tab){
   const tabs = `<div class="tabs"><button data-act="tab" data-t="buy" aria-pressed="${tab==='buy'}">Comprar</button><button data-act="tab" data-t="sell" aria-pressed="${tab==='sell'}">Vender</button><span class="spacer"></span></div>`;
   let body='';
   if(tab==='buy') body = Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id], L=d.lvl||0, pot=['hp','mp','hp2','mp2'].includes(id), tier=L>=35?2:L>=20?1:0; return d.price && (!d.slot || canUse(d)) && (pot ? (id==='hp'||id==='mp'||n.id!=='merchant') : tier===({merchant:0,merchant3:1,merchant2:2}[n.id])); })
       .sort((a,b)=>{ const A=ITEMS[a], B=ITEMS[b]; return (A.slot?1+SLOT_ORDER[A.slot]:0)-(B.slot?1+SLOT_ORDER[B.slot]:0) || A.price-B.price; })
-      .map(id=>{ const it={id,n:1,r:0,a:[]}; return itemRow(it, itemSub(it)+` · <span class="price">${ITEMS[id].price} ouro</span>`, `<button data-act="buy" data-id="${id}" ${player.gold<ITEMS[id].price?'disabled':''}>Comprar</button>`); }).join('');
+      .map(id=>{ const it={id,n:1,r:0,a:[]}, d=ITEMS[id];
+        if(d.stack) return itemRow(it, itemSub(it)+` · <span class="price">${d.price} ouro cada</span>`, `<input class="qty" type="number" min="1" max="1000" data-q="${id}" value="${shopQty[id]||100}" aria-label="Quantidade"><button data-act="buy" data-id="${id}" ${player.gold<d.price?'disabled':''}>Comprar</button>`);
+        return itemRow(it, itemSub(it)+` · <span class="price">${d.price} ouro</span>`, `<button data-act="buy" data-id="${id}" ${player.gold<d.price?'disabled':''}>Comprar</button>`); }).join('');
   const mine=allItems();
   if(tab!=='buy') body = mine.length ? mine.map((s,i)=>{ const p=isBag(s)&&s.items.length?0:sellPrice(s); return itemRow(s, (s.n>1?s.n+'× · ':'')+itemSub(s,{sell:false})+` · <span class="price">${p} ouro${s.n>1?' cada':''}</span>`, p>0?`<button data-act="sell" data-i="${i}">Vender${s.n>1?' 1':''}</button>${s.n>1?`<button data-act="sellall" data-i="${i}">Todos</button>`:''}`:''); }).join('') : '<p>Sua mochila está vazia.</p>';
   openDialog(n, n.name, `<p>"Ouro na mesa e a mercadoria é sua. Separei o que serve para um ${CLASSES[player.cls].name}. Também compro o que você trouxer lá de fora." <span class="price">Você tem ${player.gold} ouro.</span></p>${tabs}<div class="list">${body}</div><div class="row"><button data-act="close">Fechar</button></div>`, (act,ds)=>{
     if(act==='close') return closeDialog();
     if(act==='tab') return openShop(n, ds.t);
-    if(act==='buy'){ const d=ITEMS[ds.id]; if(player.gold<d.price) return; if(!addItem(ds.id,1)){ log('A mochila está cheia.','sys'); return; } player.gold-=d.price; log('Você comprou '+d.name+' por '+d.price+' ouro.','loot'); }
+    if(act==='buy'){ const d=ITEMS[ds.id]; let q=1;
+      if(d.stack){ const inp=dlgBody.querySelector(`[data-q="${ds.id}"]`); q=Math.max(1,Math.min(1000,Math.floor(+(inp?.value)||1))); shopQty[ds.id]=q; q=Math.min(q, Math.floor(player.gold/d.price)); }
+      if(q<1||player.gold<d.price) return; if(!addItem(d.stack?{id:ds.id,n:q,r:0,a:[]}:ds.id,1)){ log('A mochila está cheia.','sys'); return; }
+      player.gold-=d.price*q; log('Você comprou '+(q>1?q+' ':'')+d.name+' por '+d.price*q+' ouro.','loot'); }
     if(act==='sell'||act==='sellall'){ const s=mine[Number(ds.i)]; if(!s||(isBag(s)&&s.items.length)) return; const k=act==='sellall'?s.n:1, p=sellPrice(s)*k; player.gold+=p; log('Você vendeu '+(k>1?k+' ':'')+itemName(s)+' por '+p+' ouro.','loot'); removeOne(s,k); }
     uiDirty=true; openShop(n, tab);
   });
@@ -2831,14 +2954,14 @@ function frame(t){
   if(running && Date.now()-sess.t0-(sess.samples.at(-1)?.t||0)>=5000) sampleSess();
   if(afkOpen){ afkT-=dt; if(afkT<=0){ afkT=1000; renderAfk(); } if(running&&uiDirty) renderUI(); requestAnimationFrame(frame); return; }
   render();
-  if(running){ updateBars(); if(uiDirty) renderUI(); drawMini(); }
+  if(running){ updateBars(); if(uiDirty) renderUI(); if(skillsDirty&&(t-(frame.sk||0))>400){ frame.sk=t; renderSkills(); } drawMini(); }
   requestAnimationFrame(frame);
 }
 
 // ============================================================ salvar / carregar
 function encFog(){ const o={}; for(const m of Object.values(MAPS)){ const E=m.explored; let any=false, runs=[], v=0, n=0; for(let i=0;i<E.length;i++){ const b=E[i]?1:0; if(b) any=true; if(b===v) n++; else { runs.push(n.toString(36)); v=b; n=1; } } runs.push(n.toString(36)); if(any) o[m.id]=runs.join('.'); } return o; }
 function decFog(o){ for(const [id,str] of Object.entries(o||{})){ const m=MAPS[id]; if(!m||typeof str!=='string') continue; let i=0, v=0; for(const r of str.split('.')){ const n=parseInt(r,36)||0; if(v) m.explored.fill(1,i,Math.min(i+n,m.explored.length)); i+=n; v^=1; } } miniDirty=true; }
-function serialize(){ return {v:8, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
+function serialize(){ return {v:9, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
 function save(){ if(!running) return; const d=serialize();
   if(Cloud.on&&Cloud.charId){ Cloud.queue(d); try{ localStorage.setItem(SAVE_KEY+':'+Cloud.charId, JSON.stringify(d)); }catch(e){} return; }
   if(!localSlot) localSlot='c'+Date.now().toString(36);
@@ -2865,6 +2988,7 @@ function applySave(s){
   player.eq.bag.items.push(...oldInv);
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
   player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm;
+  { const D=SKILL_DEF(); for(const k in (s.skills||{})) if(D[k]) D[k]={lv:+s.skills[k].lv||D[k].lv, p:+s.skills[k].p||0}; player.skills=D; player.bestiary=s.bestiary||{}; }
   { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
   decFog(s.fog);
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
@@ -2917,6 +3041,11 @@ function openAdm(note){
     <select id="admMap" style="width:100%">${Object.values(MAPS).map(m=>opt(m.id,m.name,m.id===ADM.map)).join('')}</select>
     <div class="botrow"><button data-act="tp" type="button" class="primary">Teleportar</button></div>
    </fieldset>
+   <fieldset><legend>Habilidades</legend>
+    <div class="botrow">Nível mágico <input type="number" id="admMl" min="0" max="150" value="${skillLv('ml')}"></div>
+    <div class="botrow">${esc(SKILLS.find(x=>x[0]===(weaponSkill()||'sword'))[1])} <input type="number" id="admSk" min="10" max="150" value="${skillLv(weaponSkill()||'sword')}"><button data-act="skills" type="button">Definir</button></div>
+    <div class="botrow"><button data-act="bestall" type="button">Completar bestiário</button></div>
+   </fieldset>
    <fieldset><legend>Monstros e chefes</legend>
     <select id="admMon" style="width:100%">${mons.map(k=>opt(k,(MON[k].boss?'★ ':'')+MON[k].name+' (nv '+(MON[k].lvl||'?')+')',k===ADM.mon)).join('')}</select>
     <div class="botrow">Qtd. <input type="number" id="admMn" min="1" max="10" value="${ADM.mn}"><button data-act="summon" type="button" class="primary">Invocar aqui</button></div>
@@ -2932,6 +3061,8 @@ function openAdm(note){
     player.adm=true; let msg='';
     if(act==='lvl'){ const L=Math.max(1,Math.min(300,Math.floor(+v('admLvl')||1))); ADM.lvl=L; player.level=L; player.xp=totalXp(L); const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; buildActions(); msg='Nível '+L+'.'; }
     if(act==='gold'){ player.gold+=ADM.gold; msg='+'+ADM.gold+' de ouro.'; }
+    if(act==='skills'){ const ml=Math.max(0,Math.min(150,Math.floor(+v('admMl')||0))), sk=Math.max(10,Math.min(150,Math.floor(+v('admSk')||10))); player.skills.ml={lv:ml,p:0}; player.skills[weaponSkill()||'sword']={lv:sk,p:0}; skillsDirty=true; msg='Habilidades definidas.'; }
+    if(act==='bestall'){ for(const t of Object.keys(MON)) player.bestiary[t]=Math.max(player.bestiary[t]||0, BEST_T(MON[t])[2]); msg='Bestiário completo.'; }
     if(act==='heal'){ const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; player.slowT=0; msg='Vida e mana cheias.'; }
     if(act==='god'){ player.god=!player.god; msg=player.god?'Modo deus ligado: você não recebe dano.':'Modo deus desligado.'; }
     if(act==='spells'){ player.learned={fae:true,ash:true}; quests.fae.state=2; quests.ash.state=2; buildActions(); msg='Todas as magias da classe liberadas (ainda respeitam o nível).'; }
@@ -2948,6 +3079,7 @@ function openAdm(note){
   });
 }
 $('btnAdm').addEventListener('click',()=>{ if(running) openAdm(); });
+$('btnBest').addEventListener('click',()=>{ if(running){ bestSel=null; openBestiary(); } });
 // ============================================================ início
 function begin(fromSave, forcedName){
   for(const m of Object.values(MAPS)) m.explored.fill(0);
@@ -2958,14 +3090,14 @@ function begin(fromSave, forcedName){
     player.eq={}; for(const id of C.start) player.eq[ITEMS[id].slot]=makeItem(id,0);
     player.eq.legs=makeItem('leatherlegs',0);
     player.eq.bag={id:'basicbag',n:1,r:0,a:[],items:[{id:'hp',n:3,r:0,a:[]}]}; if(C.mpLv>10) player.eq.bag.items.push({id:'mp',n:3,r:0,a:[]});
-    player.learned={fae:false,ash:false}; player.bot=BOT_DEF(); player.adm=false;
+    player.learned={fae:false,ash:false}; player.bot=BOT_DEF(); player.adm=false; player.skills=SKILL_DEF(); player.bestiary={};
     quests.wolves={state:0,count:0}; quests.king={state:0}; quests.fae={state:0,base:0}; quests.ash={state:0,base:0};
     cur=MAPS.over; const s=MAPS.over.spawn; player.x=player.px=s.x; player.y=player.py=s.y;
     const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp;
   }
   if(!fromSave) player.auto=AUTO_DEF(); player.potCd=0;
   player.buffs={}; player.spellCd={}; openWins=[]; timers=[]; player.slowT=0; if(!fromSave){ player.bossKills={}; player.depot={gold:0,items:[]}; }
-  $('startScreen').hidden=true; running=true; bot.on=false; bot.mode='hunt'; bot.mark=false; resetSess(); player.god=false; $('btnAdm').hidden=!isAdmin(); buildActions(); renderAuto(); renderBot(); reveal(); miniDirty=true; uiDirty=true;
+  $('startScreen').hidden=true; running=true; bot.on=false; bot.mode='hunt'; bot.mark=false; resetSess(); skillsDirty=true; player.god=false; $('btnAdm').hidden=!isAdmin(); buildActions(); renderAuto(); renderBot(); reveal(); miniDirty=true; uiDirty=true;
   if(fromSave && fromSave.dead){ player.hp=1; }
   log(fromSave?`Bem-vindo de volta, ${player.name}.`:`Bem-vindo a Brumaval, ${player.name}. ${CLASSES[player.cls].name}${CLASSES[player.cls].name.endsWith('r')?'es':'s'} começam no templo de Pedraluz.`,'sys');
   if(!fromSave) log('Dica: fale com o Capitão Bento, perto do portão norte. Ratos rondam os campos fora da cidade.','npc');
@@ -3112,7 +3244,7 @@ player.x=player.px=MAPS.over.spawn.x; player.y=player.py=MAPS.over.spawn.y+5;
 window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
-window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
