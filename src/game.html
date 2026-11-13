@@ -134,11 +134,16 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 input[type=text],input[type=number],input[type=email],input[type=password]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px}
 .keys{font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:12px}
 .keys b{color:var(--ink);font-weight:500}
-.actionbar{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
-@media (max-width:760px){.actionbar{grid-template-columns:repeat(5,minmax(0,1fr))}}
-.act.empty{opacity:.5;border-style:dashed}.act.empty:hover{opacity:.85}
-.act .ic0{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px dashed var(--line);border-radius:3px;color:var(--muted);font-size:16px}
-.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:5px}
+.actionbar{display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start}
+.actionbar .act{position:relative;width:42px;height:42px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px}
+.actionbar .act .ic{width:34px;height:34px;image-rendering:pixelated;border-radius:3px;display:block}
+.actionbar .act:disabled .ic{filter:grayscale(1) brightness(.55)}
+.actionbar .act .k{position:absolute;top:1px;left:1px;font-size:9px;background:rgba(0,0,0,.78);padding:0 2px;border-radius:2px;line-height:11px;color:var(--ink)}
+.actionbar .act .c{position:absolute;right:1px;bottom:1px;font-size:9px;font-family:var(--mono);background:rgba(0,0,0,.78);padding:0 2px;border-radius:2px;line-height:11px;color:var(--ink)}
+.actionbar .act .cdv{position:absolute;left:0;bottom:0;top:auto;width:100%;height:0;background:rgba(0,0,0,.62);pointer-events:none;border-radius:0}
+.actionbar .act.empty{opacity:.45;border-style:dashed}.actionbar .act.empty:hover{opacity:.85}
+.actionbar .act .ic0{color:var(--muted);font-size:15px;line-height:1}
+.actionbar .act:hover{border-color:var(--accent)}
 .pick{display:flex;align-items:center;gap:8px;text-align:left;padding:5px 7px}.pick img{width:26px;height:26px;image-rendering:pixelated;flex:none}.pick span{display:flex;flex-direction:column;min-width:0}.pick b{font-weight:600;font-size:13px}.pick small{color:var(--muted);font-size:11px}
 .pick.on{border-color:var(--accent);background:var(--panel-2)}.pk0{width:26px;height:26px}
 .pkh{font-family:var(--display);font-weight:500;font-size:13px;color:var(--muted);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.05em}
@@ -2306,7 +2311,7 @@ function spellIconURL(s){
 }
 
 // ============================================================ atalhos configuráveis
-const KEY_DEF={...Object.fromEntries(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','KeyQ','KeyE','KeyR','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyT'].map((k,i)=>['b'+i,k])), next:'Space', bot:'KeyB'};
+const KEY_DEF={...Object.fromEntries(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','KeyQ','KeyE','KeyR','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyT',...Array(20).fill('')].map((k,i)=>['b'+i,k])), next:'Space', bot:'KeyB'};
 let KEYS={...KEY_DEF}; try{ const old=JSON.parse(localStorage.getItem('brumaval-keys')||'{}')||{};
   if(old.s0!==undefined||old.hp!==undefined){ for(let i=0;i<8;i++) if(old['s'+i]!==undefined) old['b'+i]=old['s'+i]; if(old.hp!==undefined) old.b8=old.hp; if(old.mp!==undefined) old.b9=old.mp; for(const k of ['s0','s1','s2','s3','s4','s5','s6','s7','hp','mp']) delete old[k]; }
   Object.assign(KEYS, old); for(const k of Object.keys(KEYS)) if(!(k in KEY_DEF)) delete KEYS[k];
@@ -2314,7 +2319,7 @@ let KEYS={...KEY_DEF}; try{ const old=JSON.parse(localStorage.getItem('brumaval-
 const RESERVED=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape','Minus','Equal','NumpadAdd','NumpadSubtract','Tab','Enter']);
 function keyLabel(code){ if(!code) return '—'; if(/^Digit\d$/.test(code)) return code.slice(5); if(/^Key[A-Z]$/.test(code)) return code.slice(3); if(/^Numpad\d$/.test(code)) return 'Num '+code.slice(6);
   return {Space:'Espaço',Backquote:'´',Backslash:'\\',Comma:',',Period:'.',Slash:'/',Semicolon:'ç',Quote:'~',BracketLeft:'[',BracketRight:']',ShiftLeft:'Shift',ShiftRight:'Shift dir.',ControlLeft:'Ctrl',AltLeft:'Alt',CapsLock:'Caps'}[code]||code; }
-const keyActions=()=>[...Array.from({length:20},(_,i)=>({id:'b'+i, label:'Atalho '+(i+1)+(i<10?' (1ª linha)':' (2ª linha)')+': '+(slotInfo(player.bar?.[i])?.name||'vazio')})), {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}];
+const keyActions=()=>[...Array.from({length:BAR_N},(_,i)=>({id:'b'+i, label:'Atalho '+(i+1)+': '+(slotInfo(player.bar?.[i])?.name||'vazio')})), {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}];
 let capturing=null;
 const saveKeys=()=>{ try{ localStorage.setItem('brumaval-keys',JSON.stringify(KEYS)); }catch(e){} };
 function actionFor(code){ for(const k in KEYS) if(KEYS[k]===code) return k; return null; }
@@ -3285,7 +3290,7 @@ function updateBars(){
   setBar('mp', player.mp, st.maxMp, `Mana ${Math.floor(player.mp)} / ${st.maxMp}`);
   setBar('xp', player.xp-a, b-a, `${player.xp-a} / ${b-a} xp`);
   { const sea=(cur.region||cur.id)==='sea'; if($('airBar').hidden===sea) $('airBar').hidden=!sea; if(sea) setBar('air', Math.round(player.air??100), 100, 'Fôlego '+Math.ceil(player.air??100)+'%'); }
-  for(const k in actEls){ const el=actEls[k], sl=el.s; if(!sl||sl.t!=='s') continue; const sp=classSpells()[sl.i]; if(!sp) continue; const cd=player.spellCd[sl.i]||0; el.cd.style.height=(cd>0?cd/sp.cd*30:0)+'px'; el.btn.disabled=!spellReady(sp); }
+  for(const k in actEls){ const el=actEls[k], sl=el.s; if(!sl||sl.t!=='s') continue; const sp=classSpells()[sl.i]; if(!sp) continue; const cd=player.spellCd[sl.i]||0; el.cd.style.height=(cd>0?cd/sp.cd*100:0)+'%'; el.btn.disabled=!spellReady(sp); }
   renderCond();
 }
 function renderUI(){
@@ -3297,7 +3302,7 @@ function renderUI(){
   $('equip').innerHTML = SLOTS.map(([s,label])=>{ const it=player.eq[s]; const [r,c]=pos[s].split('/');
     return `<button class="slot r${it?.r||0}" style="grid-row:${r};grid-column:${c}" data-slot="${s}" ${it&&s!=='bag'?'draggable="true"':''} aria-label="${it?esc(itemName(it)):label+' vazio'}">${it?`<img alt="" src="${iconURL(it.id)}">`:`<span class="ph">${label}</span>`}</button>`; }).join('');
   renderContainers();
-  for(const k in actEls){ const el=actEls[k], sl=el.s; if(!sl||sl.t!=='p') continue; const t='×'+slotCount(sl), c=el.btn.querySelector('.c'); if(c&&c.textContent!==t) c.textContent=t; }
+  for(const k in actEls){ const el=actEls[k], sl=el.s; if(!sl||sl.t!=='p') continue; const t=String(slotCount(sl)), c=el.btn.querySelector('.c'); if(c&&c.textContent!==t) c.textContent=t; }
   const q=quests; const ql=[];
   if(q.wolves.state===1) ql.push(`<div>Lobos do bosque <small>· ${Math.min(8,q.wolves.count)}/8 ${q.wolves.count>=8?'· fale com o Capitão Bento':''}</small></div>`);
   if(q.king.state===1) ql.push(`<div>O rei morto <small>· Cripta Esquecida, a noroeste</small></div>`);
@@ -3447,7 +3452,7 @@ let actEls={};
 const spellReady = s => player.level>=s.lvl && (!s.learn || !!player.learned?.[s.learn]);
 const spellLock = s => s.learn && !player.learned?.[s.learn] ? (s.learn==='fae'?'Lunária':'Cinzaforte')+' · nv '+s.lvl : player.level<s.lvl ? 'nível '+s.lvl : s.mana+' mana';
 // ---- barra de atalhos: 2 linhas de 10, cada espaço recebe uma magia, poção ou item
-const BAR_N=20;
+const BAR_N=40;
 const BAR_DEF=()=>{ const b=Array(BAR_N).fill(null); for(let i=0;i<8;i++) b[i]={t:'s',i}; b[8]={t:'p',id:'hp'}; b[9]={t:'p',id:'mp'}; return b; };
 const slotCount=s=>s.id==='hp'||s.id==='mp'?potCount(s.id):countItem(s.id);
 function slotInfo(s){
@@ -3476,12 +3481,13 @@ function openSlotPicker(i){
     if(act==='pick'){ const v=ds.v; B[i]=!v?null:v[0]==='s'?{t:'s',i:+v.slice(1)}:{t:'p',id:v.slice(1)}; buildActions(); save(); closeDialog(); } });
 }
 function buildActions(){
-  const bar=$('actionbar'); bar.innerHTML=''; actEls={}; if(!player.bar||player.bar.length!==BAR_N) player.bar=BAR_DEF();
+  const bar=$('actionbar'); bar.innerHTML=''; actEls={}; if(!player.bar) player.bar=BAR_DEF(); while(player.bar.length<BAR_N) player.bar.push(null);
   for(let i=0;i<BAR_N;i++){ const s=player.bar[i], inf=slotInfo(s), key=KEYS['b'+i];
     const b=document.createElement('button'); b.type='button'; b.className='act'+(inf?'':' empty'); b.dataset.slot=i;
-    b.title=(inf?inf.desc:'Atalho vazio: clique para escolher')+' · botão direito: trocar';
-    b.innerHTML=inf?`<span class="icw"><img class="ic" alt="" src="${inf.icon}"><span class="cdv"></span></span><span class="n">${esc(inf.name)}</span><span class="c">${esc(inf.cost)}</span><span class="k">${esc(keyLabel(key))}</span>`
-      :`<span class="icw"><span class="ic0">+</span></span><span class="n">vazio</span><span class="c"></span><span class="k">${esc(keyLabel(key))}</span>`;
+    b.title=(inf?inf.name+(s.t==='s'?' · '+inf.cost:'')+'\n'+inf.desc:'Atalho vazio: clique para escolher')+'\nBotão direito: trocar';
+    b.innerHTML=inf?`<img class="ic" alt="" src="${inf.icon}"><span class="cdv"></span>${s.t==='p'?`<span class="c">${esc(inf.cost.replace('×',''))}</span>`:''}${key?`<span class="k">${esc(keyLabel(key))}</span>`:''}`
+      :`<span class="ic0">+</span>${key?`<span class="k">${esc(keyLabel(key))}</span>`:''}`;
+    b.setAttribute('aria-label',(inf?inf.name:'Atalho vazio')+(key?' ('+keyLabel(key)+')':''));
     b.addEventListener('click',()=>slotAction(i,false)); b.addEventListener('contextmenu',e=>{ e.preventDefault(); if(running) openSlotPicker(i); });
     bar.appendChild(b); actEls[i]={btn:b, cd:b.querySelector('.cdv'), s:inf?s:null}; }
 }
@@ -3566,7 +3572,7 @@ function applySave(s){
   if(!player.eq.bag.items) player.eq.bag.items=[];
   player.eq.bag.items.push(...oldInv);
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
-  player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm; player.bar=Array.isArray(s.bar)&&s.bar.length===20?s.bar:BAR_DEF(); player.ammo=ITEMS[s.ammo]?.ammo?s.ammo:null;
+  player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm; player.bar=Array.isArray(s.bar)&&s.bar.length?[...s.bar.slice(0,BAR_N),...Array(Math.max(0,BAR_N-s.bar.length)).fill(null)]:BAR_DEF(); player.ammo=ITEMS[s.ammo]?.ammo?s.ammo:null;
   { const D=SKILL_DEF(), old=s.skills||{}; if(!old.melee&&(old.sword||old.axe||old.club)){ const b=['sword','axe','club'].map(k=>old[k]).filter(Boolean).sort((a,b)=>b.lv-a.lv||b.p-a.p)[0]; old.melee=b; } for(const k in old) if(D[k]) D[k]={lv:+s.skills[k].lv||D[k].lv, p:+s.skills[k].p||0}; player.skills=D; player.bestiary=s.bestiary||{}; }
   { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
   decFog(s.fog);
@@ -3583,7 +3589,7 @@ $('btnHelp').addEventListener('click',()=>{ if(!running) return; openDialog(play
   <b>Clique no chão</b><span>andar até lá</span><b>Clique num monstro</b><span>atacar (ataque automático quando estiver ao lado)</span>
   <b>Clique num NPC</b><span>conversar</span><b>Clique num corpo</b><span>ver o saque (marcado com um ponto amarelo)</span>
   <b>WASD / setas</b><span>andar (duas teclas juntas, como W+D, andam na diagonal; o teclado numérico também)</span><b>Espaço</b><span>alternar entre inimigos próximos</span>
-  <b>Atalhos</b><span>duas linhas com 10 espaços cada (teclas 1 a 0 e Q E R F G Z X C V T). Botão direito num espaço escolhe a magia, poção ou item; o botão "Atalhos" muda as teclas</span><b>Caça automática</b><span>marque pontos da rota no andar (aqui ou no minimapa), escolha magias e o que pegar, e ligue</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span></div>
+  <b>Atalhos</b><span>40 quadradinhos embaixo do mapa. Do 1 ao 0 vêm prontos; os outros (Q E R F G Z X C V T e mais 20 sem tecla) você monta. Clique num vazio ou use o botão direito para escolher a magia, poção ou item; o botão "Atalhos" muda as teclas</span><b>Caça automática</b><span>marque pontos da rota no andar (aqui ou no minimapa), escolha magias e o que pegar, e ligue</span><b>Minimapa</b><span>clique para andar, arraste para navegar, roda do mouse para zoom</span><b>Títulos dos painéis</b><span>clique para recolher ou abrir</span><b>Esc</b><span>cancelar alvo ou fechar janela</span></div>
   <p style="margin-top:10px">O jogo salva sozinho neste navegador a cada 15 segundos.</p><div class="row"><button data-act="close">Fechar</button></div>`,()=>closeDialog()); });
 $('btnRespawn').addEventListener('click',respawn);
 
