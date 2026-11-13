@@ -34,6 +34,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .panel.collapsed h2{margin-bottom:0}
 .battle{display:flex;flex-direction:column;gap:4px;height:226px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:2px}
 .battle .bl{flex:0 0 auto}
+.bottabs{display:flex;gap:2px;margin:10px 0 4px;border-bottom:1px solid var(--line)}
+.bottabs button{flex:1 1 0;min-width:0;padding:5px 2px;font-size:12px;border:1px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;background:none;color:var(--muted);margin-bottom:-1px}
+.bottabs button[aria-selected=true]{background:var(--panel-2);border-color:var(--line);color:var(--ink)}
+.botbody h3:first-child{margin-top:6px}
+.botmode{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.botmode label{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.botmode label.on{border-color:var(--accent);background:var(--panel-2)}
+.botmode input{margin-top:3px;accent-color:var(--accent)}.botmode span{display:flex;flex-direction:column;gap:1px;font-size:13px}.botmode b{font-weight:600}.botmode small{color:var(--muted);font-size:12px}
+.botdim{opacity:.45;pointer-events:none}
 .skills{display:flex;flex-direction:column;gap:3px}
 .sk{display:grid;grid-template-columns:1fr auto;column-gap:8px;font-size:13px;color:var(--muted)}
 .sk b{font-family:var(--mono);color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
@@ -230,8 +239,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 
   <aside class="side side-l" id="sideL">
     <section class="panel" data-p="battle"><h2>Batalha <span class="price" id="battleCount"></span></h2><div class="pbody"><div class="battle" id="battle"></div></div></section>
-    <section class="panel" data-p="bot"><h2>Caça automática</h2><div class="pbody"><div class="botui" id="botui"></div></div></section>
-    <section class="panel" data-p="auto"><h2>Cura automática</h2><div class="pbody"><div class="auto" id="autoheal"></div></div></section>
+    <section class="panel" data-p="bot"><h2>Caça automática</h2><div class="pbody"><div class="botui" id="botui"></div><div class="auto" id="autoheal" hidden></div></div></section>
     <section class="panel" data-p="quests"><h2>Missões</h2><div class="pbody"><div class="quests" id="quests"></div></div></section>
     <section class="panel" data-p="bosses"><h2>Chefes</h2><div class="pbody"><div class="quests" id="bosses"></div></div></section>
   </aside>
@@ -1933,7 +1941,7 @@ addEventListener('keydown',e=>{ if(!capturing) return; e.preventDefault(); e.sto
 $('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
 
 // ============================================================ caça automática por rota
-const BOT_DEF=()=>({routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true, dist:0, refill:{on:true,minHp:5,hp:100,minMp:0,mp:50,full:true,strong:false}});
+const BOT_DEF=()=>({how:'route', routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true, dist:0, refill:{on:true,minHp:5,hp:100,minMp:0,mp:50,full:true,strong:false}});
 let bot={on:false, wp:0, mark:false, msg:'', lastLootFail:-1e9, think:0, stuck:0, mode:'hunt', sub:'', huntMap:null, town:null, fullAt:-1e9};
 const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Flecha Certeira':6,'Chuva de Flechas':6,'Flecha Envenenada':6,'Flecha Explosiva':6,
   'Bola de Fogo':6,'Raio Encadeado':6,'Meteoro':6,'Lança de Gelo':6,'Chuva de Granizo':6};
@@ -1949,7 +1957,7 @@ function botStatus(t){ if(bot.msg===t) return; bot.msg=t; const el=$('botMsg'); 
 function nearestWp(){ const R=route(); let bi=0,bd=1e9; R.forEach((p,i)=>{ const d=Math.abs(p.x-player.x)+Math.abs(p.y-player.y); if(d<bd){ bd=d; bi=i; } }); return bi; }
 function toggleBot(force, why){
   if(!player.bot) return; const on = force===undefined ? !bot.on : force;
-  if(on && !bot.on){ if(!route().length){ log('Marque pelo menos um ponto de rota neste andar antes de ligar a caça automática.','sys'); return; } bot.on=true; bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática ligada.','sys'); }
+  if(on && !bot.on){ const stay=player.bot.how==='stay'; if(!stay&&!route().length){ log('Marque pelo menos um ponto de rota neste andar, ou escolha "Atacar aqui, sem rota" na aba Geral da caça.','sys'); return; } bot.anchor={map:cur.id,x:player.x,y:player.y}; bot.on=true; bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática ligada.','sys'); }
   else if(!on && bot.on){ bot.on=false; bot.mode='hunt'; bot.sub=''; player.path=null; log(why||'Caça automática desligada.','sys'); }
   bot.msg=''; renderBot();
 }
@@ -1969,46 +1977,69 @@ function botTick(dt){
   if(foes.length){ target=foes[0]; player.follow=true; player.path=null; player.pending=null; botStatus('Atacando: '+target.def.name); return; }
   const c=corpses.find(c=>c.map===cur.id&&!c.botDone&&!c.player&&cheb(player,c)<=B.range&&c.items.some(lootWanted));
   if(c){ if(cheb(player,c)<=1){ botLoot(c); return; } if((c.botTries=(c.botTries||0)+1)>45){ c.botDone=true; return; } if(!player.moving&&!(player.path&&player.path.length)){ botStatus('Indo saquear'); walkTo(c.x,c.y,true,null,4000,true); if(!player.path) c.botDone=true; } return; }
+  if(B.how==='stay'){ const a=bot.anchor; if(a&&a.map===cur.id&&cheb(player,a)>1){ botStatus('Voltando ao ponto de caça'); if(!player.moving&&!(player.path&&player.path.length)) walkTo(a.x,a.y,false,null,20000,true); } else botStatus('Esperando monstros'); return; }
   const R=route(); if(!R.length){ toggleBot(false); return; } if(bot.wp>=R.length) bot.wp=0; const w=R[bot.wp];
   if(Math.max(Math.abs(w.x-player.x),Math.abs(w.y-player.y))<=1){ bot.wp=(bot.wp+1)%R.length; return; }
   botStatus('Indo ao ponto '+(bot.wp+1)+' de '+R.length);
   if(!player.moving&&!(player.path&&player.path.length)){ walkTo(w.x,w.y,true,null,20000,true); if(!player.path){ if(++bot.stuck>3){ bot.stuck=0; bot.wp=(bot.wp+1)%R.length; } } else bot.stuck=0; }
 }
+let botTab='geral';
 function renderBot(){
   const el=$('botui'); if(!el||!player.bot) return; const B=player.bot, R=route(), sp=classSpells();
   if(!B.spells){ B.spells={}; sp.forEach((s,i)=>{ if(s.kind==='ataque') B.spells[i]=true; }); }
+  if(!B.how) B.how='route';
+  const TABS=[['geral','Geral'],['ataque','Ataque'],['cura','Cura'],['saque','Saque'],['cidade','Cidade']];
   const rarOpts=[['5','nenhum equipamento'],['0','todos'],['1','Incomum ou melhor'],['2','Raro ou melhor'],['3','Épico ou melhor'],['4','só Lendário']];
-  el.innerHTML=`<div class="botstate"><button type="button" class="${bot.on?'':'primary'}" data-b="toggle">${bot.on?'Parar':'Ligar'} caça</button><span class="kbd">${esc(keyLabel(KEYS.bot))}</span><span class="hint" id="botMsg" style="margin:0">${bot.on?esc(bot.msg||'Ligada'):'Desligada'}</span></div>
-    <h3>Rota deste andar · ${R.length} ponto${R.length===1?'':'s'}</h3>
-    <div class="rowb"><button type="button" data-b="here">+ Ponto aqui</button><button type="button" data-b="mark" aria-pressed="${bot.mark}">${bot.mark?'Marcando no minimapa…':'Marcar no minimapa'}</button><button type="button" data-b="undo" ${R.length?'':'disabled'}>Desfazer</button><button type="button" data-b="clear" ${R.length?'':'disabled'}>Limpar</button></div>
-    <h3>Magias que a caça usa</h3>
+  const head=`<div class="botstate"><button type="button" class="${bot.on?'':'primary'}" data-b="toggle">${bot.on?'Parar':'Ligar'} caça</button><span class="kbd" title="Atalho">${esc(keyLabel(KEYS.bot))}</span><span class="hint" id="botMsg" style="margin:0">${bot.on?esc(bot.msg||'Ligada'):'Desligada'}</span></div>
+    <div class="bottabs" role="tablist">${TABS.map(([k,l])=>`<button type="button" role="tab" data-b="tab" data-t="${k}" aria-selected="${botTab===k}">${l}</button>`).join('')}</div>`;
+  let body='';
+  if(botTab==='geral') body=`
+    <div class="botmode">
+      <label class="${B.how==='route'?'on':''}"><input type="radio" name="bhow" data-k="how" value="route" ${B.how==='route'?'checked':''}><span><b>Seguir uma rota</b><small>Anda pelos pontos marcados neste andar e ataca o que encontrar.</small></span></label>
+      <label class="${B.how==='stay'?'on':''}"><input type="radio" name="bhow" data-k="how" value="stay" ${B.how==='stay'?'checked':''}><span><b>Atacar aqui, sem rota</b><small>Fica onde você ligou, ataca o que chegar perto e volta para o lugar.</small></span></label>
+    </div>
+    ${B.how==='route'?`<h3>Rota deste andar · ${R.length} ponto${R.length===1?'':'s'}</h3>
+    <div class="rowb"><button type="button" data-b="here">+ Ponto aqui</button><button type="button" data-b="mark" aria-pressed="${bot.mark}">${bot.mark?'Marcando… (clique para parar)':'Marcar no minimapa'}</button><button type="button" data-b="undo" ${R.length?'':'disabled'}>Desfazer</button><button type="button" data-b="clear" ${R.length?'':'disabled'}>Limpar</button></div>
+    <p class="hint" style="margin:6px 0 0">No minimapa: <b>arraste</b> um ponto para mudá-lo de lugar e use o <b>botão direito</b> nele para apagar.</p>`
+    :`<p class="hint" style="margin:8px 0 0">Ataca monstros a até ${B.range} quadrados (aba Ataque). Se você mudar de lugar, desligue e ligue de novo.</p>`}
+    <p class="hint" style="margin:8px 0 0">Na caça automática você ganha <b>metade da experiência e do saque</b>. Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
+  if(botTab==='ataque') body=`
+    <h3>Magias de ataque</h3>
     <div class="botsp">${sp.map((s,i)=>s.kind==='cura'?'':`<label title="${esc(s.desc)}"><input type="checkbox" data-sp="${i}" ${B.spells[i]?'checked':''} ${spellReady(s)?'':'disabled'}><img alt="" src="${spellIconURL(s)}"><span>${esc(s.name)}${spellReady(s)?'':' <small>('+esc(spellLock(s))+')</small>'}</span></label>`).join('')}</div>
-    <label class="botrow">Só com mana acima de <input type="number" min="0" max="95" step="5" data-k="minMana" value="${B.minMana}"> %</label>
-    <label class="botrow">Atacar até <input type="number" min="3" max="10" data-k="range" value="${B.range}"> quadrados</label>
-    <label class="botrow">Ficar a <input type="number" min="0" max="5" data-k="dist" value="${B.dist|0}"> de distância dos monstros</label>
-    <p class="hint" style="margin:2px 0 0">0 = chega perto. Para Feiticeiro, Caçador e Xamã, 3 ou 4 mantém os monstros longe enquanto ataca.</p>
+    <label class="botrow">Só usar magia com mana acima de <input type="number" min="0" max="95" step="5" data-k="minMana" value="${B.minMana}"> %</label>
+    <h3>Distância</h3>
+    <label class="botrow">Atacar monstros a até <input type="number" min="3" max="10" data-k="range" value="${B.range}"> quadrados</label>
+    <label class="botrow">Manter <input type="number" min="0" max="5" data-k="dist" value="${B.dist|0}"> quadrados longe dos monstros</label>
+    <p class="hint" style="margin:2px 0 0">0 = chega perto. Para Feiticeiro, Caçador e Xamã, 3 ou 4 mantém os monstros longe enquanto ataca.</p>`;
+  if(botTab==='cura') body=`<p class="hint" style="margin:6px 0 4px">Funciona sempre, com ou sem a caça ligada.</p>`;
+  if(botTab==='saque') body=`
     <h3>O que pegar dos corpos</h3>
     <div class="botsp">${[['gold','Ouro'],['pots','Poções'],['mats','Materiais para vender'],['bags','Mochilas']].map(([k,l])=>`<label><input type="checkbox" data-l="${k}" ${B.loot[k]?'checked':''}><span>${l}</span></label>`).join('')}</div>
     <label class="botrow">Equipamentos: <select data-k="rar">${rarOpts.map(([v,l])=>`<option value="${v}" ${String(B.loot.rar)===v?'selected':''}>${l}</option>`).join('')}</select></label>
-    <h3>Reabastecer na cidade</h3>
-    <label class="botrow"><input type="checkbox" data-r="on" ${B.refill.on?'checked':''}> Ir à cidade, guardar o saque e comprar poções</label>
+    <p class="hint" style="margin:6px 0 0">Corpos ao lado são saqueados na hora, mesmo no meio da luta.</p>`;
+  if(botTab==='cidade') body=`
+    <label class="botrow"><input type="checkbox" data-r="on" ${B.refill.on?'checked':''}> <b>Reabastecer na cidade</b></label>
+    <div class="${B.refill.on?'':'botdim'}">
     <label class="botrow">Ir quando restarem <input type="number" min="0" max="500" data-r="minHp" value="${B.refill.minHp}"> poções de vida</label>
     <label class="botrow">ou <input type="number" min="0" max="500" data-r="minMp" value="${B.refill.minMp}"> de mana <small class="hint" style="margin:0">(0 = não importa)</small></label>
     <label class="botrow"><input type="checkbox" data-r="full" ${B.refill.full?'checked':''}> Ir também quando a mochila encher</label>
     <label class="botrow">Comprar até ter <input type="number" min="0" max="2000" step="10" data-r="hp" value="${B.refill.hp}"> de vida e <input type="number" min="0" max="2000" step="10" data-r="mp" value="${B.refill.mp}"> de mana</label>
     <label class="botrow"><input type="checkbox" data-r="strong" ${B.refill.strong?'checked':''}> Comprar poções fortes (Cinzaforte e Lunária)</label>
-    <p class="hint" style="margin:4px 0 0">Na cidade da região, guarda no depósito todo o ouro e os itens que não são poções nem mochilas, saca o que precisa, compra as poções e volta para o último andar de caça.</p>
-    <label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''} ${B.refill.on?'disabled':''}> Sem reabastecer: voltar para a cidade e parar quando acabarem as poções de vida</label>
-    <p class="hint" style="margin:4px 0 0">Com a caça automática ligada você ganha <b>metade da experiência e do saque</b>. A cura usa o painel "Cura automática". Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
+    <p class="hint" style="margin:4px 0 0">Guarda no depósito o ouro e os itens que não são poções nem mochilas, saca o que precisa, compra as poções e volta para onde estava caçando.</p></div>
+    ${B.refill.on?'':`<label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''}> Sem reabastecer: voltar para a cidade e parar quando acabarem as poções de vida</label>`}`;
+  el.innerHTML=head+`<div class="botbody">${body}</div>`;
+  const ah=$('autoheal'); if(ah) ah.hidden=botTab!=='cura';
 }
 $('botui').addEventListener('click',e=>{ const b=e.target.closest('[data-b]'); if(!b||!running||!player.bot) return; const R=route();
+  if(b.dataset.b==='tab'){ botTab=b.dataset.t; renderBot(); return; }
   if(b.dataset.b==='toggle') toggleBot();
   if(b.dataset.b==='here'){ if(R.some(p=>p.x===player.x&&p.y===player.y)) return; R.push({x:player.x,y:player.y}); log('Ponto '+R.length+' marcado aqui.','sys'); }
   if(b.dataset.b==='mark'){ bot.mark=!bot.mark; if(bot.mark) log('Clique no minimapa para marcar pontos da rota. Clique no botão de novo para terminar.','sys'); }
   if(b.dataset.b==='undo') R.pop();
-  if(b.dataset.b==='clear'){ R.length=0; if(bot.on) toggleBot(false); }
+  if(b.dataset.b==='clear'){ R.length=0; if(bot.on&&player.bot.how!=='stay') toggleBot(false); }
   renderBot(); save(); });
 $('botui').addEventListener('change',e=>{ const t=e.target, B=player.bot; if(!B) return;
+  if(t.dataset.k==='how'){ B.how=t.value; if(bot.on) toggleBot(false,'Caça automática desligada: você trocou o modo.'); bot.mark=false; renderBot(); }
   if(t.dataset.sp!=null) B.spells[+t.dataset.sp]=t.checked;
   if(t.dataset.l) B.loot[t.dataset.l]=t.checked;
   if(t.dataset.k==='minMana') B.minMana=clamp(+t.value||0,0,95);
@@ -2760,14 +2791,24 @@ function drawMini(){
   mctx.fillStyle='#ff3a2a'; mctx.fillRect(px,py,ps,ps);
   if(player.path&&player.path.length&&!player.follow){ const g=player.path[player.path.length-1]; mctx.strokeStyle='#ffd54a'; mctx.lineWidth=1; mctx.strokeRect((g.x-V.x0)*z-1.5,(g.y-V.y0)*z-1.5,ps+3,ps+3); }
   { const RT=player.bot?.routes?.[m.id]; if(RT&&RT.length){ mctx.strokeStyle='rgba(80,210,255,.7)'; mctx.lineWidth=1; mctx.beginPath(); RT.forEach((p,i)=>{ const x=(p.x+0.5-V.x0)*z, y=(p.y+0.5-V.y0)*z; i?mctx.lineTo(x,y):mctx.moveTo(x,y); }); if(RT.length>2) mctx.closePath(); mctx.stroke();
-      RT.forEach((p,i)=>{ mctx.fillStyle=bot.on&&i===bot.wp?'#ffd54a':'#4fd0ff'; mctx.fillRect((p.x-V.x0)*z-1,(p.y-V.y0)*z-1,Math.max(3,z)+2,Math.max(3,z)+2); }); } }
+      RT.forEach((p,i)=>{ const cx=(p.x+0.5-V.x0)*z, cy=(p.y+0.5-V.y0)*z, rr=Math.max(3,z*0.7)+1, drag=mdrag&&mdrag.wp===i;
+        mctx.fillStyle='rgba(0,0,0,.6)'; mctx.beginPath(); mctx.arc(cx,cy,rr+1.5,0,7); mctx.fill(); mctx.fillStyle=drag?'#ffffff':bot.on&&i===bot.wp?'#ffd54a':'#4fd0ff'; mctx.beginPath(); mctx.arc(cx,cy,rr,0,7); mctx.fill();
+        if(z>=3){ mctx.fillStyle='#0b0907'; mctx.font='700 '+Math.max(8,Math.round(rr*1.5))+'px monospace'; mctx.textAlign='center'; mctx.textBaseline='middle'; mctx.fillText(String(i+1),cx,cy+0.5); mctx.textAlign='start'; mctx.textBaseline='alphabetic'; } }); } }
   if(mpan){ mctx.fillStyle='rgba(0,0,0,.6)'; mctx.fillRect(4,mini.height-18,112,14); mctx.fillStyle='#d9a441'; mctx.font='10px sans-serif'; mctx.fillText('◎ para centralizar',8,mini.height-8); }
 }
 let mdrag=null;
-mini.addEventListener('pointerdown',e=>{ if(!running) return; mini.setPointerCapture(e.pointerId); const V=miniView(); mdrag={sx:e.clientX, sy:e.clientY, cx:V.x0+mini.width/V.z/2, cy:V.y0+mini.height/V.z/2, moved:false}; });
-mini.addEventListener('pointermove',e=>{ if(!mdrag) return; const r=mini.getBoundingClientRect(), k=mini.width/r.width, dx=(e.clientX-mdrag.sx)*k, dy=(e.clientY-mdrag.sy)*k;
+function miniTile(e){ const r=mini.getBoundingClientRect(), V=miniView(); return {x:Math.floor(V.x0+(e.clientX-r.left)*mini.width/r.width/V.z), y:Math.floor(V.y0+(e.clientY-r.top)*mini.height/r.height/V.z)}; }
+function miniWp(e){ const RT=player.bot?.routes?.[cur.id]; if(!RT||!RT.length||player.bot.how==='stay') return -1; const r=mini.getBoundingClientRect(), V=miniView(), k=mini.width/r.width, px=(e.clientX-r.left)*k, py=(e.clientY-r.top)*k;
+  let bi=-1, bd=100; RT.forEach((p,i)=>{ const x=(p.x+0.5-V.x0)*V.z, y=(p.y+0.5-V.y0)*V.z, d=(x-px)**2+(y-py)**2; if(d<bd){ bd=d; bi=i; } }); return bi; }
+const wpOk=(m,x,y)=>x>=0&&y>=0&&x<m.W&&y<m.H&&m.explored[y*m.W+x]&&passPlayer(m,x,y)&&!LINKS_T.has(m.t[y*m.W+x])&&!m.links[y*m.W+x];
+mini.addEventListener('pointerdown',e=>{ if(!running||e.button===2) return; mini.setPointerCapture(e.pointerId); const V=miniView(); mdrag={sx:e.clientX, sy:e.clientY, cx:V.x0+mini.width/V.z/2, cy:V.y0+mini.height/V.z/2, moved:false}; const wi=miniWp(e); if(wi>=0){ mdrag.wp=wi; mdrag.orig={...route()[wi]}; } });
+mini.addEventListener('contextmenu',e=>{ e.preventDefault(); if(!running) return; const wi=miniWp(e); if(wi<0) return; const R=route(); R.splice(wi,1); if(bot.wp>=R.length) bot.wp=0; log('Ponto '+(wi+1)+' apagado.','sys'); if(!R.length&&bot.on&&player.bot.how!=='stay') toggleBot(false); renderBot(); save(); });
+mini.addEventListener('pointermove',e=>{ if(!mdrag) return;
+  if(mdrag.wp!=null){ if(Math.abs(e.clientX-mdrag.sx)+Math.abs(e.clientY-mdrag.sy)>3) mdrag.moved=true; if(mdrag.moved){ const t=miniTile(e), R=route(); if(R[mdrag.wp]&&wpOk(cur,t.x,t.y)){ R[mdrag.wp]={x:t.x,y:t.y}; } } return; }
+  const r=mini.getBoundingClientRect(), k=mini.width/r.width, dx=(e.clientX-mdrag.sx)*k, dy=(e.clientY-mdrag.sy)*k;
   if(Math.abs(dx)+Math.abs(dy)>5) mdrag.moved=true; if(mdrag.moved){ const z=MZ[mz]; mpan={x:mdrag.cx-dx/z, y:mdrag.cy-dy/z}; } });
-mini.addEventListener('pointerup',e=>{ const d=mdrag; mdrag=null; if(!d||d.moved||!running||player.dead) return;
+mini.addEventListener('pointerup',e=>{ const d=mdrag; mdrag=null; if(d&&d.wp!=null&&d.moved){ const p=route()[d.wp]; if(p&&(p.x!==d.orig.x||p.y!==d.orig.y)){ log('Ponto '+(d.wp+1)+' movido.','sys'); if(player.path) player.path=null; save(); } renderBot(); return; }
+  if(!d||d.moved||!running||player.dead) return;
   const r=mini.getBoundingClientRect(), V=miniView(), m=cur, tx=Math.floor(V.x0+(e.clientX-r.left)*mini.width/r.width/V.z), ty=Math.floor(V.y0+(e.clientY-r.top)*mini.height/r.height/V.z);
   if(tx<0||ty<0||tx>=m.W||ty>=m.H) return;
   if(!m.explored[ty*m.W+tx]){ log('Você ainda não explorou essa parte do mapa.','sys'); return; }
@@ -3308,6 +3349,7 @@ player.x=player.px=MAPS.over.spawn.x; player.y=player.py=MAPS.over.spawn.y+5;
 window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+window.__miniView=()=>miniView();
 window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
