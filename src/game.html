@@ -248,7 +248,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
           <div class="afkc"><h3>Poções na mochila <span class="lg"><i style="background:#e06058"></i>Vida</span><span class="lg"><i style="background:#5b8fe0"></i>Mana</span></h3><div class="cbox"><canvas id="afkPot"></canvas><div class="ctip" hidden></div></div></div>
         </div>
         <div class="afkc"><h3>Itens saqueados</h3><div id="afkLoot"></div></div>
-        <p class="hint" style="margin:0">O jogo continua rodando por trás; o mapa não é desenhado enquanto este painel está aberto. Esc fecha.</p>
+        <p class="hint" style="margin:0">Caça automática: metade da experiência e do saque. O jogo continua rodando por trás; o mapa não é desenhado enquanto este painel está aberto. Esc fecha.</p>
       </div></div>
       <div class="overlay" id="dialog" hidden>
         <div class="card" role="dialog" aria-modal="false">
@@ -1158,7 +1158,12 @@ function openBestiary(){
 }
 function bestiaryKill(t){ if(!player.bestiary) player.bestiary={}; const before=bestStage(t); player.bestiary[t]=(player.bestiary[t]||0)+1; const now2=bestStage(t);
   if(now2>before) log(now2===3?'Bestiário: '+MON[t].name+' completo! +5% de dano contra essa criatura.':'Bestiário: nova etapa de '+MON[t].name+' ('+now2+'/3).','lvl'); }
-const totalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
+const AUTO_PENALTY=0.5;  // caça automática: metade da experiência e do saque
+const XP_RATE=1;
+// curva de experiência: o tempo por nível cresce devagar (meta: nível 25 em ~8 h jogando manualmente e nível 50 em ~22 h; o dobro na caça automática)
+const XP_TABLE=[0,0]; for(let k=1;k<=400;k++) XP_TABLE[k+1]=XP_TABLE[k]+Math.round(2445*Math.pow(k,1.3)*Math.min(1,k/10));
+const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];
+const oldTotalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
 function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
   const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0};
@@ -1502,12 +1507,13 @@ function killMonster(m){
   monsters.splice(monsters.indexOf(m),1);
   if(target===m){ target=null; player.follow=false; }
   const lv=m.def.lvl+Math.round((m.mult-1)*10), items=[];
-  if(!m.sp.temp) for(const [id,ch,a,b] of m.def.loot) if(R()<ch) items.push(ITEMS[id].slot ? makeItem(id, rollRarity(lv, m.def.boss), lv) : {id, n:ri(a,b)});
-  const extra = m.sp.temp ? 0 : m.def.boss ? 3 : (R() < 0.04+lv*0.006 ? 1 : 0);
+  const AF=bot.on?AUTO_PENALTY:1;
+  if(!m.sp.temp) for(const [id,ch,a,b] of m.def.loot) if(R()<ch*AF) items.push(ITEMS[id].slot ? makeItem(id, rollRarity(lv, m.def.boss), lv) : {id, n:Math.max(1,Math.round(ri(a,b)*(id==='gold'?AF:1)))});
+  const extra = m.sp.temp ? 0 : m.def.boss ? (bot.on?2:3) : (R() < (0.04+lv*0.006)*AF ? 1 : 0);
   for(let i=0;i<extra;i++){ const id=randomGearId(lv); if(id) items.push(makeItem(id, rollRarity(lv, m.def.boss), lv)); }
   corpses.push({map:m.map, x:m.x, y:m.y, type:m.type, items, t:0, life:120000});
   burst(m, m.def.undead?'#d8d0bc':'#8a1a10', 18, 90); if(m.def.boss) trauma=Math.min(1,trauma+0.4);
-  gainXp(m.sp.temp?Math.round(m.xp/2):m.xp, m);
+  gainXp(Math.max(1,Math.round((m.sp.temp?m.xp/2:m.xp)*XP_RATE*(bot.on?AUTO_PENALTY:1))), m);
   const what = items.length? items.map(i=>(i.n>1?i.n+' ':'')+itemName(i)).join(', ') : 'nada';
   log('Você derrotou: '+m.def.name+'. Saque: '+what+'.','loot');
   let best=null; for(const it of items) if((it.r||0)>=2 && (!best||it.r>best.r)) best=it;
@@ -1964,7 +1970,7 @@ function renderBot(){
     <label class="botrow"><input type="checkbox" data-r="strong" ${B.refill.strong?'checked':''}> Comprar poções fortes (Cinzaforte e Lunária)</label>
     <p class="hint" style="margin:4px 0 0">Na cidade da região, guarda no depósito todo o ouro e os itens que não são poções nem mochilas, saca o que precisa, compra as poções e volta para o último andar de caça.</p>
     <label class="botrow"><input type="checkbox" data-k="stopNoPots" ${B.stopNoPots?'checked':''} ${B.refill.on?'disabled':''}> Sem reabastecer: voltar para a cidade e parar quando acabarem as poções de vida</label>
-    <p class="hint" style="margin:4px 0 0">A cura usa o painel "Cura automática". Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
+    <p class="hint" style="margin:4px 0 0">Com a caça automática ligada você ganha <b>metade da experiência e do saque</b>. A cura usa o painel "Cura automática". Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
 }
 $('botui').addEventListener('click',e=>{ const b=e.target.closest('[data-b]'); if(!b||!running||!player.bot) return; const R=route();
   if(b.dataset.b==='toggle') toggleBot();
@@ -2155,10 +2161,10 @@ function talk(n){
   if(n.id==='boat'||n.id==='boat2'||n.id==='boat3'){
     const here=n.map, DEST=[{map:'over',name:'Pedraluz',cost:120,lvl:0,say:'O mar está calmo até Pedraluz.'},
       {map:'fae',name:'Lunária, no Bosque Encantado',cost:150,lvl:25,say:'Lunária fica rio acima, entre árvores gigantes.'},
-      {map:'ash',name:'Cinzaforte, nas Terras Queimadas',cost:200,lvl:40,say:'Cinzaforte são três dias de mar, até a ilha de fogo.'}].filter(d=>d.map!==here);
-    const rows=DEST.map((d,i)=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${d.name}</b><small>${d.say}${d.lvl?` Recomendado: nível ${d.lvl}+.`:''}${player.level<d.lvl?' <span class="bad">Você ainda está abaixo do nível recomendado.</span>':''}</small></div><div class="btns"><button class="primary" data-act="go" data-i="${i}" ${player.gold<d.cost?'disabled':''}>Viajar (${d.cost} ouro)</button></div></div>`).join('');
+      {map:'ash',name:'Cinzaforte, nas Terras Queimadas',cost:200,lvl:50,say:'Cinzaforte são três dias de mar, até a ilha de fogo.'}].filter(d=>d.map!==here);
+    const rows=DEST.map((d,i)=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${d.name}</b><small>${d.say}${d.lvl?` Exige nível ${d.lvl}.`:''}${player.level<d.lvl?' <span class="bad">"Lá fora é perigoso demais para você. Volte no nível '+d.lvl+'."</span>':''}</small></div><div class="btns"><button class="primary" data-act="go" data-i="${i}" ${player.gold<d.cost||player.level<d.lvl?'disabled':''}>Viajar (${d.cost} ouro)</button></div></div>`).join('');
     openDialog(n, n.name, `<p>"Para onde vamos? Eu levo você a qualquer porto."</p><div class="list">${rows}</div><div class="row"><button data-act="close">Agora não</button></div>`, (act,ds)=>{
-      const d=DEST[+ds.i]; if(act==='go' && d && player.gold>=d.cost){ player.gold-=d.cost; closeDialog(); const M=MAPS[d.map]; changeMap(d.map, M.dock.x, M.dock.y, M.enter); uiDirty=true; } else closeDialog(); });
+      const d=DEST[+ds.i]; if(act==='go' && d && player.gold>=d.cost && player.level>=d.lvl){ player.gold-=d.cost; closeDialog(); const M=MAPS[d.map]; changeMap(d.map, M.dock.x, M.dock.y, M.enter); uiDirty=true; } else closeDialog(); });
   }
   if(n.id==='sage'||n.id==='firesage'){
     const k=n.id==='sage'?'fae':'ash', q=quests[k], R=LEARNQ[k];
@@ -2976,7 +2982,7 @@ function frame(t){
 // ============================================================ salvar / carregar
 function encFog(){ const o={}; for(const m of Object.values(MAPS)){ const E=m.explored; let any=false, runs=[], v=0, n=0; for(let i=0;i<E.length;i++){ const b=E[i]?1:0; if(b) any=true; if(b===v) n++; else { runs.push(n.toString(36)); v=b; n=1; } } runs.push(n.toString(36)); if(any) o[m.id]=runs.join('.'); } return o; }
 function decFog(o){ for(const [id,str] of Object.entries(o||{})){ const m=MAPS[id]; if(!m||typeof str!=='string') continue; let i=0, v=0; for(const r of str.split('.')){ const n=parseInt(r,36)||0; if(v) m.explored.fill(1,i,Math.min(i+n,m.explored.length)); i+=n; v^=1; } } miniDirty=true; }
-function serialize(){ return {v:9, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
+function serialize(){ return {v:10, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
 function save(){ if(!running) return; const d=serialize();
   if(Cloud.on&&Cloud.charId){ Cloud.queue(d); try{ localStorage.setItem(SAVE_KEY+':'+Cloud.charId, JSON.stringify(d)); }catch(e){} return; }
   if(!localSlot) localSlot='c'+Date.now().toString(36);
@@ -2992,6 +2998,8 @@ function applySave(s){
   const fix = it => { const f=fix0(it); delete f._u; if(f.items) f.items=f.items.filter(x=>ITEMS[typeof x==='string'?x:x.id]).map(fix); return f; };
   player.cls = CLASSES[s.cls] ? s.cls : 'guerreiro';
   player.name=s.name; player.level=s.level; player.xp=s.xp; player.gold=s.gold;
+  if((s.v||0)<10){ const L=s.level, a=oldTotalXp(L), b=oldTotalXp(L+1), fr=Math.max(0,Math.min(0.999,(s.xp-a)/Math.max(1,b-a))); player.xp=Math.round(totalXp(L)+fr*(totalXp(L+1)-totalXp(L))); }
+  player.xp=Math.max(player.xp, totalXp(player.level));
   const oldInv=(s.inv||[]).filter(it=>ITEMS[typeof it==='string'?it:it.id]).map(fix);
   player.bossKills=s.bossKills||{};
   { const D=AUTO_DEF(), A=s.auto||{}; player.auto={heal:{...D.heal,...A.heal}, hp:{...D.hp,...A.hp}, mp:{...D.mp,...A.mp}}; }
@@ -3259,7 +3267,7 @@ player.x=player.px=MAPS.over.spawn.x; player.y=player.py=MAPS.over.spawn.y+5;
 window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
-window.__game = {player, get cur(){return cur}, monsters, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, SETS, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
