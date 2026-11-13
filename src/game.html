@@ -3038,15 +3038,25 @@ $('btnChars').addEventListener('click', async ()=>{ if(!running) return; save();
 // Offline: abra o jogo com ?admin no endereço (e ?admin=0 para desligar). Na nuvem: profiles.is_admin = true.
 try{ const q=new URLSearchParams(location.search); if(q.has('admin')) localStorage.setItem('brumaval-admin', q.get('admin')==='0'?'0':'1'); }catch(e){}
 function isAdmin(){ if(Cloud.on) return !!Cloud.admin; try{ return localStorage.getItem('brumaval-admin')==='1'; }catch(e){ return false; } }
-const ADM={item:'', r:0, n:1, map:'', mon:'', mn:1, lvl:'', gold:1000};
+const ADM={item:'', r:0, n:1, map:'', mon:'', mn:1, lvl:'', gold:1000, fcls:'', fmin:'', fmax:''};
+const ADM_SL={weapon:'Armas',shield:'Mão esquerda',helmet:'Elmos',armor:'Armaduras',legs:'Calças',boots:'Botas',ring:'Anéis',amulet:'Colares',bag:'Mochilas'};
+function admItems(){ const lo=ADM.fmin===''?null:+ADM.fmin, hi=ADM.fmax===''?null:+ADM.fmax, c=ADM.fcls;
+  return Object.keys(ITEMS).filter(id=>{ if(id==='gold') return false; const d=ITEMS[id];
+    if(c && !(d.slot && d.slot!=='bag' && canUse(d,c))) return false;
+    if((lo!=null||hi!=null) && !d.slot) return false;
+    const L=d.lvl||1; if(lo!=null&&L<lo) return false; if(hi!=null&&L>hi) return false; return true; })
+    .sort((a,b)=>(ITEMS[a].slot||'~').localeCompare(ITEMS[b].slot||'~')||(ITEMS[a].lvl||0)-(ITEMS[b].lvl||0)||ITEMS[a].name.localeCompare(ITEMS[b].name)); }
+function admItemOptions(items){ const groups={}; for(const id of items){ const g=ADM_SL[ITEMS[id].slot]||(ITEMS[id].heal||ITEMS[id].mana?'Poções':'Outros'); (groups[g]=groups[g]||[]).push(id); }
+  if(!items.includes(ADM.item)) ADM.item=items[0]||'';
+  return Object.entries(groups).map(([g,ids])=>`<optgroup label="${g}">${ids.map(id=>`<option value="${id}" ${id===ADM.item?'selected':''}>${esc(ITEMS[id].name+(ITEMS[id].lvl?' (nv '+ITEMS[id].lvl+')':'')+(ITEMS[id].cls&&ITEMS[id].cls.length<5?' · '+ITEMS[id].cls.map(c=>CLASSES[c].name).join('/'):''))}</option>`).join('')}</optgroup>`).join(''); }
+dlgBody.addEventListener('input', e=>{ const id=e.target.id; if(id!=='admFcls'&&id!=='admFmin'&&id!=='admFmax') return;
+  ADM.fcls=$('admFcls').value; ADM.fmin=$('admFmin').value.trim(); ADM.fmax=$('admFmax').value.trim();
+  const items=admItems(); $('admItem').innerHTML=admItemOptions(items); $('admCount').textContent=items.length+' ite'+(items.length===1?'m':'ns'); $('admGive').disabled=!items.length; });
 function admArrival(id){ for(const m of Object.values(MAPS)) for(const l of Object.values(m.links||{})) if(l.map===id) return {x:l.x,y:l.y}; return MAPS[id].spawn||null; }
 function openAdm(note){
   if(!isAdmin()) return;
-  const items=Object.keys(ITEMS).filter(id=>id!=='gold').sort((a,b)=>(ITEMS[a].slot||'~').localeCompare(ITEMS[b].slot||'~')||(ITEMS[a].lvl||0)-(ITEMS[b].lvl||0)||ITEMS[a].name.localeCompare(ITEMS[b].name));
-  if(!ADM.item) ADM.item=items[0]; if(!ADM.map) ADM.map=cur.id;
+  const items=admItems(); if(!ADM.map) ADM.map=cur.id;
   const mons=Object.keys(MON).sort((a,b)=>(MON[b].boss?1:0)-(MON[a].boss?1:0)||(MON[a].lvl||0)-(MON[b].lvl||0)); if(!ADM.mon) ADM.mon=mons.find(k=>MON[k].boss)||mons[0];
-  const SL={weapon:'Armas',shield:'Mão esquerda',helmet:'Elmos',armor:'Armaduras',legs:'Calças',boots:'Botas',ring:'Anéis',amulet:'Colares',bag:'Mochilas'};
-  const groups={}; for(const id of items){ const g=SL[ITEMS[id].slot]||(ITEMS[id].heal||ITEMS[id].mana?'Poções':'Outros'); (groups[g]=groups[g]||[]).push(id); }
   const opt=(v,l,sel)=>`<option value="${v}" ${sel?'selected':''}>${esc(l)}</option>`;
   const bosses=spawns.filter(sp=>MON[sp.type].boss), dead=bosses.filter(sp=>!sp.mon).length;
   const html=`<p class="hint" style="margin-top:0">Ferramentas de teste. Este personagem fica marcado como <b>teste</b> ao usar o painel.${note?'<br><b style="color:var(--accent)">'+esc(note)+'</b>':''}</p>
@@ -3057,8 +3067,10 @@ function openAdm(note){
     <div class="rowb" style="margin-top:6px"><button data-act="heal" type="button">Curar tudo</button><button data-act="god" type="button" aria-pressed="${!!player.god}">${player.god?'Modo deus: ligado':'Modo deus: desligado'}</button><button data-act="spells" type="button">Aprender todas as magias</button><button data-act="pots" type="button">+100 poções de cada</button></div>
    </fieldset>
    <fieldset><legend>Dar item</legend>
-    <select id="admItem" style="width:100%">${Object.entries(groups).map(([g,ids])=>`<optgroup label="${g}">${ids.map(id=>opt(id,ITEMS[id].name+(ITEMS[id].lvl?' (nv '+ITEMS[id].lvl+')':''),id===ADM.item)).join('')}</optgroup>`).join('')}</select>
-    <div class="botrow"><select id="admR">${RAR.map((r,i)=>opt(i,r,i===ADM.r)).join('')}</select> Qtd. <input type="number" id="admN" min="1" max="999" value="${ADM.n}"><button data-act="item" type="button" class="primary">Dar</button></div>
+    <div class="botrow" style="margin:0 0 6px"><select id="admFcls" aria-label="Filtrar por classe"><option value="">Todas as classes</option>${CLASS_ORDER.map(c=>opt(c,CLASSES[c].name,c===ADM.fcls)).join('')}</select>
+      Nível <input type="number" id="admFmin" min="1" max="300" placeholder="de" value="${ADM.fmin}" aria-label="Nível mínimo"> a <input type="number" id="admFmax" min="1" max="300" placeholder="até" value="${ADM.fmax}" aria-label="Nível máximo"> <small class="hint" style="margin:0" id="admCount">${items.length} ite${items.length===1?'m':'ns'}</small></div>
+    <select id="admItem" style="width:100%">${admItemOptions(items)}</select>
+    <div class="botrow"><select id="admR">${RAR.map((r,i)=>opt(i,r,i===ADM.r)).join('')}</select> Qtd. <input type="number" id="admN" min="1" max="999" value="${ADM.n}"><button data-act="item" id="admGive" type="button" class="primary" ${items.length?'':'disabled'}>Dar</button></div>
    </fieldset>
    <fieldset><legend>Ir para</legend>
     <select id="admMap" style="width:100%">${Object.values(MAPS).map(m=>opt(m.id,m.name,m.id===ADM.map)).join('')}</select>
@@ -3090,7 +3102,7 @@ function openAdm(note){
     if(act==='god'){ player.god=!player.god; msg=player.god?'Modo deus ligado: você não recebe dano.':'Modo deus desligado.'; }
     if(act==='spells'){ player.learned={fae:true,ash:true}; quests.fae.state=2; quests.ash.state=2; buildActions(); msg='Todas as magias da classe liberadas (ainda respeitam o nível).'; }
     if(act==='pots'){ for(const id of ['hp','mp','hp2','mp2']) addItem({id,n:100,r:0,a:[]}); msg='+100 de cada poção.'; }
-    if(act==='item'){ const d=ITEMS[ADM.item]; let given=0;
+    if(act==='item'){ const d=ITEMS[ADM.item]; if(!d) return openAdm('Nenhum item com esse filtro.'); let given=0;
       if(d.stack){ if(addItem({id:ADM.item,n:ADM.n,r:0,a:[]})) given=ADM.n; }
       else for(let i=0;i<ADM.n;i++){ if(addItem(makeItem(ADM.item, ADM.r, d.lvl||player.level))) given++; else break; }
       msg=given?'Recebeu '+given+'× '+d.name+(d.slot&&!d.stack?' ('+RAR[ADM.r]+')':'')+'.':'A mochila está cheia.'; }
