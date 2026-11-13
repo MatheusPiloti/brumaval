@@ -167,7 +167,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .bar{position:relative;height:16px;background:#0c0a08;border:1px solid var(--line);border-radius:3px;margin-bottom:5px;overflow:hidden}
 .bar i{position:absolute;inset:0 auto 0 0;display:block}
 .bar span{position:relative;display:block;text-align:center;font-family:var(--mono);font-size:11px;line-height:14px;text-shadow:0 1px 0 #000}
-.bar.hp i{background:var(--hp)}.bar.mp i{background:var(--mp)}.bar.xp i{background:var(--xp)}
+.bar.air i{background:#4ab8d0}.bar.hp i{background:var(--hp)}.bar.mp i{background:var(--mp)}.bar.xp i{background:var(--xp)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;font-size:13px}
 .stats div{background:var(--panel-2);border-radius:3px;padding:4px 6px}
 .stats b{display:block;font-family:var(--mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
@@ -297,6 +297,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
       <div class="who"><span class="nm" id="pName">—</span><span class="lv" id="pLevel">Nível 1</span></div>
       <div class="bar hp"><i id="hpFill"></i><span id="hpTxt"></span></div>
       <div class="bar mp"><i id="mpFill"></i><span id="mpTxt"></span></div>
+      <div class="bar air" id="airBar" hidden><i id="airFill"></i><span id="airTxt"></span></div>
       <div class="bar xp"><i id="xpFill"></i><span id="xpTxt"></span></div>
       <div class="stats">
         <div><small>Ataque</small><b id="sAtk">0</b></div>
@@ -361,7 +362,14 @@ Object.assign(BASE_OF,{[GTREE]:MOSS,[HEDGE]:FSTONE,[CRYST]:MOSS,[CRYW]:MOSS,[LOG
 Object.assign(ROOF,{[GTREE]:['#1f4a22','#2c6a2e'],[HEDGE]:['#2e6a32','#3e8a42'],[CRYW]:['#2e2e4a','#7ac8e0'],[LOGW]:['#3e7a3a','#2e6a32']});
 SAFE.add(FSTONE);
 Object.assign(MINI,{[MOSS]:'#3f7a3a',[FFLOW]:'#4a8a52',[FSTONE]:'#6a7068',[FSHROOM]:'#4a7a6a',[ROTF]:'#3a2e40',[GTREE]:'#1a3e1e',[HEDGE]:'#24502a',[CRYST]:'#9ae0ff',[CRYW]:'#22223a',[LOGW]:'#4a3018',[RING]:'#ffd54a'});
-const LINKS_T = new Set([DOWN,UP,SUP,SDOWN,GATE,HOLE,NHOLE,ENTR,RING]);
+// ---- Invernália (gelo) e Coralina (fundo do mar)
+const SNOW=57,SNOWP=58,IPINE=59,IWALL=60,ICEF=61,DRIFT=62,SANDF=63,CORAL=64,KELP=65,REEFW=66,NACRE=67,BUBBLE=68,ABYSS=69,HULL=70,IENT=71,SENT=72;
+for(const t of [IPINE,IWALL,CORAL,REEFW,HULL]){ BLOCKS.add(t); TALL.add(t); }
+Object.assign(BASE_OF,{[IPINE]:SNOW,[IWALL]:ICEF,[CORAL]:SANDF,[REEFW]:ABYSS,[HULL]:WOOD});
+Object.assign(ROOF,{[IWALL]:['#a8c8e0','#d8ecf8'],[REEFW]:['#2a3a4a','#3a5a6a'],[HULL]:['#3a2614','#5a3a1c']});
+SAFE.add(NACRE);
+Object.assign(MINI,{[SNOW]:'#d8e4ec',[SNOWP]:'#b0a490',[IPINE]:'#2a4a3a',[IWALL]:'#6a8aa8',[ICEF]:'#a8d0e8',[DRIFT]:'#e8f0f8',[SANDF]:'#b8a878',[CORAL]:'#c0506a',[KELP]:'#4a7a5a',[REEFW]:'#1a2a36',[NACRE]:'#d8d0e0',[BUBBLE]:'#9ae0ff',[ABYSS]:'#2a3440',[HULL]:'#3a2614',[IENT]:'#ffd54a',[SENT]:'#ffd54a'});
+const LINKS_T = new Set([DOWN,UP,SUP,SDOWN,GATE,HOLE,NHOLE,ENTR,RING,IENT,SENT]);
 function makeNoise(W,H,cell,rng){
   const gw=Math.ceil(W/cell)+2, gh=Math.ceil(H/cell)+2, g=new Float32Array(gw*gh);
   for(let i=0;i<g.length;i++) g[i]=rng();
@@ -651,6 +659,82 @@ const FAED = {
   heart:  mkFae('heart',3,{darkA:.88,oob:RWALL,glowCol:'rgba(170,80,230,'},(id,i,last)=>genCA(id,'Coração do Bosque Sombrio (andar '+i+')',52,42,9500+i*7,ROTF,RWALL,FSHROOM,0.03,{exit:!last})),
 };
 for(const ids of Object.values(FAED)) for(const id of ids){ const M=MAPS[id]; if(!M.far) M.far=M.exit||M.boss; }
+// ---- cidades novas: mesmo formato de Lunária (cidade murada no centro, cais a oeste, 5 entradas de masmorra)
+function genRegionTown(c){
+  const W=88,H=68,rng=mulberry32(c.seed),t=new Uint8Array(W*H);
+  const inb=(x,y)=>x>=0&&y>=0&&x<W&&y<H, set=(x,y,v)=>{ if(inb(x,y)) t[y*W+x]=v; }, get=(x,y)=>t[y*W+x];
+  const n1=makeNoise(W,H,6,rng), n2=makeNoise(W,H,8,rng);
+  const CX=44, CY=34, X0=36, X1=52, Y0=27, Y1=41;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    let v=c.ground(rng);
+    if(n1(x,y)>0.62) v=c.tree; else if(n2(x,y)>0.74) v=c.pond; else if(rng()<c.decoP) v=c.deco;
+    if(x<4) v=c.sea; else if(x>=W-2||y<2||y>=H-2) v=c.tree;
+    t[y*W+x]=v;
+  }
+  for(let y=Y0-3;y<=Y1+3;y++) for(let x=X0-3;x<=X1+3;x++) set(x,y,c.ground(rng));
+  for(let y=Y0;y<=Y1;y++) for(let x=X0;x<=X1;x++) set(x,y,(x===X0||x===X1||y===Y0||y===Y1)?c.wall:c.floor);
+  for(let d=-1;d<=1;d++){ set(CX+d,Y0,c.floor); set(CX+d,Y1,c.floor); set(X0,CY+d,c.floor); set(X1,CY+d,c.floor); }
+  const building=(a,b,cc,d,dx,dy)=>{ for(let y=b;y<=d;y++) for(let x=a;x<=cc;x++) set(x,y,(x===a||x===cc||y===b||y===d)?c.bwall:WOOD); set(dx,dy,DOOR); };
+  building(X0+1,Y0+1,X0+7,Y0+6, X0+4,Y0+6);
+  building(X1-7,Y0+1,X1-1,Y0+6, X1-4,Y0+6);
+  set(CX+3,CY+3,c.townPond); set(CX+4,CY+3,c.townPond); set(CX+3,CY+4,c.townPond); set(CX+4,CY+4,c.townPond);
+  const carve=(x,y,x1,y1)=>{ for(let i=0;i<600&&(x!==x1||y!==y1);i++){
+      if(x!==x1&&(y===y1||rng()<0.5)) x+=Math.sign(x1-x); else y+=Math.sign(y1-y);
+      const k=get(x,y); if(SAFE.has(k)||k===c.wall||k===c.bwall||LINKS_T.has(k)||k===WATER&&x<4) continue; set(x,y,k===WATER?BRIDGE:c.path); } };
+  for(let y=CY-4;y<=CY+4;y++) for(let x=4;x<=7;x++) set(x,y,c.ground(rng));
+  for(let x=2;x<=4;x++) set(x,CY,BRIDGE); set(2,CY+1,BOAT);
+  set(5,CY,c.path); carve(5,CY,X0-1,CY);
+  const ENTS=[{x:20,y:12,gap:'S'},{x:70,y:12,gap:'S'},{x:18,y:57,gap:'N'},{x:70,y:57,gap:'N'},{x:80,y:34,gap:'W'}];
+  for(const e of ENTS){
+    for(let y=e.y-3;y<=e.y+3;y++) for(let x=e.x-3;x<=e.x+3;x++){
+      const edge=Math.abs(x-e.x)===3||Math.abs(y-e.y)===3;
+      const gap=(e.gap==='S'&&y===e.y+3&&Math.abs(x-e.x)<=1)||(e.gap==='N'&&y===e.y-3&&Math.abs(x-e.x)<=1)||(e.gap==='W'&&x===e.x-3&&Math.abs(y-e.y)<=1);
+      set(x,y, edge&&!gap ? c.tree : c.ground(rng));
+    }
+    set(e.x,e.y,c.ent);
+    const ox=e.gap==='W'?e.x-1:e.x, oy=e.gap==='S'?e.y+1:e.gap==='N'?e.y-1:e.y; set(ox,oy,c.path);
+    const gx=e.gap==='W'?X1+1:CX, gy=e.gap==='W'?CY:(e.y<CY?Y0-1:Y1+1);
+    carve(ox,oy,gx,gy);
+  }
+  const seen=new Uint8Array(W*H), st=[CY*W+CX]; seen[st[0]]=1;
+  while(st.length){ const i=st.pop(),x=i%W,y=(i/W)|0; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx,ny=y+dy; if(!inb(nx,ny)) continue; const j=ny*W+nx; if(seen[j]||BLOCKS.has(t[j])) continue; seen[j]=1; st.push(j); } }
+  for(let i=0;i<W*H;i++) if(!seen[i]&&!BLOCKS.has(t[i])) t[i]=c.tree;
+  return {id:c.id, name:c.name, W,H,t, dark:false, town:true, oob:c.tree, region:c.id, links:{},
+    spawn:{x:X0+4,y:Y0+3}, dock:{x:6,y:CY}, boatman:{x:5,y:CY-1}, ents:ENTS, townRect:{x0:X0,x1:X1,y0:Y0,y1:Y1}, enter:c.enter};
+}
+MAPS.ice = genRegionTown({id:'ice', name:'Fiordes Gelados', seed:7070, ground:r=>r()<0.1?DRIFT:SNOW, tree:IPINE, pond:ICEF, deco:DRIFT, decoP:0.02, sea:WATER,
+  wall:WALL, floor:STONE, bwall:WALL, townPond:ICEF, path:SNOWP, ent:IENT, enter:'O quebra-gelo abre caminho pelo fiorde e atraca em Invernália. O vento corta como faca.'});
+MAPS.sea = genRegionTown({id:'sea', name:'Recife Profundo', seed:9090, ground:r=>r()<0.08?KELP:SANDF, tree:CORAL, pond:REEFW, deco:BUBBLE, decoP:0.012, sea:REEFW,
+  wall:REEFW, floor:NACRE, bwall:REEFW, townPond:BUBBLE, path:PATH, ent:SENT, enter:'O sino de mergulho desce devagar e para dentro da grande bolha de ar de Coralina.'});
+MAPS.sea.tint='rgba(20,90,160,.17)';
+const mkReg=(key,n,region,props,fn)=>{ const ids=[]; for(let i=1;i<=n;i++){ const id=key+i; MAPS[id]=Object.assign(fn(id,i,i===n), {region}, props, {mult:[1,1,1.2,1.4,1.6][i]}, i===n?{glow:props.glowCol}:{}); ids.push(id); } return ids; };
+const ICED = {
+  icecave: mkReg('icecave',2,'ice',{darkA:.72,oob:IWALL,glowCol:'rgba(150,210,255,'},(id,i,last)=>genCA(id,'Cavernas de Gelo Azul (andar '+i+')',52,40,9600+i*7,ICEF,IWALL,DRIFT,0.04,{exit:!last})),
+  ship: mkReg('ghostship',3,'ice',{darkA:.86,oob:HULL,glowCol:'rgba(120,230,200,'},(id,i,last)=> last
+    ? genCastleFloor(id,'Navio Fantasma (cabine do capitão)',38,30,9703,{n:5,hall:{w:13,h:9},entryTile:SUP,wall:HULL,floor:WOOD,carpet:ICEF})
+    : genCastleFloor(id,'Navio Fantasma (porão '+i+')',46,34,9700+i,{n:9,entryTile:i===1?GATE:SUP,exitTile:SDOWN,wall:HULL,floor:WOOD,carpet:ICEF})),
+  wyrm: mkReg('wyrmnest',3,'ice',{darkA:.6,oob:IWALL,glowCol:'rgba(220,240,255,'},(id,i,last)=>genCA(id,'Ninho das Serpes Brancas (andar '+i+')',56,44,9800+i*11,SNOW,IWALL,DRIFT,0.03,{exit:!last})),
+  keep: mkReg('frostkeep',4,'ice',{darkA:.7,oob:IWALL,glowCol:'rgba(160,200,255,'},(id,i,last)=> last
+    ? genCastleFloor(id,'Fortaleza dos Gigantes de Gelo (torre)',38,30,9904,{n:5,hall:{w:13,h:9},entryTile:SUP,wall:IWALL,floor:ICEF,carpet:SNOW})
+    : genCastleFloor(id,'Fortaleza dos Gigantes de Gelo (andar '+i+')',46,34,9900+i,{n:9,entryTile:i===1?GATE:SUP,exitTile:SDOWN,wall:IWALL,floor:ICEF,carpet:SNOW})),
+  aurora: mkReg('aurorarift',3,'ice',{darkA:.55,oob:IWALL,glowCol:'rgba(140,255,200,'},(id,i,last)=>genCA(id,'Fenda da Aurora (andar '+i+')',52,42,9950+i*13,ICEF,IWALL,DRIFT,0.03,{exit:!last})),
+};
+const SEAD = {
+  coral: mkReg('coralgarden',2,'sea',{darkA:.55,oob:CORAL,tint:'rgba(20,90,160,.17)',glowCol:'rgba(255,140,170,'},(id,i,last)=>genCA(id,'Jardim de Corais (andar '+i+')',52,40,10100+i*7,SANDF,CORAL,KELP,0.04,{exit:!last})),
+  wreck: mkReg('wreck',3,'sea',{darkA:.8,oob:HULL,tint:'rgba(20,90,160,.17)',glowCol:'rgba(255,210,90,'},(id,i,last)=> last
+    ? genCastleFloor(id,'Naufrágio do Galeão Dourado (tombadilho)',38,30,10203,{n:5,hall:{w:13,h:9},entryTile:SUP,wall:HULL,floor:WOOD,carpet:SANDF})
+    : genCastleFloor(id,'Naufrágio do Galeão Dourado (andar '+i+')',46,34,10200+i,{n:9,entryTile:i===1?GATE:SUP,exitTile:SDOWN,wall:HULL,floor:WOOD,carpet:SANDF})),
+  temple: mkReg('sunktemple',3,'sea',{darkA:.8,oob:REEFW,tint:'rgba(20,90,160,.17)',glowCol:'rgba(90,220,200,'},(id,i,last)=> last
+    ? genCastleFloor(id,'Templo Afundado (santuário)',38,30,10303,{n:5,hall:{w:13,h:9},entryTile:SUP,wall:REEFW,floor:ABYSS,carpet:NACRE})
+    : genCastleFloor(id,'Templo Afundado (andar '+i+')',46,34,10300+i,{n:9,entryTile:i===1?GATE:SUP,exitTile:SDOWN,wall:REEFW,floor:ABYSS,carpet:NACRE})),
+  trench: mkReg('trench',3,'sea',{darkA:.93,oob:REEFW,tint:'rgba(10,40,90,.2)',glowCol:'rgba(170,255,120,'},(id,i,last)=>genCA(id,'Fossa Abissal (andar '+i+')',54,42,10400+i*11,ABYSS,REEFW,KELP,0.02,{exit:!last})),
+  lair: mkReg('levlair',4,'sea',{darkA:.86,oob:REEFW,tint:'rgba(10,60,120,.2)',glowCol:'rgba(90,170,255,'},(id,i,last)=>genCA(id,'Covil do Leviatã (andar '+i+')',56,44,10500+i*13,ABYSS,REEFW,KELP,0.03,{exit:!last})),
+};
+for(const D of [ICED,SEAD]) for(const ids of Object.values(D)) for(const id of ids){ const M=MAPS[id]; if(!M.far) M.far=M.exit||M.boss; }
+// bolhas de ar espalhadas no fundo do mar
+{ const r=mulberry32(4242); for(const ids of Object.values(SEAD)) for(const id of ids){ const M=MAPS[id]; let n=Math.floor(M.W*M.H/230), tries=0;
+  while(n>0&&tries++<4000){ const x=1+Math.floor(r()*(M.W-2)), y=1+Math.floor(r()*(M.H-2)), k=y*M.W+x, tt=M.t[k]; if(BLOCKS.has(tt)||LINKS_T.has(tt)||SAFE.has(tt)) continue;
+    if(M.entry&&Math.abs(M.entry.x-x)+Math.abs(M.entry.y-y)<3) continue; if(M.exit&&Math.abs(M.exit.x-x)+Math.abs(M.exit.y-y)<3) continue; if(M.boss&&Math.abs(M.boss.x-x)+Math.abs(M.boss.y-y)<3) continue; M.t[k]=BUBBLE; n--; } } }
 for(const m of Object.values(MAPS)) m.explored = new Uint8Array(m.W*m.H);
 const tileAt=(m,x,y)=>(x<0||y<0||x>=m.W||y>=m.H)?(m.oob??(m.dark?CWALL:TREE)):m.t[y*m.W+x];
 function arrivalNear(m,x,y){ for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){ const nx=x+dx,ny=y+dy, tt=tileAt(m,nx,ny); if(!BLOCKS.has(tt)&&!LINKS_T.has(tt)) return {x:nx,y:ny}; } return {x,y:y+1}; }
@@ -669,7 +753,11 @@ function connect(a,ax,ay,b,bx,by){ const A=MAPS[a],B=MAPS[b]; A.links[ay*A.W+ax]
   keys.forEach((k,i)=>{ const ids=FAED[k]; connect('fae',F.ents[i].x,F.ents[i].y,ids[0],6,6);
     for(let j=0;j<ids.length-1;j++){ const P=MAPS[ids[j]]; connect(ids[j],P.exit.x,P.exit.y,ids[j+1],6,6); } }); }
 
+for(const [reg,D] of [['ice',ICED],['sea',SEAD]]){ const A=MAPS[reg];
+  Object.keys(D).forEach((k,i)=>{ const ids=D[k], F=MAPS[ids[0]], e=F.entry||{x:6,y:6}; connect(reg,A.ents[i].x,A.ents[i].y,ids[0],e.x,e.y);
+    for(let j=0;j<ids.length-1;j++){ const P=MAPS[ids[j]], Q=MAPS[ids[j+1]], qe=Q.entry||{x:6,y:6}; connect(ids[j],P.exit.x,P.exit.y,ids[j+1],qe.x,qe.y); } }); }
 function zoneName(m,x,y){
+  if((m.id==='ice'||m.id==='sea')&&m.townRect){ const r=m.townRect; return (x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1)?(m.id==='ice'?'Invernália':'Coralina'):m.name; }
   if(m.id==='fae'){ const r=m.townRect; return (x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1)?'Lunária':'Bosque Encantado'; }
   if(m.id==='ash'){ const r=m.townRect; return (x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1)?'Cinzaforte':'Terras Queimadas'; }
   if(m.id!=='over') return m.name;
@@ -915,6 +1003,7 @@ function statLines(it){
   if(d.hp) s.push('Vida +'+d.hp); if(d.mp) s.push('Mana +'+d.mp); if(d.crit) s.push('Crítico +'+d.crit+'%'); if(d.speed) s.push('Velocidade +'+d.speed); if(d.slots) s.push('Capacidade: '+d.slots+' itens'); if(d.hands===2) s.push('Duas mãos'); if(d.atkspd) s.push('Vel. de ataque '+(d.atkspd>0?'+':'')+d.atkspd+'%'); if(d.regen) s.push('Regeneração +'+d.regen);
   if(d.heal) s.push('Cura '+d.heal); if(d.mana) s.push('Mana +'+d.mana);
   if(bladeKind(d)) s.push(BLADE_TXT[bladeKind(d)]);
+  if(d.warm===true) s.push('Protege do frio dos Fiordes'); if(d.warm>1) s.push('Aquece por 10 min (protege do frio)'); if(d.gill) s.push('Debaixo d\'água, o fôlego dura o dobro'); if(d.air) s.push('Enche o fôlego debaixo d\'água');
   if(d.ammo){ s.push('Flecha: '+AMMO[d.ammo].txt); s.push('Só Caçador · nível '+(d.lvl||1)+' · gasta 1 por tiro'); s.push(player.ammo===it.id?'Ativa (clique para voltar à comum)':'Clique para usar'); }
   if(d.set&&SETS[d.set]){ const S=SETS[d.set], have=Object.values(player.eq||{}).filter(x=>x&&ITEMS[x.id]?.set===d.set).length; s.push(S.name+' ('+have+'/4)'); s.push('2 peças: '+setBonusTxt(S.b2)); s.push('4 peças: '+setBonusTxt(S.b4)); }
   return s;
@@ -1064,6 +1153,117 @@ const BOSSES=[{type:'queen',lvl:10,where:'Ninho de Seda, pântano ao sul · anda
   {type:'forgemaster',lvl:50,where:'Forja dos Diabretes, Terras Queimadas (noroeste) · andar 2'},{type:'magmaheart',lvl:60,where:'Fendas de Magma, Terras Queimadas (nordeste) · andar 2'},
   {type:'ashwidow',lvl:70,where:'Necrópole de Cinzas, Terras Queimadas (sudoeste) · andar 3'},{type:'pyraxis',lvl:80,where:'Ninho dos Dragões, Terras Queimadas (sudeste) · andar 3'},
   {type:'ignivar',lvl:90,where:'Coração do Vulcão, Terras Queimadas (leste) · andar 4'}];
+// ---- Invernália
+Object.assign(MON, {
+  frostwolf:{name:'Lobo da Geada', lvl:70, hp:900, atk:420, def:50, xp:700, step:280, as:1200, sight:7, col:'#e8f0f8', loot:[['gold',.8,100,250],['frostfur',.5,1,1],['warmpot',.05,1,1]]},
+  walrus:  {name:'Morsa Guerreira', lvl:72, hp:1600, atk:520, def:70, xp:900, step:520, as:1600, sight:6, col:'#8a6e5a', charge:true, loot:[['gold',.8,120,280],['walrustusk',.4,1,1],['hp2',.08,1,1]]},
+  yeti:    {name:'Ieti', lvl:76, hp:2200, atk:640, def:66, xp:1100, step:460, as:1600, sight:6, col:'#f0f4f8', loot:[['gold',.9,150,320],['frostfur',.6,1,2],['hp2',.1,1,1]]},
+  icewraith:{name:'Espírito da Nevasca', lvl:78, hp:900, atk:380, def:50, xp:1000, step:300, as:1400, sight:7, col:'#c8e8ff', ranged:{range:5,cd:2400,min:380,max:500,color:'#c8e8ff',slow:2000}, loot:[['gold',.7,120,260],['icecore',.3,1,1],['mp2',.1,1,1]]},
+  drowned: {name:'Marinheiro Afogado', lvl:80, hp:1300, atk:560, def:64, xp:1100, step:420, as:1400, sight:6, col:'#7a9aa0', loot:[['gold',1,180,380],['icecore',.15,1,1],['hp2',.1,1,1]]},
+  frostserpent:{name:'Serpe Branca', lvl:84, hp:2600, atk:720, def:76, xp:1500, step:420, as:1600, sight:7, col:'#e8f4ff', breath:{range:3,cd:4800,min:420,max:560}, loot:[['gold',.9,200,420],['frostscale',.4,1,1],['hp2',.12,1,1]]},
+  icegiant:{name:'Gigante de Gelo', lvl:88, hp:4400, atk:950, def:100, xp:2100, step:600, as:1900, sight:6, col:'#9ac8e8', charge:true, loot:[['gold',1,260,560],['icecore',.5,1,2],['hp2',.2,1,1]]},
+  auroraspirit:{name:'Espectro da Aurora', lvl:92, hp:1500, atk:600, def:72, xp:1700, step:300, as:1400, sight:8, col:'#a0ffd0', ranged:{range:6,cd:2200,min:520,max:700,color:'#a0ffd0'}, loot:[['gold',.8,200,420],['auroraglass',.18,1,1],['mp2',.2,1,1]]},
+  walrusking:{name:'Tusko, o Rei das Morsas', lvl:78, hp:16000, atk:760, def:80, xp:30000, step:480, as:1600, sight:9, col:'#7a5e4a', boss:true, respawn:1500000, charge:true,
+            ab:{phases:[{at:.6,summon:'walrus',n:3,say:'Manada! Esmaguem o intruso!',enrage:true}]},
+            loot:[['gold',1,4000,7000],['walrustusk',1,3,5],['yetibag',.3,1,1],['hp2',1,3,5]]},
+  frozencaptain:{name:'Capitão Hálvar, o Congelado', lvl:84, hp:20000, atk:820, def:85, xp:42000, step:420, as:1500, sight:9, col:'#5a7a8a', boss:true, respawn:1800000,
+            ranged:{range:5,cd:2600,min:520,max:700,color:'#c8e8ff',slow:2500}, ab:{rain:{cd:5500,n:7,dmg:260,kind:'frost'}, phases:[{at:.7,summon:'drowned',n:3,say:'Tripulação, ao convés!'},{at:.35,summon:'icewraith',n:2,say:'O mar me prendeu. Agora prende você!',enrage:true}]},
+            loot:[['gold',1,5000,8000],['icecore',1,2,4],['yeticoat',.35,1,1],['hp2',1,3,5]]},
+  wyrmmother:{name:'Alvaneve, a Mãe-Serpe', lvl:88, hp:24000, atk:900, def:88, xp:52000, step:440, as:1600, sight:9, col:'#f4faff', boss:true, respawn:2100000,
+            breath:{range:4,cd:4200,min:650,max:850}, ab:{rain:{cd:5000,n:8,dmg:280,kind:'frost'}, phases:[{at:.6,summon:'frostserpent',n:2,say:'Meus filhos, despertem!',enrage:true}]},
+            loot:[['gold',1,6000,9000],['frostscale',1,3,6],['frostring',.4,1,1],['hp2',1,4,6]]},
+  frostqueen:{name:'Ysolde, Rainha da Geada', lvl:94, hp:30000, atk:1000, def:95, xp:66000, step:420, as:1500, sight:9, col:'#c8e0ff', boss:true, respawn:2400000,
+            ranged:{range:6,cd:2200,min:700,max:950,color:'#e8f4ff',slow:3000}, ab:{rain:{cd:4500,n:10,dmg:320,kind:'frost'}, phases:[{at:.7,summon:'icewraith',n:3,say:'O inverno nunca termina.'},{at:.4,summon:'icegiant',n:2,say:'Gigantes! Defendam a coroa!',enrage:true}]},
+            loot:[['gold',1,8000,12000],['icecore',1,4,6],['frostcrown',.4,1,1],['yetibag',.4,1,1],['hp3',1,3,5]]},
+  aurorath:{name:'Aurorath, o Olho do Céu', lvl:100, hp:36000, atk:1100, def:100, xp:80000, step:400, as:1500, sight:9, col:'#a0ffd0', boss:true, respawn:2700000,
+            ranged:{range:6,cd:2000,min:800,max:1050,color:'#a0ffd0'}, ab:{rain:{cd:4000,n:12,dmg:340,kind:'aurora'}, phases:[{at:.75,summon:'auroraspirit',n:3,say:'As luzes do céu se voltam contra você.'},{at:.4,summon:'auroraspirit',n:4,say:'BRILHE COMIGO!',enrage:true}]},
+            loot:[['gold',1,10000,15000],['auroraglass',1,2,4],['auroraamulet',.5,1,1],['hp3',1,4,6]]},
+  // ---- Coralina
+  giantcrab:{name:'Caranguejo Gigante', lvl:95, hp:3000, atk:900, def:120, xp:2000, step:560, as:1600, sight:6, col:'#d0503a', loot:[['gold',.9,250,520],['crabshell',.5,1,1],['airpot',.1,1,2]]},
+  eel:     {name:'Enguia Elétrica', lvl:97, hp:1500, atk:700, def:80, xp:1900, step:300, as:1300, sight:7, col:'#e8d050', ranged:{range:4,cd:2200,min:600,max:780,color:'#fff07a',slow:1500}, loot:[['gold',.8,220,460],['pearl',.12,1,1],['airpot',.1,1,1]]},
+  jelly:   {name:'Água-Viva Gigante', lvl:99, hp:1800, atk:650, def:70, xp:2000, step:420, as:1400, sight:6, col:'#ff9ad0', poison:{ch:.35,dmg:60,ticks:5}, loot:[['gold',.7,200,420],['jellygel',.5,1,2]]},
+  pirate:  {name:'Pirata Afogado', lvl:102, hp:2600, atk:950, def:95, xp:2400, step:420, as:1400, sight:7, col:'#5a7a7a', loot:[['gold',1,350,700],['pearl',.2,1,1],['hp3',.08,1,1]]},
+  fishpriest:{name:'Sacerdote Escamado', lvl:106, hp:2200, atk:760, def:90, xp:2600, step:440, as:1500, sight:7, col:'#3a9a8a', ranged:{range:6,cd:2300,min:700,max:900,color:'#5ad0c0'}, loot:[['gold',.9,300,620],['pearl',.3,1,1],['mp3',.1,1,1]]},
+  shark:   {name:'Tubarão-Martelo', lvl:110, hp:4200, atk:1200, def:110, xp:3200, step:300, as:1400, sight:7, col:'#7a8a9a', charge:true, loot:[['gold',1,350,700],['sharktooth',.5,1,1],['hp3',.1,1,1]]},
+  angler:  {name:'Peixe-Lanterna Abissal', lvl:114, hp:3000, atk:1000, def:100, xp:3400, step:380, as:1500, sight:8, col:'#2a3a4a', ranged:{range:5,cd:2400,min:800,max:1000,color:'#d0ff6a'}, loot:[['gold',.9,350,700],['abysscore',.2,1,1],['mp3',.1,1,1]]},
+  abyssal: {name:'Horror Abissal', lvl:120, hp:6500, atk:1400, def:130, xp:4500, step:560, as:1800, sight:6, col:'#3a2a5a', loot:[['gold',1,500,900],['abysscore',.4,1,1],['hp3',.15,1,1]]},
+  crabking:{name:'Karkinos, o Caranguejo-Rei', lvl:100, hp:32000, atk:1100, def:140, xp:60000, step:520, as:1700, sight:9, col:'#e0603a', boss:true, respawn:2100000,
+            ab:{rain:{cd:5000,n:8,dmg:340,kind:'tide'}, phases:[{at:.6,summon:'giantcrab',n:3,say:'Pinças à frente!',enrage:true}]},
+            loot:[['gold',1,9000,13000],['crabshell',1,4,6],['shellhelm',.4,1,1],['hp3',1,3,5]]},
+  piratequeen:{name:'Capitã Maré-Negra', lvl:106, hp:36000, atk:1200, def:110, xp:70000, step:420, as:1400, sight:9, col:'#2a3a3a', boss:true, respawn:2400000,
+            ranged:{range:6,cd:2200,min:850,max:1100,color:'#ffd54a'}, ab:{phases:[{at:.7,summon:'pirate',n:3,say:'Abordagem, cães do mar!'},{at:.35,summon:'shark',n:2,say:'Os tubarões sempre vêm quando há sangue!',enrage:true}]},
+            loot:[['gold',1,12000,18000],['pearl',1,2,4],['sharkbag',.35,1,1],['hp3',1,3,5]]},
+  tidepriest:{name:'Abyssor, o Sumo-Sacerdote', lvl:112, hp:40000, atk:1250, def:115, xp:82000, step:440, as:1500, sight:9, col:'#2a8a7a', boss:true, respawn:2700000,
+            ranged:{range:6,cd:2000,min:900,max:1150,color:'#5ad0c0',slow:2500}, ab:{rain:{cd:4500,n:10,dmg:380,kind:'tide'}, phases:[{at:.7,summon:'fishpriest',n:3,say:'Irmãos, cantem para as profundezas!'},{at:.35,summon:'eel',n:3,say:'A maré sobe!',enrage:true}]},
+            loot:[['gold',1,13000,19000],['pearl',1,3,5],['tiderobe',.35,1,1],['pearlring',.3,1,1],['mp3',1,3,5]]},
+  trencheye:{name:'O Olho da Fossa', lvl:118, hp:46000, atk:1350, def:125, xp:96000, step:600, as:1800, sight:9, col:'#4a2a6a', boss:true, respawn:3000000,
+            ranged:{range:6,cd:2000,min:1000,max:1250,color:'#d0ff6a'}, ab:{rain:{cd:4200,n:12,dmg:420,kind:'tide'}, phases:[{at:.7,summon:'angler',n:3,say:'Olhe para mim.'},{at:.35,summon:'abyssal',n:2,say:'A escuridão tem fome.',enrage:true}]},
+            loot:[['gold',1,15000,22000],['abysscore',1,3,5],['abyssplate',.35,1,1],['hp3',1,4,6]]},
+  leviathan:{name:'Leviatã', lvl:126, hp:70000, atk:1600, def:140, xp:150000, step:460, as:1600, sight:9, col:'#2a5a9a', boss:true, respawn:3600000,
+            breath:{range:4,cd:3800,min:1200,max:1500}, ab:{rain:{cd:3800,n:14,dmg:480,kind:'tide'}, phases:[{at:.75,summon:'shark',n:3,say:'O mar inteiro se agita.'},{at:.5,summon:'abyssal',n:2,say:'GRRROOOOOM!',enrage:true},{at:.25,summon:'eel',n:4,say:'O Leviatã ruge.'}]},
+            loot:[['gold',1,25000,35000],['levheart',1,1,1],['leviathanscale',.5,1,1],['hp3',1,5,8]]},
+});
+BOSSES.push({type:'walrusking',lvl:75,where:'Cavernas de Gelo Azul, Fiordes Gelados (noroeste) · andar 2'},{type:'frozencaptain',lvl:80,where:'Navio Fantasma, Fiordes Gelados (nordeste) · porão 3'},
+  {type:'wyrmmother',lvl:85,where:'Ninho das Serpes Brancas, Fiordes Gelados (sudoeste) · andar 3'},{type:'frostqueen',lvl:90,where:'Fortaleza dos Gigantes de Gelo, Fiordes Gelados (sudeste) · torre'},
+  {type:'aurorath',lvl:95,where:'Fenda da Aurora, Fiordes Gelados (leste) · andar 3'},
+  {type:'crabking',lvl:95,where:'Jardim de Corais, Recife Profundo (noroeste) · andar 2'},{type:'piratequeen',lvl:100,where:'Naufrágio do Galeão Dourado, Recife Profundo (nordeste) · tombadilho'},
+  {type:'tidepriest',lvl:105,where:'Templo Afundado, Recife Profundo (sudoeste) · santuário'},{type:'trencheye',lvl:112,where:'Fossa Abissal, Recife Profundo (sudeste) · andar 3'},
+  {type:'leviathan',lvl:120,where:'Covil do Leviatã, Recife Profundo (leste) · andar 4'});
+Object.assign(ITEMS, {
+  // poções e utilidades
+  hp3:       {name:'Poção de Vida Suprema', stack:true, heal:900, price:450, shop:['merchant4','merchant5'], icon:'potion', look:'#ff5a8a'},
+  mp3:       {name:'Poção de Mana Suprema', stack:true, mana:550, price:350, shop:['merchant4','merchant5'], icon:'potion', look:'#5ab0ff'},
+  warmpot:   {name:'Poção Quente', stack:true, warm:600000, price:40, shop:'merchant4', icon:'potion', look:'#ff9a3a'},
+  airpot:    {name:'Poção de Fôlego', stack:true, air:true, price:50, shop:'merchant5', icon:'potion', look:'#9ae0ff'},
+  // materiais
+  frostfur:  {name:'Pelo Gélido', stack:true, sell:120, icon:'pelt', look:'#e8f0f8'},
+  walrustusk:{name:'Presa de Morsa', stack:true, sell:200, icon:'fang', look:'#f0e8d0'},
+  icecore:   {name:'Núcleo de Gelo', stack:true, sell:260, icon:'dust', look:'#9ad8ff'},
+  frostscale:{name:'Escama Alva', stack:true, sell:380, icon:'pelt', look:'#f4faff'},
+  auroraglass:{name:'Vidro da Aurora', stack:true, sell:900, icon:'dust', look:'#a0ffd0'},
+  crabshell: {name:'Casco de Caranguejo', stack:true, sell:300, icon:'pelt', look:'#d0503a'},
+  pearl:     {name:'Pérola Negra', stack:true, sell:600, icon:'dust', look:'#3a3a5a'},
+  jellygel:  {name:'Gel de Água-Viva', stack:true, sell:220, icon:'dust', look:'#ff9ad0'},
+  sharktooth:{name:'Dente de Tubarão', stack:true, sell:420, icon:'fang', look:'#e8e8e0'},
+  abysscore: {name:'Núcleo Abissal', stack:true, sell:800, icon:'dust', look:'#6a3aaa'},
+  levheart:  {name:'Coração do Leviatã', stack:true, sell:20000, icon:'heart', look:'#2a5a9a'},
+  // equipamento de Invernália (nível 70+)
+  furcap:    {name:'Gorro de Pele', slot:'helmet', def:10, hp:40, warm:true, price:6000, shop:'merchant4', lvl:70, icon:'helmet', look:'#e8dcc8'},
+  yeticoat:  {name:'Casaco de Ieti', slot:'armor', def:30, hp:100, warm:true, sell:6000, lvl:75, icon:'armor', look:'#f0f4f8'},
+  snowboots: {name:'Botas de Neve', slot:'boots', def:9, speed:30, warm:true, sell:5000, lvl:78, icon:'boots', look:'#e8f0f8'},
+  frostring: {name:'Anel do Inverno', slot:'ring', mag:10, hp:60, sell:9000, lvl:85, icon:'ring', look:'#9ad8ff'},
+  frostcrown:{name:'Coroa da Geada', slot:'helmet', def:16, mag:12, hp:80, warm:true, sell:16000, lvl:94, icon:'helmet', look:'#c8e0ff'},
+  auroraamulet:{name:'Amuleto da Aurora', slot:'amulet', atk:10, mag:16, crit:4, sell:20000, lvl:98, icon:'amulet', look:'#a0ffd0'},
+  yetibag:   {name:'Mochila de Pele de Ieti', slot:'bag', slots:34, sell:8000, lvl:75, icon:'bag', look:'#f0f4f8', noRarity:true},
+  glacialsword:{name:'Espada de Gelo Eterno', slot:'weapon', wk:'blade', atk:60, sell:9000, lvl:80, icon:'sword', look:'#9ad8ff'},
+  glacialaxe:{name:'Machado Glacial', slot:'weapon', wk:'blade', atk:59, sell:9000, lvl:80, icon:'axe', look:'#9ad8ff'},
+  glacialmaul:{name:'Martelo Glacial', slot:'weapon', wk:'blade', atk:60, sell:9000, lvl:80, icon:'hammer', look:'#9ad8ff'},
+  borealbow: {name:'Arco Boreal', slot:'weapon', wk:'bow', hands:2, atk:57, sell:9000, lvl:80, icon:'bow', look:'#a0ffd0'},
+  blizzardwand:{name:'Varinha da Nevasca', slot:'weapon', wk:'wand', atk:35, mag:42, sell:9000, lvl:80, icon:'wand', look:'#c8e8ff'},
+  winterstaff:{name:'Cajado do Inverno', slot:'weapon', wk:'staff', atk:35, mag:42, sell:9000, lvl:80, icon:'staff', look:'#c8e8ff'},
+  iceclaws:  {name:'Garras de Gelo', slot:'weapon', wk:'fist', atk:50, sell:9000, lvl:80, icon:'fist', look:'#9ad8ff'},
+  // equipamento de Coralina (nível 90+)
+  gillneck:  {name:'Colar de Guelras', slot:'amulet', hp:60, gill:true, price:12000, shop:'merchant5', lvl:90, icon:'amulet', look:'#5ad0c0'},
+  shellhelm: {name:'Elmo de Concha', slot:'helmet', def:16, hp:80, sell:12000, lvl:100, icon:'helmet', look:'#e8c8b0'},
+  abyssplate:{name:'Couraça Abissal', slot:'armor', def:36, hp:150, sell:16000, lvl:110, cls:['guerreiro','cacador','monge'], icon:'armor', look:'#3a2a5a'},
+  tiderobe:  {name:'Manto da Maré', slot:'armor', def:17, mag:24, sell:16000, lvl:105, cls:MAGES, icon:'robe', look:'#2a8a7a'},
+  pearlring: {name:'Anel de Pérola', slot:'ring', mp:100, mag:8, sell:12000, lvl:105, icon:'ring', look:'#e8e0f0'},
+  leviathanscale:{name:'Escama do Leviatã', slot:'amulet', def:10, hp:150, atk:12, mag:12, gill:true, sell:30000, lvl:120, icon:'amulet', look:'#2a5a9a'},
+  sharkbag:  {name:'Bolsa de Couro de Tubarão', slot:'bag', slots:36, sell:10000, lvl:100, icon:'bag', look:'#7a8a9a', noRarity:true},
+  coralblade:{name:'Lâmina de Coral', slot:'weapon', wk:'blade', atk:70, sell:12000, lvl:100, icon:'sword', look:'#e07a50'},
+  abyssaxe:  {name:'Machado Abissal', slot:'weapon', wk:'blade', atk:69, sell:12000, lvl:100, icon:'axe', look:'#6a3aaa'},
+  pearlmace: {name:'Maça de Pérola', slot:'weapon', wk:'blade', atk:70, sell:12000, lvl:100, icon:'hammer', look:'#e8e0f0'},
+  finbow:    {name:'Arco de Barbatana', slot:'weapon', wk:'bow', hands:2, atk:66, sell:12000, lvl:100, icon:'bow', look:'#5ad0c0'},
+  tidewand:  {name:'Varinha da Maré', slot:'weapon', wk:'wand', atk:40, mag:50, sell:12000, lvl:100, icon:'wand', look:'#5ad0c0'},
+  coralstaff:{name:'Cajado de Coral', slot:'weapon', wk:'staff', atk:40, mag:50, sell:12000, lvl:100, icon:'staff', look:'#e07a50'},
+  shellfists:{name:'Punhos de Concha', slot:'weapon', wk:'fist', atk:58, sell:12000, lvl:100, icon:'fist', look:'#e8c8b0'},
+});
+// armas novas também caem dos chefes e monstros de cada região
+for(const [type,ids] of [['walrusking',['glacialaxe','glacialmaul']],['frozencaptain',['glacialsword','blizzardwand']],['wyrmmother',['borealbow','winterstaff']],['frostqueen',['iceclaws','snowboots']],
+  ['crabking',['shellfists','pearlmace']],['piratequeen',['coralblade','finbow']],['tidepriest',['tidewand','coralstaff']],['trencheye',['abyssaxe','shellhelm']]]) for(const id of ids) MON[type].loot.push([id,.25,1,1]);
+for(const [type,ids] of [['icegiant',['glacialmaul','glacialaxe']],['auroraspirit',['blizzardwand','winterstaff']],['frostserpent',['borealbow','iceclaws']],['yeti',['yeticoat','snowboots']],
+  ['abyssal',['abyssaxe','abyssplate']],['fishpriest',['tidewand','coralstaff']],['shark',['finbow','coralblade']],['pirate',['pearlmace','shellfists']]]) for(const id of ids) MON[type].loot.push([id,.012,1,1]);
+
 
 // ============================================================ estado
 let cur = MAPS.over;
@@ -1142,6 +1342,22 @@ function fanVolley(st, mul){ const {lanes}=fanLanes(); let hits=0;
   for(const L of lanes){ if(!L.length) continue; const end=L[L.length-1], a=rpos(player); projectiles.push({map:cur.id,x0:a.x*T+16,y0:a.y*T+14,x1:end.x*T+16,y1:end.y*T+14,t:0,dur:220,color:'#e8c890',arrow:true,onHit:()=>{}});
     for(const m of monsters.filter(m=>!m.dead&&m.map===cur.id&&!m.def.dummy&&L.some(q=>q.x===m.x&&q.y===m.y))){ hits++; const d=Math.max(1,Math.abs(m.x-player.x),Math.abs(m.y-player.y)); timers.push({t:30*d, fn:()=>{ if(!m.dead) spellHit(m, st.atk*mul, st, {color:'#ffe08a'}); }}); } }
   return hits; }
+function inTownRect(m,x,y){ const r=m.id==='over'?TOWN:m.townRect; return !!(r&&m.town&&x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1); }
+function climateTick(dt){
+  const reg=cur.region||cur.id, st=stats();
+  if(reg==='ice' && !inTownRect(cur,player.x,player.y)){ player.coldT=(player.coldT??3000)-dt;
+    if(player.coldT<=0){ player.coldT=3000;
+      if(!(player.buffs.warm>0) && !st.warm){ const wp=allItems().find(i=>i.id==='warmpot'); if(wp) useItem(wp);
+        else { hurtPlayer(Math.max(1,Math.round(st.maxHp*0.025)),'Frio'); floatAt(player,'frio','#c8e8ff'); if(!player.coldWarn||now-player.coldWarn>30000){ player.coldWarn=now; log('Você está congelando! Use Poção Quente ou equipamento de pele (Gorro de Pele, Casaco de Ieti, Botas de Neve).','dmg'); } } } } }
+  if(reg==='sea'){ if(player.air==null) player.air=100;
+    const bub=[[0,0],[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>tileAt(cur,player.x+dx,player.y+dy)===BUBBLE);
+    if(inTownRect(cur,player.x,player.y)||bub) player.air=Math.min(100,player.air+dt/25);
+    else { player.air=Math.max(0,player.air-dt/(st.gill?900:450));
+      if(player.air<25){ const ap=allItems().find(i=>i.id==='airpot'); if(ap) useItem(ap); }
+      if(player.air<=0){ player.drownT=(player.drownT||0)-dt; if(player.drownT<=0){ player.drownT=1000; hurtPlayer(Math.max(1,Math.round(st.maxHp*0.05)),'Afogamento'); floatAt(player,'sem ar!','#9ae0ff');
+        if(!player.airWarn||now-player.airWarn>20000){ player.airWarn=now; log('Seu ar acabou! Volte para uma bolha de ar, para a cidade ou beba uma Poção de Fôlego.','dmg'); } } } } }
+  else player.air=100;
+}
 function ammoId(){ const id=player.ammo; return id&&ITEMS[id]?.ammo&&countItem(id)>0?id:null; }
 function setAmmo(id){ if(id&&!ITEMS[id]?.ammo) return; if(id&&player.level<(ITEMS[id].lvl||1)){ log(ITEMS[id].name+' exige nível '+ITEMS[id].lvl+'.','sys'); return; }
   player.ammo=id||null; log(id?'Flecha ativa: '+ITEMS[id].name+' ('+countItem(id)+').':'Flecha ativa: comum (infinita).','sys'); uiDirty=true; renderBot(); save(); }
@@ -1212,13 +1428,13 @@ function renderSkills(){ skillsDirty=false; const el=$('skills'); if(!el||!playe
 const BEST_T=d=>d.boss?[1,3,5]:[10,100,500];
 const bestKills=t=>player.bestiary?.[t]||0;
 const bestStage=t=>{ const T=BEST_T(MON[t]), k=bestKills(t); return k>=T[2]?3:k>=T[1]?2:k>=T[0]?1:0; };
-function monRegion(t){ const sp=spawns.find(s=>s.type===t); if(!sp) return 'other'; const M=MAPS[sp.map]; return M.region==='ash'||sp.map==='ash'?'ash':M.region==='fae'||sp.map==='fae'?'fae':'over'; }
+function monRegion(t){ const sp=spawns.find(s=>s.type===t); if(!sp) return 'other'; const M=MAPS[sp.map]; return ['ash','fae','ice','sea'].includes(M.region)?M.region:['ash','fae','ice','sea'].includes(sp.map)?sp.map:'over'; }
 function monWhere(t){ return [...new Set(spawns.filter(s=>s.type===t).map(s=>MAPS[s.map].name.replace(/ \(.*\)$/,'')))].join(', ')||'invocado por chefes'; }
 const chanceTxt=c=>c>=0.5?'comum':c>=0.15?'incomum':c>=0.04?'semi-raro':c>=0.01?'raro':'muito raro';
 let bestTab='over', bestSel=null;
 function openBestiary(){
   const all=Object.keys(MON).filter(t=>!MON[t].dummy).filter(t=>spawns.some(s=>s.type===t)||bestKills(t)>0);
-  const R={over:'Pedraluz',fae:'Lunária',ash:'Cinzaforte'};
+  const R={over:'Pedraluz',fae:'Lunária',ash:'Cinzaforte',ice:'Invernália',sea:'Coralina'};
   const list=all.filter(t=>monRegion(t)===bestTab).sort((a,b)=>(MON[a].boss?1:0)-(MON[b].boss?1:0)||(MON[a].lvl||0)-(MON[b].lvl||0));
   const done=all.filter(t=>bestStage(t)===3).length, known=all.filter(t=>bestKills(t)>0).length;
   let body;
@@ -1253,6 +1469,7 @@ function stats(){
     for(const a of it.a||[]) s[a.k]+=a.v; }
   { const cnt={}; for(const k in player.eq){ const d=ITEMS[player.eq[k]?.id]; if(d?.set) cnt[d.set]=(cnt[d.set]||0)+1; }
     for(const [sid,n] of Object.entries(cnt)){ const S=SETS[sid]; if(!S) continue; if(n>=2) for(const [k,v] of Object.entries(S.b2)) s[k]+=v; if(n>=4) for(const [k,v] of Object.entries(S.b4)) s[k]+=v; } }
+  s.warm=Object.values(player.eq).some(it=>it&&ITEMS[it.id]?.warm===true); s.gill=Object.values(player.eq).some(it=>it&&ITEMS[it.id]?.gill);
   const B=player.buffs||{}; if(B.fury>0) s.def=Math.round(s.def*1.2); if(B.ironskin>0) s.def=Math.round(s.def*1.5); if(B.bark>0) s.def=Math.round(s.def*1.4);
   if(B.eagle>0) s.crit+=20; if(B.tiger>0){ s.atkspd+=35; s.crit+=5; } if(B.haste>0) s.atkspd+=40; if(B.balance>0) s.lifesteal+=15;
   s.maxHp=C.hp0+L*C.hpLv+s.hp; s.maxMp=C.mp0+L*C.mpLv+s.mp; s.critCh=Math.min(60,s.crit);
@@ -1324,12 +1541,14 @@ function useItem(it){
   if(!it||player.dead) return; const d=ITEMS[it.id], st=stats();
   if(isBag(it)){ toggleWin(it); return; }
   if(d.slot){ equipItem(it); return; }
+  if(d.warm>1){ player.buffs.warm=d.warm; removeOne(it); log('Você bebe a '+d.name+'. O frio não te alcança por 10 minutos.','sys'); burst(player,'#ff9a3a',10,60); uiDirty=true; return; }
+  if(d.air){ player.air=100; removeOne(it); floatAt(player,'+fôlego','#9ae0ff'); burst(player,'#9ae0ff',10,60); uiDirty=true; return; }
   if(d.ammo){ if(!canUseAmmo(d)) { log('Só o Caçador usa flechas especiais.','sys'); return; } setAmmo(player.ammo===it.id?null:it.id); return; }
   if(d.heal){ if(player.potCd>0) return; if(player.hp>=st.maxHp){ log('Sua vida já está cheia.','sys'); return; } player.potCd=1000; heal(d.heal); removeOne(it); sess.used.hp++; burst(player,'#e05050',8); return; }
   if(d.mana){ if(player.potCd>0) return; if(player.mp>=st.maxMp){ log('Sua mana já está cheia.','sys'); return; } player.potCd=1000; sess.used.mp++; player.mp=Math.min(st.maxMp,player.mp+d.mana); floatAt(player,'+'+d.mana,'#7aa8ff'); removeOne(it); burst(player,'#5080e0',8); return; }
   log(d.name+': vende por '+sellPrice(it)+' ouro nos mercadores.','sys');
 }
-function usePotion(id){ const strong={hp:'hp2',mp:'mp2'}[id], all=allItems(); const it=(strong&&all.find(s=>s.id===strong))||all.find(s=>s.id===id); if(!it){ log('Você não tem '+ITEMS[id].name+'.','sys'); return; } useItem(it); }
+function usePotion(id){ const order={hp:['hp3','hp2','hp'],mp:['mp3','mp2','mp']}[id]||[id], all=allItems(); let it=null; for(const k of order){ it=all.find(s=>s.id===k); if(it) break; } if(!it){ log('Você não tem '+ITEMS[id].name+'.','sys'); return; } useItem(it); }
 function unequip(slot){
   const it=player.eq[slot]; if(!it) return;
   if(slot==='bag'){ log('A mochila principal não sai. Para trocar, arraste outra mochila para este espaço.','sys'); return; }
@@ -1431,6 +1650,40 @@ function setupWorld(){
   fillF('heart',0,[['shadowfairy',8],['darkdryad',6,0.25]]);
   fillF('heart',1,[['darkdryad',7],['shadowfairy',6],['rottreant',3,0.35]]);
   fillF('heart',2,[['rottreant',4],['darkdryad',5],['shadowfairy',4]],'oakking');
+  // ---- Fiordes Gelados e Recife Profundo
+  for(const [reg,list] of [['ice',[['frostwolf',12,(x,y,r)=>y<r.y0-6],['walrus',8,(x,y,r)=>y>r.y1+6],['yeti',6,(x,y,r)=>x>r.x1+8]]],['sea',[['giantcrab',10,(x,y,r)=>y<r.y0-6],['eel',8,(x,y,r)=>y>r.y1+6],['jelly',8,(x,y,r)=>x>r.x1+8]]]]){
+    const M=MAPS[reg], r=M.townRect, out=(x,y)=>x>8&&(x<r.x0-6||x>r.x1+6||y<r.y0-6||y>r.y1+6); for(const [type,n,f] of list) pick(M,n,(x,y)=>out(x,y)&&f(x,y,r),type); }
+  const fillR=(D,k,i,list,boss)=>{ const M=MAPS[D[k][i]]; for(const [type,n,minD] of list) pick(M,n,(x,y)=>dr(M,x,y)>(minD||0.15)&&(!boss||farB(M,x,y)),type); if(boss) bossAt(M.id,boss); };
+  fillR(ICED,'icecave',0,[['frostwolf',9],['walrus',6,0.3]]);
+  fillR(ICED,'icecave',1,[['walrus',8],['frostwolf',6]],'walrusking');
+  fillR(ICED,'ship',0,[['drowned',10],['icewraith',4,0.3]]);
+  fillR(ICED,'ship',1,[['drowned',9],['icewraith',6]]);
+  fillR(ICED,'ship',2,[['drowned',5],['icewraith',4]],'frozencaptain');
+  fillR(ICED,'wyrm',0,[['yeti',8],['frostserpent',4,0.3]]);
+  fillR(ICED,'wyrm',1,[['frostserpent',7],['yeti',6]]);
+  fillR(ICED,'wyrm',2,[['frostserpent',6],['yeti',4]],'wyrmmother');
+  fillR(ICED,'keep',0,[['yeti',7],['icewraith',6]]);
+  fillR(ICED,'keep',1,[['icegiant',5],['icewraith',7]]);
+  fillR(ICED,'keep',2,[['icegiant',7],['icewraith',5]]);
+  fillR(ICED,'keep',3,[['icegiant',4],['icewraith',4]],'frostqueen');
+  fillR(ICED,'aurora',0,[['auroraspirit',8],['icewraith',6]]);
+  fillR(ICED,'aurora',1,[['auroraspirit',10],['icegiant',3,0.35]]);
+  fillR(ICED,'aurora',2,[['auroraspirit',8],['icegiant',3]],'aurorath');
+  fillR(SEAD,'coral',0,[['giantcrab',9],['jelly',7]]);
+  fillR(SEAD,'coral',1,[['giantcrab',8],['jelly',5],['eel',4,0.3]],'crabking');
+  fillR(SEAD,'wreck',0,[['pirate',10],['eel',4,0.3]]);
+  fillR(SEAD,'wreck',1,[['pirate',9],['shark',3,0.35]]);
+  fillR(SEAD,'wreck',2,[['pirate',5],['shark',3]],'piratequeen');
+  fillR(SEAD,'temple',0,[['fishpriest',8],['jelly',6]]);
+  fillR(SEAD,'temple',1,[['fishpriest',9],['eel',6]]);
+  fillR(SEAD,'temple',2,[['fishpriest',5],['eel',4]],'tidepriest');
+  fillR(SEAD,'trench',0,[['angler',9],['jelly',6]]);
+  fillR(SEAD,'trench',1,[['angler',8],['abyssal',3,0.35]]);
+  fillR(SEAD,'trench',2,[['angler',5],['abyssal',3]],'trencheye');
+  fillR(SEAD,'lair',0,[['shark',8],['eel',6]]);
+  fillR(SEAD,'lair',1,[['shark',7],['abyssal',4,0.3]]);
+  fillR(SEAD,'lair',2,[['abyssal',6],['shark',6]]);
+  fillR(SEAD,'lair',3,[['abyssal',4],['shark',4]],'leviathan');
   for(const s of spawns) spawnMonster(s);
   const {x0,x1,y0}=TOWN;
   npcs=[
@@ -1452,6 +1705,12 @@ function setupWorld(){
       {kind:'npc', id:'merchant3', name:'Pip, o Mercador Gnomo', map:'fae', x:q.x1-4, y:q.y0+2, look:'gnome'},
       {kind:'npc', id:'depot3', name:'Depósito', map:'fae', x:q.x0+4, y:q.y1-3, look:'chest'},
       {kind:'npc', id:'sage', name:'Mestra Sylva', map:'fae', x:q.x1-4, y:q.y1-3, look:'sage'}); }
+  for(const [reg,n,town,boat,priest,merch] of [['ice',4,'Invernália','Capitão Ulfar','Irmã Neve','Gunnhild, a Peleteira'],['sea',5,'Coralina','Mestre Ondino, o Sineiro','Sacerdotisa Pérola','Escamílio, o Mercador']]){
+    const M=MAPS[reg], q=M.townRect;
+    npcs.push({kind:'npc', id:'boat'+n, name:boat, map:reg, x:M.boatman.x, y:M.boatman.y, look:'boatman'},
+      {kind:'npc', id:'priest'+n, name:priest, map:reg, x:q.x0+4, y:q.y0+2, look:'priest', town},
+      {kind:'npc', id:'merchant'+n, name:merch, map:reg, x:q.x1-4, y:q.y0+2, look:'merchant'},
+      {kind:'npc', id:'depot'+n, name:'Depósito', map:reg, x:q.x0+4, y:q.y1-3, look:'chest'}); }
   for(const n of npcs){ n.px=n.x; n.py=n.y; n.moving=false; n.mt=0; n.mdur=1; n.phase=R(); n.dir='down'; }
   placeDummies();
 }
@@ -1522,10 +1781,10 @@ function onArrive(){
   if(dialogRef && cheb(player,dialogRef)>2) closeDialog();
 }
 function changeMap(id,x,y,msg){
-  const prev=cur.id; cur=MAPS[id]; mpan=null; battleKey=''; if(bot.on&&bot.mode==='hunt'){ bot.on=false; log('Caça automática parou: você mudou de andar.','sys'); } bot.mark=false; player.x=player.px=x; player.y=player.py=y; player.moving=false; player.path=null; player.pending=null; target=null; player.follow=false;
+  const prev=cur.id; cur=MAPS[id]; mpan=null; battleKey=null; if(bot.on&&bot.mode==='hunt'){ bot.on=false; log('Caça automática parou: você mudou de andar.','sys'); } bot.mark=false; player.x=player.px=x; player.y=player.py=y; player.moving=false; player.path=null; player.pending=null; target=null; player.follow=false;
   projectiles=[]; particles=[]; floats=[]; keys.clear(); player.lock=450;
   reveal(); miniDirty=true; uiDirty=true;
-  log(msg || (['over','ash','fae'].includes(id) ? 'Você volta à superfície.' : ((['over','ash','fae'].includes(prev))&&MAPS[id].enter ? MAPS[id].enter : 'Você chega a: '+MAPS[id].name+'.')),'sys'); fields=[];
+  log(msg || (['over','ash','fae','ice','sea'].includes(id) ? 'Você volta à superfície.' : ((['over','ash','fae','ice','sea'].includes(prev))&&MAPS[id].enter ? MAPS[id].enter : 'Você chega a: '+MAPS[id].name+'.')),'sys'); fields=[];
   save();
 }
 function updatePlayer(dt){
@@ -1634,13 +1893,13 @@ function die(src){
 }
 function respawn(){
   const st=stats(); player.dead=false; player.hp=st.maxHp; player.mp=st.maxMp; $('deathScreen').hidden=true;
-  const home=(cur.region==='ash'||cur.region==='fae')?cur.region:'over', s=MAPS[home].spawn, H={over:['Pedraluz','Irmã Lúcia'],ash:['Cinzaforte','Irmã Brasa'],fae:['Lunária','Druida Aurélia']}[home];
+  const home=['ash','fae','ice','sea'].includes(cur.region)?cur.region:'over', s=MAPS[home].spawn, H={over:['Pedraluz','Irmã Lúcia'],ash:['Cinzaforte','Irmã Brasa'],fae:['Lunária','Druida Aurélia'],ice:['Invernália','Irmã Neve'],sea:['Coralina','Sacerdotisa Pérola']}[home];
   changeMap(home, s.x, s.y, 'Você desperta no templo de '+H[0]+'.'); log(H[1]+' reza por você.','npc');
 }
 
 // ============================================================ magias por classe
 // learn: 'fae' = missão em Lunária (nível 25+), 'ash' = missão em Cinzaforte (nível 45+)
-const BUFFS = {fury:'Fúria', ironskin:'Pele de Ferro', eagle:'Olho de Águia', haste:'Vento Ágil', focus:'Concentração', arcshield:'Escudo Arcano',
+const BUFFS = {warm:'Aquecido', fury:'Fúria', ironskin:'Pele de Ferro', eagle:'Olho de Águia', haste:'Vento Ágil', focus:'Concentração', arcshield:'Escudo Arcano',
   bless:'Bênção da Floresta', bark:'Pele de Casca', tiger:'Postura do Tigre', balance:'Equilíbrio Interior'};
 function buff(name, ms, color, msg){ player.buffs[name]=ms; burst(player,color,22,85); log(msg,'lvl'); uiDirty=true; return true; }
 function knock(tg){ if(tg.dead||tg.def.boss||tg.moving) return; const dx=Math.sign(tg.x-player.x), dy=Math.sign(tg.y-player.y), nx=tg.x+dx, ny=tg.y+dy; if(passMon(cur,nx,ny)&&!occupied(cur.id,nx,ny,tg)) startStep(tg,nx,ny,140); }
@@ -1764,7 +2023,7 @@ function cast(i){
 
 // ============================================================ IA dos monstros
 function placeDummies(){
-  for(const id of ['over','ash','fae']){ const M=MAPS[id], rc=id==='over'?TOWN:M.townRect; if(!rc) continue; const sp={x:Math.round((rc.x0+rc.x1)/2), y:Math.round((rc.y0+rc.y1)/2)}; let best=null, bd=1e9;
+  for(const id of ['over','ash','fae','ice','sea']){ const M=MAPS[id], rc=id==='over'?TOWN:M.townRect; if(!rc) continue; const sp={x:Math.round((rc.x0+rc.x1)/2), y:Math.round((rc.y0+rc.y1)/2)}; let best=null, bd=1e9;
     const free=(x,y)=>passPlayer(M,x,y)&&!LINKS_T.has(tileAt(M,x,y))&&!M.links[y*M.W+x]&&!npcs.some(n=>n.map===id&&Math.abs(n.x-x)<=1&&Math.abs(n.y-y)<=1)&&!spawns.some(s=>s.map===id&&s.x===x&&s.y===y);
     for(let y=rc.y0+1;y<=rc.y1-2;y++) for(let x=rc.x0+1;x<=rc.x1-5;x++){ const d=Math.abs(x+2-sp.x)+Math.abs(y-sp.y); if(d<3||d>=bd) continue;
       let ok=true; for(let dx=0;dx<=4&&ok;dx++) for(let dy=0;dy<=1&&ok;dy++) if(!free(x+dx,y+dy)) ok=false; if(ok){ bd=d; best={x,y}; } }
@@ -1849,6 +2108,7 @@ function summon(type, near, n){
 // ---- fogo no chão, sopro de dragão e chuva de fogo
 let fields=[];
 const FIELD_KIND={fire:{name:'fogo',say:'Chuva de fogo!',p:['#ff9a2a','#ffd54a'],warn:'255,110,30'},thorn:{name:'espinhos',say:'Espinhos!',p:['#7ad04a','#c8f0a0'],warn:'120,200,80'},fairy:{name:'pó de fada',say:'Pó de fada!',p:['#ff9af0','#ffffff'],warn:'255,140,240'}};
+Object.assign(FIELD_KIND,{frost:{name:'granizo',say:'Granizo!',p:['#c8e8ff','#ffffff'],warn:'150,210,255'},tide:{name:'redemoinho',say:'A maré!',p:['#5ad0e0','#e8ffff'],warn:'80,200,230'},aurora:{name:'luz da aurora',say:'Luzes do céu!',p:['#a0ffd0','#ff9af0'],warn:'140,255,200'}});
 function addField(mapId,x,y,dmg,life,warn,kind){ const M=MAPS[mapId]; if(BLOCKS.has(tileAt(M,x,y))) return; if(fields.some(f=>f.map===mapId&&f.x===x&&f.y===y&&f.t<f.warn+f.life-300)) return; fields.push({map:mapId,x,y,dmg,life,warn:warn||0,t:0,tick:0,kind:kind||'fire'}); }
 function updateFields(dt){
   for(const f of fields){ f.t+=dt; if(f.map!==cur.id||f.t<f.warn) continue;
@@ -1876,8 +2136,8 @@ function autoHeal(dt){
   autoT-=dt; if(autoT>0) return; autoT=150;
   const a=player.auto; if(!a||player.dead) return; const st=stats(), hp=player.hp/st.maxHp*100, mp=player.mp/st.maxMp*100, sp=classSpells()[0];
   if(a.heal.on && hp<a.heal.pct && player.level>=sp.lvl && player.mp>=sp.mana && !(player.spellCd[0]>0)){ cast(0); return; }
-  if(a.hp.on && hp<a.hp.pct && !(player.potCd>0) && countItem('hp')+countItem('hp2')>0){ usePotion('hp'); return; }
-  if(a.mp.on && mp<a.mp.pct && !(player.potCd>0) && countItem('mp')+countItem('mp2')>0) usePotion('mp');
+  if(a.hp.on && hp<a.hp.pct && !(player.potCd>0) && potCount('hp')>0){ usePotion('hp'); return; }
+  if(a.mp.on && mp<a.mp.pct && !(player.potCd>0) && potCount('mp')>0) usePotion('mp');
 }
 function renderAuto(){
   const a=player.auto||(player.auto=AUTO_DEF()), sp=classSpells()[0];
@@ -1902,7 +2162,7 @@ function openDepot(n, tab){
   const mine=allItems();
   if(tab==='put') body = mine.length ? `<div class="list">${mine.map((s,i)=>row(s,i,'put','Guardar')).join('')}</div>` : '<p>Sua mochila está vazia.</p>';
   else if(tab==='take') body = D.items.length ? `<div class="list">${D.items.map((s,i)=>row(s,i,'take','Pegar')).join('')}</div>` : '<p>O depósito está vazio.</p>';
-  openDialog(n,'Depósito',`<p class="hint" style="margin-top:0">O mesmo depósito em Pedraluz e em Cinzaforte · itens guardados: ${D.items.length}/${DEPOT_SIZE}</p>${tabs}${body}<div class="row"><button data-act="close">Fechar</button></div>`,(act,ds)=>{
+  openDialog(n,'Depósito',`<p class="hint" style="margin-top:0">O mesmo depósito em todas as cidades · itens guardados: ${D.items.length}/${DEPOT_SIZE}</p>${tabs}${body}<div class="row"><button data-act="close">Fechar</button></div>`,(act,ds)=>{
     if(act==='close') return closeDialog();
     if(act==='tab') return openDepot(n,ds.t);
     const amt=()=>Math.floor(Math.max(0,+(document.getElementById('depAmt')?.value||0)));
@@ -2113,9 +2373,9 @@ $('botui').addEventListener('change',e=>{ const t=e.target, B=player.bot; if(!B)
   save(); });
 
 // ---- caça automática: reabastecer na cidade e voltar
-const TOWN_NPC={over:['depot','merchant'], ash:['depot2','merchant2'], fae:['depot3','merchant3']};
-const townOf=id=>['over','ash','fae'].includes(id)?id:(MAPS[id].region==='ash'||MAPS[id].region==='fae'?MAPS[id].region:'over');
-const potIds=k=>k==='hp'?['hp','hp2']:['mp','mp2'];
+const TOWN_NPC={over:['depot','merchant'], ash:['depot2','merchant2'], fae:['depot3','merchant3'], ice:['depot4','merchant4'], sea:['depot5','merchant5']};
+const townOf=id=>['over','ash','fae','ice','sea'].includes(id)?id:(['ash','fae','ice','sea'].includes(MAPS[id].region)?MAPS[id].region:'over');
+const potIds=k=>k==='hp'?['hp','hp2','hp3']:['mp','mp2','mp3'];
 const potCount=k=>potIds(k).reduce((a,id)=>a+countItem(id),0);
 function mapPath(from,to){ if(from===to) return [from]; const prev={[from]:null}, q=[from];
   while(q.length){ const a=q.shift(); for(const l of Object.values(MAPS[a].links||{})){ const b=l.map; if(b in prev||!MAPS[b]) continue; prev[b]=a; if(b===to){ const p=[b]; let c=a; while(c!=null){ p.unshift(c); c=prev[c]; } return p; } q.push(b); } }
@@ -2124,6 +2384,7 @@ function bagFull(){ return !freeContainer(); }
 function needRefill(fighting){ const F=player.bot.refill; if(!F||!F.on) return '';
   if(potCount('hp')<=F.minHp) return 'poções de vida acabando';
   if(F.mp>0 && F.minMp>0 && potCount('mp')<=F.minMp) return 'poções de mana acabando';
+  { const tw=townOf(cur.id), st=stats(); if(tw==='sea'&&!st.gill&&countItem('airpot')===0) return 'poções de fôlego acabando'; if(tw==='ice'&&!st.warm&&countItem('warmpot')===0&&!(player.buffs.warm>60000)) return 'poções quentes acabando'; }
   if(player.cls==='cacador' && player.ammo && (F.minAmmo|0)>0 && countItem(player.ammo)<=F.minAmmo) return 'flechas acabando';
   if(!fighting && F.full && bagFull() && now-bot.fullAt<20000) return 'mochila cheia';
   return ''; }
@@ -2160,16 +2421,17 @@ function botTravel(B,st){
     botBuy(B,n); if(potCount('hp')<=B.refill.minHp){ toggleBot(false,'Caça automática parou na cidade: não há ouro suficiente para comprar poções de vida.'); return; } bot.mode='return'; bot.stuck=0; log('Caça automática: reabastecido. Voltando para '+MAPS[bot.huntMap].name+'.','sys'); save(); return; }
   bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática: de volta à caçada.','sys'); renderBot(); }
 function botDeposit(B){ const D=player.depot; let n=0, full=false;
-  for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana||d.ammo) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
+  for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana||d.ammo||(!d.slot&&(d.warm||d.air))) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
   const cost=refillCost(B); const total=player.gold+D.gold; const keep=Math.min(cost,total); D.gold=total-keep; player.gold=keep;
   log('Caça automática guardou '+n+' ite'+(n===1?'m':'ns')+' e o ouro no depósito'+(full?' (o depósito encheu; alguns ficaram na mochila)':'')+'.','loot'); uiDirty=true; save(); }
-function potBuyId(B,k){ const strong=B.refill.strong&&bot.town!=='over'; return k==='hp'?(strong?'hp2':'hp'):(strong?'mp2':'mp'); }
-function refillCost(B){ const F=B.refill; let c=0; for(const k of ['hp','mp']){ const want=k==='hp'?F.hp:F.mp, need=Math.max(0,want-potCount(k)); c+=need*ITEMS[potBuyId(B,k)].price; } const a=player.ammo; if(a&&ITEMS[a]) c+=Math.max(0,(F.ammo??500)-countItem(a))*ITEMS[a].price; return c; }
+function potBuyId(B,k){ const strong=B.refill.strong&&bot.town!=='over', sup=strong&&(bot.town==='ice'||bot.town==='sea'); return k==='hp'?(sup?'hp3':strong?'hp2':'hp'):(sup?'mp3':strong?'mp2':'mp'); }
+function refillCost(B){ const F=B.refill; let c=0; for(const k of ['hp','mp']){ const want=k==='hp'?F.hp:F.mp, need=Math.max(0,want-potCount(k)); c+=need*ITEMS[potBuyId(B,k)].price; } const a=player.ammo; if(a&&ITEMS[a]) c+=Math.max(0,(F.ammo??500)-countItem(a))*ITEMS[a].price; if(bot.town==='ice') c+=8*40; if(bot.town==='sea') c+=30*50; return c; }
 function botBuy(B,n){ const F=B.refill; let msg=[];
   for(const k of ['hp','mp']){ const id=potBuyId(B,k), d=ITEMS[id], want=k==='hp'?F.hp:F.mp; let need=Math.max(0,want-potCount(k));
     need=Math.min(need, Math.floor(player.gold/d.price)); if(need<=0) continue;
     if(addItem({id,n:need,r:0,a:[]})){ player.gold-=need*d.price; msg.push(need+' '+d.name); } }
   { const a=player.ammo, d=ITEMS[a]; if(a&&d){ let need=Math.min(Math.max(0,(F.ammo??500)-countItem(a)), Math.floor(player.gold/d.price)); if(need>0&&addItem({id:a,n:need,r:0,a:[]})){ player.gold-=need*d.price; msg.push(need+' '+d.name); } } }
+  { const st=stats(), ex=bot.town==='ice'&&!st.warm?['warmpot',8]:bot.town==='sea'?['airpot',st.gill?10:30]:null; if(ex){ const [id,want]=ex, d=ITEMS[id]; let need=Math.min(Math.max(0,want-countItem(id)),Math.floor(player.gold/d.price)); if(need>0&&addItem({id,n:need,r:0,a:[]})){ player.gold-=need*d.price; msg.push(need+' '+d.name); } } }
   if(player.gold>0){ player.depot.gold+=player.gold; player.gold=0; }
   log(msg.length?'Caça automática comprou '+msg.join(' e ')+'.':'Caça automática: sem ouro para comprar poções.','loot'); uiDirty=true; }
 
@@ -2274,18 +2536,20 @@ function openCorpse(c){
 }
 function talk(n){
   const nm=esc(player.name);
-  if(n.id==='priest'||n.id==='priest2'||n.id==='priest3'){
+  if(/^priest\d?$/.test(n.id)){
     openDialog(n, n.name, `<p>"Que a luz de ${n.town||'Pedraluz'} te guarde, ${nm}. Se estiver ferido ou envenenado, posso cuidar de você. Sem custo."</p>
       <div class="row"><button class="primary" data-act="heal">Curar minhas feridas</button><button data-act="close">Até logo</button></div>`, act=>{
         if(act==='heal'){ const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; player.poison=null; burst(player,'#fff3b0',20,70); log('Irmã Lúcia: "Pronto. Vá com cuidado lá fora."','npc'); uiDirty=true; }
         closeDialog(); });
   }
-  if(n.id==='merchant'||n.id==='merchant2'||n.id==='merchant3') openShop(n,'buy');
-  if(n.id==='depot'||n.id==='depot2'||n.id==='depot3') openDepot(n,'gold');
-  if(n.id==='boat'||n.id==='boat2'||n.id==='boat3'){
+  if(/^merchant\d?$/.test(n.id)) openShop(n,'buy');
+  if(/^depot\d?$/.test(n.id)) openDepot(n,'gold');
+  if(/^boat\d?$/.test(n.id)){
     const here=n.map, DEST=[{map:'over',name:'Pedraluz',cost:120,lvl:0,say:'O mar está calmo até Pedraluz.'},
       {map:'fae',name:'Lunária, no Bosque Encantado',cost:150,lvl:25,say:'Lunária fica rio acima, entre árvores gigantes.'},
-      {map:'ash',name:'Cinzaforte, nas Terras Queimadas',cost:200,lvl:50,say:'Cinzaforte são três dias de mar, até a ilha de fogo.'}].filter(d=>d.map!==here);
+      {map:'ash',name:'Cinzaforte, nas Terras Queimadas',cost:200,lvl:50,say:'Cinzaforte são três dias de mar, até a ilha de fogo.'},
+      {map:'ice',name:'Invernália, nos Fiordes Gelados',cost:400,lvl:70,say:'Um quebra-gelo leva você ao norte, entre icebergs. Leve roupa de pele ou Poções Quentes.'},
+      {map:'sea',name:'Coralina, a cidade submersa',cost:600,lvl:90,say:'O sino de mergulho desce até a bolha de ar no fundo do recife. Fora dela, falta ar.'}].filter(d=>d.map!==here);
     const rows=DEST.map((d,i)=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${d.name}</b><small>${d.say}${d.lvl?` Exige nível ${d.lvl}.`:''}${player.level<d.lvl?' <span class="bad">"Lá fora é perigoso demais para você. Volte no nível '+d.lvl+'."</span>':''}</small></div><div class="btns"><button class="primary" data-act="go" data-i="${i}" ${player.gold<d.cost||player.level<d.lvl?'disabled':''}>Viajar (${d.cost} ouro)</button></div></div>`).join('');
     openDialog(n, n.name, `<p>"Para onde vamos? Eu levo você a qualquer porto."</p><div class="list">${rows}</div><div class="row"><button data-act="close">Agora não</button></div>`, (act,ds)=>{
       const d=DEST[+ds.i]; if(act==='go' && d && player.gold>=d.cost && player.level>=d.lvl){ player.gold-=d.cost; closeDialog(); const M=MAPS[d.map]; changeMap(d.map, M.dock.x, M.dock.y, M.enter); uiDirty=true; } else closeDialog(); });
@@ -2333,7 +2597,7 @@ const shopQty={};
 function openShop(n, tab){
   const tabs = `<div class="tabs"><button data-act="tab" data-t="buy" aria-pressed="${tab==='buy'}">Comprar</button><button data-act="tab" data-t="sell" aria-pressed="${tab==='sell'}">Vender</button><span class="spacer"></span></div>`;
   let body='';
-  if(tab==='buy') body = Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id], L=d.lvl||0, pot=['hp','mp','hp2','mp2'].includes(id), tier=L>=35?2:L>=20?1:0; return d.price && (!d.slot || canUse(d)) && (!d.ammo || canUseAmmo(d)) && (pot ? (id==='hp'||id==='mp'||n.id!=='merchant') : tier===({merchant:0,merchant3:1,merchant2:2}[n.id])); })
+  if(tab==='buy') body = Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id], L=d.lvl||0, pot=['hp','mp','hp2','mp2'].includes(id), tier=L>=85?4:L>=60?3:L>=35?2:L>=20?1:0; if(d.shop) return d.price && [].concat(d.shop).includes(n.id) && (!d.slot||canUse(d)); return d.price && (!d.slot || canUse(d)) && (!d.ammo || canUseAmmo(d)) && (pot ? (id==='hp'||id==='mp'||n.id!=='merchant') : tier===({merchant:0,merchant3:1,merchant2:2,merchant4:3,merchant5:4}[n.id])); })
       .sort((a,b)=>{ const A=ITEMS[a], B=ITEMS[b]; return (A.slot?1+SLOT_ORDER[A.slot]:0)-(B.slot?1+SLOT_ORDER[B.slot]:0) || A.price-B.price; })
       .map(id=>{ const it={id,n:1,r:0,a:[]}, d=ITEMS[id];
         if(d.stack) return itemRow(it, itemSub(it)+` · <span class="price">${d.price} ouro cada</span>`, `<input class="qty" type="number" min="1" max="1000" data-q="${id}" value="${shopQty[id]||100}" aria-label="Quantidade"><button data-act="buy" data-id="${id}" ${player.gold<d.price?'disabled':''}>Comprar</button>`);
@@ -2397,6 +2661,17 @@ function paint(type, v, rng){
     case PATH: speck('#8f7148',['#7f6340','#a0805a','#866842'],50); for(let i=0;i<4;i++) r('#b09a78',(rng()*30)|0,(rng()*30)|0,2,2); break;
     case SAND: speck('#c9ad74',['#bfa168','#d6bc86','#c4a66c'],50); break;
     case SWAMP: speck('#45532f',['#3c4a29','#526238','#344024'],60); g.fillStyle='#2e3a2a'; g.beginPath(); g.ellipse(8+rng()*16,8+rng()*16,6,3,0,0,7); g.fill(); for(let i=0;i<3;i++) r('#6b7a3a',(rng()*30)|0,(rng()*24)|0,1,5); break;
+    case SNOW: speck('#dfe8f0',['#d2dde8','#e8f0f6','#c8d6e2','#f4f8fb'],60); for(let i=0;i<4;i++) r('#ffffff',(rng()*30)|0,(rng()*30)|0,2,1); break;
+    case SNOWP: speck('#b8ad9a',['#a89c88','#c8bea8','#d8d2c4'],55); for(let i=0;i<5;i++) r('#eef2f6',(rng()*30)|0,(rng()*30)|0,3,2); break;
+    case ICEF: r('#a8d0e8',0,0,32,32); g.strokeStyle='rgba(255,255,255,.55)'; g.lineWidth=1; for(let i=0;i<4;i++){ g.beginPath(); const x=rng()*32,y=rng()*32; g.moveTo(x,y); g.lineTo(x+rng()*10-5,y+rng()*10-5); g.stroke(); } r('#c8e4f4',(rng()*24)|0,(rng()*24)|0,6,2); break;
+    case DRIFT: speck('#dfe8f0',['#d2dde8','#e8f0f6'],40); for(let i=0;i<3;i++){ const x=4+((rng()*22)|0), y=6+((rng()*18)|0); g.fillStyle=['#9ad0f0','#c8e8fa','#7ab8e0'][i]; g.beginPath(); g.moveTo(x,y+8); g.lineTo(x+2,y); g.lineTo(x+4,y+8); g.fill(); } break;
+    case SANDF: speck('#b8a878',['#a89868','#c8b888','#b0a070'],50); for(let i=0;i<3;i++) r('#e8dcc0',(rng()*30)|0,(rng()*30)|0,2,1); break;
+    case KELP: speck('#b8a878',['#a89868','#c8b888'],40); for(let i=0;i<3;i++){ const x=4+((rng()*24)|0); g.strokeStyle=['#3a7a4a','#4a8a3a','#2a6a4a'][i]; g.lineWidth=2; g.beginPath(); g.moveTo(x,31); g.quadraticCurveTo(x-4,20,x+1,10+rng()*6); g.stroke(); } break;
+    case NACRE: r('#d8d0e0',0,0,32,32); for(let row=0;row<2;row++){ const off=(row%2)*8; for(let x=-8;x<32;x+=16) r('#b8b0c8',x+off,row*16,1,16); r('#b8b0c8',0,row*16,32,1);} for(let i=0;i<6;i++) r(['#e8f0ff','#f0e0f0','#d0e8f0'][i%3],(rng()*28)|0,(rng()*28)|0,3,2); break;
+    case BUBBLE: speck('#b8a878',['#a89868','#c8b888'],30); g.fillStyle='#3a3a3a'; g.beginPath(); g.ellipse(16,25,8,4,0,0,7); g.fill(); g.fillStyle='#1a1a1a'; g.beginPath(); g.ellipse(16,25,4,2,0,0,7); g.fill(); g.strokeStyle='rgba(200,240,255,.95)'; g.lineWidth=1; for(const [bx,by,br] of [[14,17,3],[18,10,2.2],[15,4,1.5],[20,19,1.8]]){ g.beginPath(); g.arc(bx,by,br,0,7); g.stroke(); } break;
+    case ABYSS: speck('#2a3440',['#24303a','#303c48','#1e2830'],60); for(let i=0;i<3;i++) r('#3a5a6a',(rng()*30)|0,(rng()*30)|0,2,2); break;
+    case IENT: speck('#dfe8f0',['#d2dde8','#e8f0f6'],40); g.fillStyle='#4a6a8a'; g.beginPath(); g.ellipse(16,20,14,12,0,Math.PI,0); g.fill(); r('#4a6a8a',2,19,28,13); g.fillStyle='#0a1018'; g.beginPath(); g.ellipse(16,22,10,9,0,Math.PI,0); g.fill(); r('#0a1018',6,21,20,11); r('#e8f4fc',3,8,26,3); break;
+    case SENT: speck('#b8a878',['#a89868','#c8b888'],40); g.fillStyle='#c0506a'; g.beginPath(); g.ellipse(16,20,14,12,0,Math.PI,0); g.fill(); r('#c0506a',2,19,28,13); g.fillStyle='#05080c'; g.beginPath(); g.ellipse(16,22,10,9,0,Math.PI,0); g.fill(); r('#05080c',6,21,20,11); r('#e07a50',4,10,4,4); r('#c060c0',24,12,4,4); break;
     case WATER: r('#2b5a86',0,0,32,32); for(let i=0;i<5;i++) r(v%2?'#3d73a4':'#4f86b4',(rng()*26)|0,(rng()*30)|0,5,1); for(let i=0;i<3;i++) r('#264f78',(rng()*28)|0,(rng()*30)|0,4,1); break;
     case STONE: r('#7c766b',0,0,32,32); for(let row=0;row<2;row++){ const off=(row%2)*8; for(let x=-8;x<32;x+=16){ r('#6a645a',x+off,row*16,1,16); } r('#6a645a',0,row*16,32,1); } for(let i=0;i<10;i++) r(rng()<.5?'#86806f':'#726c61',(rng()*30)|0,(rng()*30)|0,2,2); break;
     case WOOD: r('#6e4c2e',0,0,32,32); for(let y=0;y<32;y+=8){ r('#5a3c22',0,y,32,1); r('#7d5838',0,y+1,32,1); r('#5a3c22',((rng()*24)|0)+4,y,1,8);} break;
@@ -2457,6 +2732,12 @@ function paintTall(type, v, rng){
       for(const [bx,h,w,col] of [[10,22,6,'#7ac8e0'],[18,28,7,'#9ae0ff'],[23,16,5,'#c8a0ff']]){ g.fillStyle=col; g.beginPath(); g.moveTo(bx,44); g.lineTo(bx+w/2,44-h); g.lineTo(bx+w,44); g.fill(); g.fillStyle='rgba(255,255,255,.5)'; g.fillRect(bx+1,44-h+6,1,h-8); } break;
     case CRYW: r('#2a2a44',0,18,32,30); for(let i=0;i<5;i++){ g.fillStyle=['#7ac8e0','#c8a0ff','#9ae0ff'][i%3]; g.globalAlpha=.7; const bx=(rng()*26)|0, h=6+rng()*10; g.beginPath(); g.moveTo(bx,46); g.lineTo(bx+3,46-h); g.lineTo(bx+6,46); g.fill(); } g.globalAlpha=1; r('#3a3a5a',0,4,32,15); r('#5a5a8a',(rng()*24)|0,6,6,2); r('#1a1a2a',0,17,32,2); break;
     case LOGW: r('#4a3018',0,18,32,30); for(let y=20;y<48;y+=6){ r('#5e3e20',0,y,32,5); r('#3a2410',0,y+5,32,1); r('#7a5634',((y*7)%26),y+1,4,3); } r('#3e7a3a',0,4,32,14); r('#4e9a4a',0,4,32,2); break;
+    case IPINE: g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(16,44,10,4,0,0,7); g.fill(); r('#4a3220',14,36,4,8);
+      for(let i=0;i<3;i++){ g.fillStyle=['#1f4438','#275242','#30614e'][i]; g.beginPath(); g.moveTo(16,2+i*9); g.lineTo(3+i*1.5,22+i*8); g.lineTo(29-i*1.5,22+i*8); g.fill(); g.fillStyle='#eef4f8'; g.beginPath(); g.moveTo(16,3+i*9); g.lineTo(9+i,12+i*9); g.lineTo(23-i,12+i*9); g.fill(); } break;
+    case IWALL: r('#5a7a98',0,18,32,30); for(let i=0;i<6;i++){ g.fillStyle=['#7aa0c0','#9ac0dc','#6a8aa8'][i%3]; const bx=(rng()*26)|0; g.beginPath(); g.moveTo(bx,46); g.lineTo(bx+3,24+rng()*10); g.lineTo(bx+6,46); g.fill(); } r('#c8e0f0',0,4,32,15); r('#e8f4fc',0,4,32,3); for(let i=0;i<4;i++) r('#e8f4fc',(rng()*28)|0,19,2,3+((rng()*4)|0)); break;
+    case CORAL: g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(16,44,12,4,0,0,7); g.fill(); g.lineCap='round'; for(const [bx,col] of [[9,'#d0506a'],[17,'#e07a50'],[24,'#c060c0']]){ g.strokeStyle=col; g.lineWidth=4; g.beginPath(); g.moveTo(bx,44); g.lineTo(bx,26+v*2); g.moveTo(bx,35); g.lineTo(bx-5,24); g.moveTo(bx,31); g.lineTo(bx+5,20); g.stroke(); } g.lineCap='butt'; break;
+    case REEFW: r('#1e2a34',0,18,32,30); for(let i=0;i<8;i++) r(rng()<.5?'#26343f':'#162028',(rng()*28)|0,20+((rng()*24)|0),5,3); r('#2a3a4a',0,4,32,15); for(let i=0;i<5;i++) r(['#c0506a','#e07a50','#4a8a5a'][i%3],(rng()*28)|0,4+((rng()*12)|0),3,3); break;
+    case HULL: r('#3a2614',0,18,32,30); for(let y=20;y<48;y+=5){ r('#4e3420',0,y,32,4); r('#2a1a0c',0,y+4,32,1); } for(let i=0;i<3;i++) r('#8a8a7a',(rng()*28)|0,22+((rng()*20)|0),2,2); r('#5a3a1c',0,4,32,14); r('#6a4a28',0,4,32,2); break;
     case OBS: g.fillStyle='rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(16,44,13,4,0,0,7); g.fill(); g.fillStyle='#1a1418'; g.beginPath(); g.moveTo(3,44); g.lineTo(8,24); g.lineTo(15,14+v*2); g.lineTo(24,20); g.lineTo(30,36); g.lineTo(27,44); g.fill();
       g.fillStyle='#2e2632'; g.beginPath(); g.moveTo(8,26); g.lineTo(15,16+v*2); g.lineTo(18,30); g.lineTo(10,36); g.fill(); r('#6a5a8a',14,18+v*2,2,6); break;
     case DTREE: g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(16,44,9,3,0,0,7); g.fill(); g.strokeStyle='#2a1e18'; g.lineWidth=4; g.beginPath(); g.moveTo(16,45); g.lineTo(16,22); g.stroke(); g.lineWidth=2;
@@ -2469,7 +2750,7 @@ function paintTall(type, v, rng){
 }
 (function buildTiles(){
   const rng=mulberry32(99);
-  for(const t of [G,FLOW,PATH,SAND,SWAMP,WATER,STONE,WOOD,CAVE,BONES,DOOR,BRIDGE,DOWN,UP,CFL,CARPET,DIRT,SHROOM,WEBF,EGGS,SUP,SDOWN,GATE,HOLE,NHOLE,ASH,CRACK,LAVA,ASHPATH,BASALT,ENTR,BOAT,EMBER,MOSS,FFLOW,FSTONE,FSHROOM,ROTF,RING]){ tileImgs[t]=[]; for(let v=0;v<4;v++) tileImgs[t].push(paint(t,v,rng)); }
+  for(const t of [G,FLOW,PATH,SAND,SWAMP,WATER,STONE,WOOD,CAVE,BONES,DOOR,BRIDGE,DOWN,UP,CFL,CARPET,DIRT,SHROOM,WEBF,EGGS,SUP,SDOWN,GATE,HOLE,NHOLE,ASH,CRACK,LAVA,ASHPATH,BASALT,ENTR,BOAT,EMBER,MOSS,FFLOW,FSTONE,FSHROOM,ROTF,RING,SNOW,SNOWP,ICEF,DRIFT,SANDF,KELP,NACRE,BUBBLE,ABYSS,IENT,SENT]){ tileImgs[t]=[]; for(let v=0;v<4;v++) tileImgs[t].push(paint(t,v,rng)); }
   for(const t of TALL){ tallImgs[t]=[]; for(let v=0;v<3;v++) tallImgs[t].push(paintTall(t,v,rng)); }
 })();
 
@@ -2701,6 +2982,32 @@ function drawMonster(c,m,x,y){
     case 'obsgolem': scaled(c,x,y,1.35,(a,b)=>drawElemental(c,a,b,d.col,ph,1,'#a07aff')); break;
     case 'flamecaller': drawHuman(c,x,y,{dir:m.dir,skin:'#e0b48a',robe:'#c0501a',body:'#c0501a',hood:'#8a3010',weapon:'#ffd54a',wk:'staff'},ph,w); break;
     case 'ignivar': drawDragon(c,x,y,d.col,m.face,ph,w,2.3); break;
+    case 'frostwolf': drawBeast(c,x,y,d.col,m.face,ph,w,1.05,'wolf'); break;
+    case 'walrus': drawBeast(c,x,y-1,d.col,m.face,ph,w,1.2,'bear'); rect(c,'#f0e8d0',x+16+m.face*9,y+18,2,6); rect(c,'#f0e8d0',x+16+m.face*12,y+18,2,6); break;
+    case 'yeti': drawBeast(c,x,y-3,d.col,m.face,ph,w,1.35,'bear'); rect(c,'#3a5a8a',x+16+m.face*10,y+12,2,2); break;
+    case 'icewraith': drawWraith(c,x,y,d.col,ph,1,'#e8f4ff'); break;
+    case 'drowned': drawHuman(c,x,y,{dir:m.dir,skin:'#8aa8b0',body:'#3a4a5a',arm:'#7a9aa0',legs:'#2a3440',hair:'#2a3a3a',eye:'#9ad8ff',weapon:'#8a8e96'},ph,w); break;
+    case 'frostserpent': drawDragon(c,x,y,d.col,m.face,ph,w,1.05); break;
+    case 'icegiant': scaled(c,x,y,1.5,(a,b)=>drawHuman(c,a,b,{dir:m.dir,skin:'#9ac8e8',body:'#5a7a98',arm:'#9ac8e8',legs:'#3a5a78',boots:'#2a3a4a',hair:'#e8f4fc',weapon:'#c8e0f0',eye:'#2a4a8a'},ph,w)); break;
+    case 'auroraspirit': { const hue=(now/20+x)%360; drawWisp(c,x,y,'hsl('+hue+',90%,70%)',ph); break; }
+    case 'walrusking': scaled(c,x,y,1.8,(a,b)=>{ drawBeast(c,a,b-1,d.col,m.face,ph,w,1.2,'bear'); rect(c,'#f0e8d0',a+16+m.face*9,b+18,2,7); rect(c,'#f0e8d0',a+16+m.face*12,b+18,2,7); rect(c,'#c9a440',a+10,b+2,12,3); }); break;
+    case 'frozencaptain': scaled(c,x,y,1.4,(a,b)=>drawHuman(c,a,b,{dir:m.dir,skin:'#9ab8c0',body:'#2a3a5a',arm:'#2a3a5a',legs:'#1a2430',hat:'#1a1a2a',eye:'#c8e8ff',weapon:'#c8e0f0'},ph,w)); break;
+    case 'wyrmmother': drawDragon(c,x,y,d.col,m.face,ph,w,2.0); break;
+    case 'frostqueen': scaled(c,x,y,1.5,(a,b)=>drawHuman(c,a,b,{dir:m.dir,skin:'#d8ecf8',robe:'#8ab8e0',body:'#a8d0f0',arm:'#d8ecf8',crown:true,hair:'#f4faff',eye:'#3a8ad8',weapon:'#e8f4ff',wk:'staff'},ph,w)); break;
+    case 'aurorath': { const hue=(now/12)%360; scaled(c,x,y,2.2,(a,b)=>drawWisp(c,a,b,'hsl('+hue+',90%,70%)',ph)); break; }
+    case 'giantcrab': drawScorpion(c,x,y,d.col,m.face,ph); break;
+    case 'eel': drawSnake(c,x,y,d.col,m.face,ph); break;
+    case 'jelly': drawWisp(c,x,y,d.col,ph); c.strokeStyle='rgba(255,154,208,.7)'; c.lineWidth=1; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(x+11+i*3,y+18); c.quadraticCurveTo(x+9+i*3+Math.sin(ph*6+i)*3,y+24,x+11+i*3,y+30); c.stroke(); } break;
+    case 'pirate': drawHuman(c,x,y,{dir:m.dir,skin:'#8aa0a0',body:'#5a2a2a',arm:'#8aa0a0',legs:'#2a2a3a',hat:'#1a1a1a',eye:'#9ad8ff',weapon:'#c9ccd2'},ph,w); break;
+    case 'fishpriest': drawHuman(c,x,y,{dir:m.dir,skin:'#5aa090',robe:'#2a6a6a',body:'#2a6a6a',hood:'#1a4a4a',eye:'#ffd54a',weapon:'#5ad0c0',wk:'staff'},ph,w); break;
+    case 'shark': drawBeast(c,x,y,d.col,m.face,ph,w,1.3,'lizard'); break;
+    case 'angler': drawWisp(c,x,y,d.col,ph); rect(c,'#d0ff6a',x+15+m.face*6,y+2+Math.sin(ph*6)*2,3,3); break;
+    case 'abyssal': scaled(c,x,y,1.3,(a,b)=>drawElemental(c,a,b,d.col,ph,1,'#c06aff')); break;
+    case 'crabking': scaled(c,x,y,1.9,(a,b)=>drawScorpion(c,a,b,d.col,m.face,ph)); rect(c,'#ffd54a',x+10,y-8,12,3); break;
+    case 'piratequeen': scaled(c,x,y,1.4,(a,b)=>drawHuman(c,a,b,{dir:m.dir,skin:'#9ab0b0',body:'#1a2a2a',arm:'#9ab0b0',legs:'#1a1a2a',hat:'#0a0a0a',hair:'#e8e0d0',eye:'#ffd54a',weapon:'#ffd54a'},ph,w)); break;
+    case 'tidepriest': scaled(c,x,y,1.5,(a,b)=>drawHuman(c,a,b,{dir:m.dir,skin:'#4a9a8a',robe:'#1a5a5a',body:'#1a5a5a',crown:true,eye:'#ffd54a',weapon:'#5ad0c0',wk:'staff'},ph,w)); break;
+    case 'trencheye': scaled(c,x,y,2.0,(a,b)=>drawElemental(c,a,b,d.col,ph,1,'#d0ff6a')); break;
+    case 'leviathan': drawDragon(c,x,y,d.col,m.face,ph,w,2.6); break;
     case 'boss': c.save(); c.translate(x+16,y+30); c.scale(1.35,1.35); c.translate(-16,-30);
       drawHuman(c,0,0,{dir:m.dir,skin:'#e8e2d0',robe:'#4a2a6a',body:'#6a3d8a',arm:'#4a2a6a',crown:true,eye:'#c06aff',weapon:'#9ad0ff'},ph,w); c.restore(); break;
   }
@@ -2816,6 +3123,8 @@ function render(){
     ctx.drawImage(dark,0,0);
     if(m.boss&&m.glow){ const bx=m.boss.x*T-cam.x+16, by=m.boss.y*T-cam.y+16; const g=ctx.createRadialGradient(bx,by,10,bx,by,140); g.addColorStop(0,m.glow+'.22)'); g.addColorStop(1,m.glow+'0)'); ctx.fillStyle=g; ctx.fillRect(bx-140,by-140,280,280); }
   }
+  if(m.region==='ice'&&!m.dark){ ctx.fillStyle='rgba(255,255,255,.85)'; for(let i=0;i<70;i++){ const sx=((hash2(i,7)%1000)/1000*cv.width+now*0.012*(1+i%3))%cv.width, sy=((hash2(i,3)%1000)/1000*cv.height+now*0.035*(1+(i%4)*0.3))%cv.height; const z=i%5?2:3; ctx.fillRect(sx|0,sy|0,z,z); } }
+  if(m.tint){ ctx.fillStyle=m.tint; ctx.fillRect(0,0,cv.width,cv.height); ctx.strokeStyle='rgba(210,245,255,.45)'; ctx.lineWidth=1; for(let i=0;i<24;i++){ const sx=((hash2(i,11)%1000)/1000*cv.width+Math.sin(now/700+i)*6)%cv.width, sy=cv.height-((hash2(i,5)%1000)/1000*cv.height+now*0.03*(1+i%3))%cv.height; ctx.beginPath(); ctx.arc(sx,sy,1.5+i%3,0,7); ctx.stroke(); } }
   // barras e nomes por cima
   ctx.textAlign='center'; ctx.font='500 10px "Pixelify Sans", monospace';
   for(const [e] of [...rows.values()].flat()){
@@ -2897,6 +3206,7 @@ function updateBars(){
   setBar('hp', player.hp, st.maxHp, `Vida ${Math.ceil(player.hp)} / ${st.maxHp}`);
   setBar('mp', player.mp, st.maxMp, `Mana ${Math.floor(player.mp)} / ${st.maxMp}`);
   setBar('xp', player.xp-a, b-a, `${player.xp-a} / ${b-a} xp`);
+  { const sea=(cur.region||cur.id)==='sea'; if($('airBar').hidden===sea) $('airBar').hidden=!sea; if(sea) setBar('air', Math.round(player.air??100), 100, 'Fôlego '+Math.ceil(player.air??100)+'%'); }
   classSpells().forEach((s,i)=>{ const el=actEls[i]; if(!el) return; const cd=player.spellCd[i]||0; el.cd.style.height=(cd>0?cd/s.cd*30:0)+'px'; el.btn.disabled = !spellReady(s); });
   renderCond();
 }
@@ -2909,7 +3219,7 @@ function renderUI(){
   $('equip').innerHTML = SLOTS.map(([s,label])=>{ const it=player.eq[s]; const [r,c]=pos[s].split('/');
     return `<button class="slot r${it?.r||0}" style="grid-row:${r};grid-column:${c}" data-slot="${s}" ${it&&s!=='bag'?'draggable="true"':''} aria-label="${it?esc(itemName(it)):label+' vazio'}">${it?`<img alt="" src="${iconURL(it.id)}">`:`<span class="ph">${label}</span>`}</button>`; }).join('');
   renderContainers();
-  for(const k of ['hp','mp']) if(actEls[k]){ const t='×'+(countItem(k)+countItem(k+'2')), c=actEls[k].btn.querySelector('.c'); if(c.textContent!==t) c.textContent=t; }
+  for(const k of ['hp','mp']) if(actEls[k]){ const t='×'+potCount(k), c=actEls[k].btn.querySelector('.c'); if(c.textContent!==t) c.textContent=t; }
   const q=quests; const ql=[];
   if(q.wolves.state===1) ql.push(`<div>Lobos do bosque <small>· ${Math.min(8,q.wolves.count)}/8 ${q.wolves.count>=8?'· fale com o Capitão Bento':''}</small></div>`);
   if(q.king.state===1) ql.push(`<div>O rei morto <small>· Cripta Esquecida, a noroeste</small></div>`);
@@ -2931,6 +3241,7 @@ function renderCond(){
   if(player.poison) cond.push(player.poison.fire?'Queimando':'Envenenado'); if(player.slowT>0) cond.push('Lento');
   for(const k in player.buffs) if(player.buffs[k]>0&&BUFFS[k]) cond.push(BUFFS[k]+' '+Math.ceil(player.buffs[k]/1000)+'s');
   if(st.lifesteal) cond.push('Roubo de vida '+st.lifesteal+'%');
+  if((cur.region||cur.id)==='ice'&&!inTownRect(cur,player.x,player.y)&&!(player.buffs.warm>0)&&!st.warm) cond.unshift('Congelando');
   if(player.cls==='cacador'){ const a=ammoId(); cond.unshift(a?'Flecha: '+ITEMS[a].name.replace('Flecha ','')+' ×'+countItem(a):'Flecha: comum'); }
   const key=cond.join(' · '); if(key!==condKey){ condKey=key; $('cond').textContent=key; }
 }
@@ -3063,8 +3374,8 @@ function buildActions(){
     b.innerHTML=`<span class="icw">${icon?`<img class="ic" alt="" src="${icon}">`:''}<span class="cdv"></span></span><span class="n">${name}</span><span class="c">${cost}</span><span class="k">${esc(keyLabel(key))}</span>`; b.addEventListener('click',fn); bar.appendChild(b);
     if(i!==undefined) actEls[i]={btn:b, cd:b.querySelector('.cdv')}; };
   classSpells().forEach((s,i)=>add(KEYS['s'+i], s.name, spellLock(s), ()=>cast(i), i, s.name+' · '+(s.kind?s.kind[0].toUpperCase()+s.kind.slice(1)+': ':'')+s.desc+(s.lvl>1?' · nível '+s.lvl:''), spellIconURL(s)));
-  add(KEYS.hp,'Poção de Vida','×'+(countItem('hp')+countItem('hp2')),()=>usePotion('hp'),'hp','Poção de vida (a forte primeiro)',iconURL('hp'));
-  add(KEYS.mp,'Poção de Mana','×'+(countItem('mp')+countItem('mp2')),()=>usePotion('mp'),'mp','Poção de mana (a forte primeiro)',iconURL('mp'));
+  add(KEYS.hp,'Poção de Vida','×'+potCount('hp'),()=>usePotion('hp'),'hp','Poção de vida (a forte primeiro)',iconURL('hp'));
+  add(KEYS.mp,'Poção de Mana','×'+potCount('mp'),()=>usePotion('mp'),'mp','Poção de mana (a forte primeiro)',iconURL('mp'));
 }
 buildActions();
 showInfo(null);
@@ -3083,6 +3394,7 @@ function update(dt){
     if(target && (target.dead||target.map!==cur.id)) { target=null; player.follow=false; }
     if(target && player.atkCd<=0){ const rg=attackRange(st); if(cheb(player,target)<=rg && (rg===1||los(cur,player,target))){ player.atkCd=st.as; autoAttack(st,rg); } }
     for(const k in player.buffs){ if(player.buffs[k]>0){ player.buffs[k]-=dt; if(player.buffs[k]<=0){ player.buffs[k]=0; uiDirty=true; } } }
+    climateTick(dt);
     if(player.buffs.bless>0){ player.blessT=(player.blessT||0)-dt; if(player.blessT<=0){ player.blessT=1000; const s2=stats(), v=Math.round(s2.maxHp*0.03+s2.mag*0.5); player.hp=Math.min(s2.maxHp,player.hp+v); floatAt(player,'+'+v,'#7ee07a'); } }
     if(player.slowT>0){ player.slowT-=dt; if(player.slowT<=0) uiDirty=true; }
     player.regT+=dt;
@@ -3187,7 +3499,7 @@ function admItemOptions(items){ const groups={}; for(const id of items){ const g
 dlgBody.addEventListener('input', e=>{ const id=e.target.id; if(id!=='admFcls'&&id!=='admFmin'&&id!=='admFmax') return;
   ADM.fcls=$('admFcls').value; ADM.fmin=$('admFmin').value.trim(); ADM.fmax=$('admFmax').value.trim();
   const items=admItems(); $('admItem').innerHTML=admItemOptions(items); $('admCount').textContent=items.length+' ite'+(items.length===1?'m':'ns'); $('admGive').disabled=!items.length; });
-function admArrival(id){ for(const m of Object.values(MAPS)) for(const l of Object.values(m.links||{})) if(l.map===id) return {x:l.x,y:l.y}; return MAPS[id].spawn||null; }
+function admArrival(id){ if(MAPS[id].town&&MAPS[id].spawn) return MAPS[id].spawn; for(const m of Object.values(MAPS)) for(const l of Object.values(m.links||{})) if(l.map===id) return {x:l.x,y:l.y}; return MAPS[id].spawn||null; }
 function openAdm(note){
   if(!isAdmin()) return;
   const items=admItems(); if(!ADM.map) ADM.map=cur.id;
@@ -3415,7 +3727,7 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
-window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
