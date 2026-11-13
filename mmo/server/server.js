@@ -15,6 +15,8 @@ const HOST = process.env.HOST || '0.0.0.0';
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
 const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
 const MAX_CHARS = 5;
+// ADM: os usuários de ADMIN_USERS; se essa lista estiver vazia, a primeira conta criada no servidor vira ADM.
+const isAdm = acc => ADMINS.has(acc) || !!(db.accounts[acc] && db.accounts[acc].adm);
 const TICK = 50;
 
 // ---------------------------------------------------------------- mundo (mesmos mapas do cliente)
@@ -134,7 +136,7 @@ function enterWorld(conn, id) {
   const c = db.chars[id]; if (!c || c.owner !== conn.acc) return send(conn.ws, { t: 'err', text: 'Personagem não encontrado.' });
   for (const o of online.values()) if (o.owner === conn.acc) { send(o.ws, { t: 'kicked', text: 'Sua conta entrou em outro lugar.' }); leaveWorld(o); try { o.ws.close(); } catch (e) {} }
   if (!MAPS[c.map]) { c.map = 'over'; c.x = MAPS.over.spawn.x; c.y = MAPS.over.spawn.y; }
-  const p = { id: c.id, owner: conn.acc, name: c.name, cls: c.cls, level: c.level || 1, map: c.map, x: c.x, y: c.y, dir: c.dir || 'down', ws: conn.ws, queue: [], next: 0, adm: ADMINS.has(conn.acc) };
+  const p = { id: c.id, owner: conn.acc, name: c.name, cls: c.cls, level: c.level || 1, map: c.map, x: c.x, y: c.y, dir: c.dir || 'down', ws: conn.ws, queue: [], next: 0, adm: isAdm(conn.acc) };
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
   send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
@@ -155,7 +157,8 @@ function onMessage(conn, m) {
       if (!validUser(u)) return send(ws, { t: 'autherr', text: 'Usuário: 3 a 20 letras minúsculas, números ou _.' });
       if (pw.length < 6 || pw.length > 100) return send(ws, { t: 'autherr', text: 'A senha precisa ter pelo menos 6 caracteres.' });
       if (db.accounts[u]) return send(ws, { t: 'autherr', text: 'Esse usuário já existe.' });
-      const salt = crypto.randomBytes(16).toString('hex'); db.accounts[u] = { salt, hash: hashPass(pw, salt), created: Date.now() }; markDirty();
+      const salt = crypto.randomBytes(16).toString('hex'), first = !ADMINS.size && !Object.values(db.accounts).some(x => x.adm);
+      db.accounts[u] = { salt, hash: hashPass(pw, salt), created: Date.now(), adm: first || undefined }; markDirty(); if (first) console.log('Primeira conta do servidor virou ADM:', u);
       return login(conn, u);
     }
     case 'login': {
@@ -163,7 +166,7 @@ function onMessage(conn, m) {
       if (!a || !crypto.timingSafeEqual(Buffer.from(a.hash, 'hex'), Buffer.from(hashPass(String(m.pass || ''), a.salt), 'hex'))) return send(ws, { t: 'autherr', text: 'Usuário ou senha incorretos.' });
       return login(conn, u);
     }
-    case 'resume': { const acc = sessions.get(String(m.token || '')); if (!acc) return send(ws, { t: 'autherr', text: 'Sessão expirada. Entre de novo.', expired: true }); conn.acc = acc; conn.token = m.token; send(ws, { t: 'auth', user: acc, token: m.token, chars: charList(acc), adm: ADMINS.has(acc) }); if (m.char && db.chars[m.char]?.owner === acc) enterWorld(conn, m.char); return; }
+    case 'resume': { const acc = sessions.get(String(m.token || '')); if (!acc) return send(ws, { t: 'autherr', text: 'Sessão expirada. Entre de novo.', expired: true }); conn.acc = acc; conn.token = m.token; send(ws, { t: 'auth', user: acc, token: m.token, chars: charList(acc), adm: isAdm(acc) }); if (m.char && db.chars[m.char]?.owner === acc) enterWorld(conn, m.char); return; }
   }
   if (!conn.acc) return send(ws, { t: 'autherr', text: 'Entre na sua conta primeiro.' });
   switch (m.t) {
@@ -198,7 +201,7 @@ function onMessage(conn, m) {
 }
 function login(conn, acc) {
   const token = crypto.randomBytes(24).toString('hex'); sessions.set(token, acc); conn.acc = acc; conn.token = token;
-  send(conn.ws, { t: 'auth', user: acc, token, chars: charList(acc), adm: ADMINS.has(acc) });
+  send(conn.ws, { t: 'auth', user: acc, token, chars: charList(acc), adm: isAdm(acc) });
 }
 
 // ---------------------------------------------------------------- HTTP: entrega a página do jogo e aceita a conexão em tempo real

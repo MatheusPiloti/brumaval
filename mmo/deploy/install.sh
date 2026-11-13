@@ -3,6 +3,7 @@
 # Uso (como root):  bash install.sh [dominio] [usuario_adm]
 #   dominio: opcional. Sem ele, usa <ip-da-vps>.sslip.io (HTTPS grátis, sem comprar domínio).
 #   usuario_adm: opcional. Usuário do jogo que pode usar /nivel, /ir, /trazer e /aviso.
+#                Sem ele, a primeira conta criada no jogo vira ADM.
 # Rodar de novo atualiza o código e reinicia o servidor, sem apagar contas nem personagens.
 set -euo pipefail
 REPO="https://github.com/matheuspiloti/brumaval.git"
@@ -12,22 +13,23 @@ ADMIN="${2:-}"
 
 [ "$(id -u)" = 0 ] || { echo "Rode como root (sudo bash install.sh)"; exit 1; }
 export DEBIAN_FRONTEND=noninteractive
+export HOME="${HOME:-/root}"
 
 echo "==> Pacotes básicos"
-apt-get update -y
-apt-get install -y curl git python3 ca-certificates gnupg debian-keyring debian-archive-keyring apt-transport-https
+apt-get -o DPkg::Lock::Timeout=600 update -y
+apt-get -o DPkg::Lock::Timeout=600 install -y curl git python3 ca-certificates gnupg debian-keyring debian-archive-keyring apt-transport-https
 
 if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split(".")[0]')" -lt 20 ]; then
   echo "==> Node.js 22"
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-  apt-get install -y nodejs
+  apt-get -o DPkg::Lock::Timeout=600 install -y nodejs
 fi
 
 if ! command -v caddy >/dev/null; then
   echo "==> Caddy (HTTPS automático)"
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
-  apt-get update -y && apt-get install -y caddy
+  apt-get -o DPkg::Lock::Timeout=600 update -y && apt-get -o DPkg::Lock::Timeout=600 install -y caddy
 fi
 
 echo "==> Código do jogo"

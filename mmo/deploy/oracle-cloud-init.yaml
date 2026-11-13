@@ -1,0 +1,8 @@
+#cloud-config
+# Cole este texto na Oracle Cloud ao criar a máquina:
+# Create instance → Show advanced options → Management → "Paste cloud-init script".
+# Ele instala o Brumaval Online sozinho na primeira vez que a máquina liga (leva uns 5 minutos).
+# A primeira conta criada no jogo vira ADM.
+runcmd:
+  - curl -fsSL https://raw.githubusercontent.com/matheuspiloti/brumaval/main/mmo/deploy/install.sh -o /root/install.sh
+  - bash /root/install.sh > /var/log/brumaval-install.log 2>&1
