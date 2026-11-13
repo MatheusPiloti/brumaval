@@ -1,0 +1,15 @@
+{
+  "name": "brumaval-online",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Servidor do Brumaval online: contas, personagens e mundo compartilhado.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "8.18.0"
+  }
+}

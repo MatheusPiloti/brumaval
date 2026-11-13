@@ -11,6 +11,7 @@ RPG 2D de quadrados no navegador: 5 classes, itens com raridade, duas cidades li
 | `build.py` | Gera a pasta `dist/` pronta para publicar. |
 | `supabase/schema.sql` | Banco de dados das contas e personagens. |
 | `.github/workflows/pages.yml` | Publica sozinho no GitHub Pages a cada envio para a branch `main`. |
+| `mmo/` | **Brumaval Online**: versão com todos no mesmo mundo, com servidor próprio. Veja `mmo/README.md`. |
 
 Gerar a versão para publicar (precisa de Python 3):
 
