@@ -276,6 +276,34 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .side.droptarget{outline:2px dashed var(--line);outline-offset:-2px}
 .zoom button{width:30px;height:30px;padding:0;font-size:18px;line-height:1;background:rgba(20,16,12,.7);border-color:rgba(255,255,255,.15)}
 @media (max-width:880px){.app{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"top" "game" "right";height:auto}.side-r{overflow:visible}.viewport{flex:none;height:min(68vh,640px);height:min(68dvh,640px)}.side{overflow:visible;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+/* Celular: menu da barra de cima que recolhe, botão de caça automática e joystick. */
+.topmenu{display:contents}
+.menubtn{display:none}
+.huntbtn{bottom:50px}
+.huntbtn.on{color:#8fe36a;border-color:#8fe36a;animation:huntpulse 1.4s ease-in-out infinite}@keyframes huntpulse{50%{box-shadow:0 0 10px #8fe36a}}
+.joy{position:absolute;left:14px;bottom:14px;z-index:3;width:124px;height:124px;border-radius:50%;background:rgba(20,15,10,.35);border:2px solid rgba(255,255,255,.18);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.joyknob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(217,164,65,.5);border:2px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none}
+.joy.act .joyknob{background:rgba(217,164,65,.85)}
+@media (max-width:1100px){
+  .top{position:relative;gap:8px;flex-wrap:nowrap}
+  .top h1{font-size:22px}
+  .top .where{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .menubtn{display:inline-block;flex:none}
+  .topmenu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:50;flex-direction:column;gap:4px;min-width:210px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:6px;box-shadow:0 10px 24px rgba(0,0,0,.6)}
+  .topmenu.open{display:flex}
+  .topmenu button{text-align:left;padding:10px 12px}
+}
+@media (pointer:coarse){
+  .lootbtn{padding:10px 14px;font-size:16px}.lootbtn kbd{display:none}
+  .huntbtn{bottom:62px}
+  .zoom button{width:40px;height:40px}
+}
+@media (max-width:880px){
+  body{padding-block:8px}
+  .app{gap:8px}
+  #acct{display:none}
+  .viewport{height:min(72vh,640px);height:min(72dvh,640px)}
+}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 
@@ -285,6 +313,8 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <span class="where" id="where">Pedraluz</span>
     <div class="spacer"></div>
     <span class="where" id="acct" hidden></span>
+    <button id="btnMenu" class="menubtn" type="button" aria-expanded="false" aria-controls="topMenu">☰ Menu</button>
+    <div class="topmenu" id="topMenu">
     <button id="btnLogout" type="button" hidden>Sair da conta</button>
     <button id="btnAdm" type="button" hidden>ADM</button>
     <button id="btnGal" type="button" hidden>Galeria</button>
@@ -296,6 +326,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <button id="btnKeys" type="button">Atalhos</button>
     <button id="btnHelp" type="button">Controles</button>
     <button id="btnSave" type="button">Salvar</button>
+    </div>
   </header>
 
   <aside class="side side-l" id="sideL">
@@ -311,6 +342,8 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
       <div class="hud" id="hud" aria-hidden="true"><div class="bar hp"><i id="thpFill"></i><span id="thpTxt"></span></div><div class="bar mp"><i id="tmpFill"></i><span id="tmpTxt"></span></div></div>
       <div class="lootfloat" id="lootWin" hidden></div>
       <button type="button" class="lootbtn" id="btnLoot" title="Pegar tudo dos corpos colados em você (tecla L)">Saquear <kbd id="lootKey">L</kbd></button>
+      <button type="button" class="lootbtn huntbtn" id="btnHunt" title="Ligar ou desligar a caça automática" hidden>Caçar <kbd id="huntKey"></kbd></button>
+      <div class="joy" id="joy" hidden aria-hidden="true"><div class="joyknob" id="joyKnob"></div></div>
       <div class="zoom"><button type="button" id="zOut" aria-label="Afastar a câmera" title="Afastar (tecla -)">−</button><button type="button" id="zIn" aria-label="Aproximar a câmera" title="Aproximar (tecla +)">+</button></div>
       <div id="afk" hidden role="dialog" aria-label="Painel AFK"><div class="afkw">
         <div class="afkh"><h2>Painel da caçada</h2><span class="afkst" id="afkState"></span><div class="spacer"></div><button type="button" id="afkBot">Caça automática</button><button type="button" id="afkReset">Zerar contadores</button><button type="button" class="primary" id="afkClose">Voltar ao jogo</button></div>
@@ -5660,6 +5693,37 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(!ONLINE && data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
+// ============================================================ celular: menu da barra de cima, botão de caça e joystick
+(function mobileUi(){
+  const menu=$('topMenu'), mb=$('btnMenu');
+  const setMenu=o=>{ menu.classList.toggle('open',o); mb.setAttribute('aria-expanded',String(o)); };
+  mb.addEventListener('click',e=>{ e.stopPropagation(); setMenu(!menu.classList.contains('open')); });
+  menu.addEventListener('click',e=>{ if(e.target.closest('button')) setMenu(false); });
+  addEventListener('pointerdown',e=>{ if(menu.classList.contains('open')&&!e.target.closest('#topMenu,#btnMenu')) setMenu(false); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape'&&menu.classList.contains('open')) setMenu(false); });
+
+  // Botão de caça automática, ao lado do "Saquear" (mesma tecla de atalho da caça).
+  const hb=$('btnHunt'), hk=$('huntKey');
+  hb.addEventListener('click',()=>{ toggleBot(); cv.focus?.(); });
+  setInterval(()=>{ hb.hidden=!running||!player.bot; if(hb.hidden) return; hb.classList.toggle('on',bot.on);
+    const t=bot.on?'Parar caça ':'Caçar '; if(hb.firstChild.nodeValue!==t) hb.firstChild.nodeValue=t;
+    const kl=KEYS.bot?keyLabel(KEYS.bot):''; if(hk.textContent!==kl){ hk.textContent=kl; hk.hidden=!kl; } },300);
+
+  // Joystick: aparece em telas de toque; simula as teclas do teclado numérico (8 direções).
+  const joy=$('joy'), knob=$('joyKnob'), touch=matchMedia('(pointer:coarse)');
+  const SECT=['Numpad6','Numpad3','Numpad2','Numpad1','Numpad4','Numpad7','Numpad8','Numpad9'];
+  let jid=null, jkey=null;
+  const setKey=k=>{ if(jkey&&jkey!==k) keys.delete(jkey); jkey=k; if(k) keys.add(k); };
+  const move=e=>{ const r=joy.getBoundingClientRect(), R=r.width/2; let dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R);
+    const d=Math.hypot(dx,dy), m=R-16; if(d>m){ dx*=m/d; dy*=m/d; } knob.style.transform=`translate(${dx}px,${dy}px)`;
+    if(d<R*0.28){ setKey(null); return; } setKey(SECT[((Math.round(Math.atan2(dy,dx)/(Math.PI/4))%8)+8)%8]); };
+  const end=e=>{ if(e.pointerId!==jid) return; jid=null; setKey(null); knob.style.transform=''; joy.classList.remove('act'); };
+  joy.addEventListener('pointerdown',e=>{ if(jid!==null||!running) return; e.preventDefault(); jid=e.pointerId; try{ joy.setPointerCapture(jid); }catch(_){} joy.classList.add('act'); move(e); });
+  joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) move(e); });
+  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>joy.addEventListener(t,end));
+  joy.addEventListener('contextmenu',e=>e.preventDefault());
+  setInterval(()=>{ const h=!running||!touch.matches; if(joy.hidden!==h){ joy.hidden=h; if(h&&jid!==null) end({pointerId:jid}); } },500);
+})();
 window.__game = {Net, netSend, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
