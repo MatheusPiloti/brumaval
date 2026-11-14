@@ -54,6 +54,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bst-i .st{grid-row:1/3;grid-column:2;display:flex;gap:3px;align-items:center}.bst-i .st i{width:8px;height:8px;border-radius:50%;border:1px solid var(--line)}.bst-i .st i.on{background:var(--accent);border-color:var(--accent)}
 .bst-i.done{border-color:var(--accent)}
 .pkkey{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px;margin-bottom:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px}.pkkey .kbd.wait{color:var(--accent)}
+.tbl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}.tb{display:grid;gap:4px;text-align:left;padding:10px;background:var(--panel-2)}.tb small{color:var(--muted)}.tb:hover{border-color:var(--accent)}
+.tlist{margin:6px 0 10px;padding-left:18px;color:var(--muted)}.tlist li{margin:3px 0}.tlist b{color:var(--ink)}
+.ecog{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin:8px 0}.eco{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px}.eco small{grid-column:1;color:var(--muted)}.eco button{grid-row:1/4;grid-column:2}
+.pips{display:flex;gap:3px}.pips i{width:10px;height:10px;border-radius:50%;border:1px solid var(--line)}.pips i.on{background:var(--accent);border-color:var(--accent)}
+.cosg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin:6px 0 10px}.cos{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;text-align:left}.cos b{flex:1;font-weight:500}.cos.pick[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.lookwrap{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start}.lookprev{position:sticky;top:0;display:grid;gap:4px;justify-items:center}.lookprev canvas{width:140px;height:140px;border:1px solid var(--line);border-radius:6px;image-rendering:pixelated}.lookprev small{color:var(--muted);text-align:center}.lookside{min-width:0;max-height:52vh;overflow-y:auto}
+@media (max-width:640px){.lookwrap{grid-template-columns:1fr}}
+.cos.on{border-color:var(--accent)}.cos small{width:100%;color:var(--muted);font-size:11px}.cos{flex-wrap:wrap}
+.sw{display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,.3);flex:none}
+.card h4{margin:10px 0 4px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .spbk{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:44vh;overflow-y:auto;margin-top:8px}
 .spb{display:grid;grid-template-columns:32px minmax(0,1fr);column-gap:8px;text-align:left;padding:5px 7px;background:var(--panel-2);align-items:center}
 .spb img{grid-row:1/4;width:32px;height:32px;image-rendering:pixelated}.spb .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.spb small,.spb span:last-child{font-size:11px}
@@ -192,8 +202,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}
 .chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
-.bl.pc{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel-2)}.bl.pc .bn{color:#9fe08a}.bl.pc small{color:var(--muted)}
-[data-p=bot],[data-p=quests],[data-p=bosses],#btnAfk,#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}
+[data-p=bot],#btnAfk,#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}
 .log .xp{color:#e7c86a}.log .dmg{color:#ec8a7c}.log .heal{color:#9fd48a}.log .npc{color:#9cc3ee}.log .loot{color:#d8bf94}.log .sys{color:var(--muted)}.log .lvl{color:var(--accent);font-weight:700}
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px}
@@ -275,6 +284,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <button id="btnAdm" type="button" hidden>ADM</button>
     <button id="btnGal" type="button" hidden>Galeria</button>
     <button id="btnChars" type="button" title="Salvar e voltar para a lista de personagens">Personagens</button>
+    <button id="btnLook" type="button" title="Roupa, montaria, aura, cor do nome e das magias, título">Visual</button>
     <button id="btnBook" type="button" title="Todas as magias da sua classe e onde aprender">Magias</button>
     <button id="btnBest" type="button">Bestiário</button>
     <button id="btnAfk" type="button" title="Tela de acompanhamento da caçada">AFK</button>
@@ -790,6 +800,23 @@ for(const D of [ICED,SEAD]) for(const ids of Object.values(D)) for(const id of i
 { const r=mulberry32(4242); for(const ids of Object.values(SEAD)) for(const id of ids){ const M=MAPS[id]; let n=Math.floor(M.W*M.H/230), tries=0;
   while(n>0&&tries++<4000){ const x=1+Math.floor(r()*(M.W-2)), y=1+Math.floor(r()*(M.H-2)), k=y*M.W+x, tt=M.t[k]; if(BLOCKS.has(tt)||LINKS_T.has(tt)||SAFE.has(tt)) continue;
     if(M.entry&&Math.abs(M.entry.x-x)+Math.abs(M.entry.y-y)<3) continue; if(M.exit&&Math.abs(M.exit.x-x)+Math.abs(M.exit.y-y)<3) continue; if(M.boss&&Math.abs(M.boss.x-x)+Math.abs(M.boss.y-y)<3) continue; M.t[k]=BUBBLE; n--; } } }
+// ---- cidades maiores: o muro cresce e entra uma fileira de 4 casinhas embaixo para os NPCs (vale para as cinco cidades)
+function expandTown(M, rc, cfg){ const W=M.W, H=M.H, t=M.t, set=(x,y,v)=>{ if(x>=0&&y>=0&&x<W&&y<H) t[y*W+x]=v; };
+  const CX=Math.round((rc.x0+rc.x1)/2), CY=Math.round((rc.y0+rc.y1)/2), X0=rc.x0-4, X1=rc.x1+4, Y0=rc.y0-2, Y1=rc.y1+3;
+  for(let y=Y0-2;y<=Y1+2;y++) for(let x=X0-2;x<=X1+2;x++){ if(x<0||y<0||x>=W||y>=H) continue; const k=t[y*W+x];
+    if(x<X0||x>X1||y<Y0||y>Y1){ if(BLOCKS.has(k)&&k!==BOAT) set(x,y,cfg.ground[(hash2(x*7+3,y*13+W)%100)<cfg.alt?1:0]); } else set(x,y,cfg.floor); }
+  for(let y=Y0;y<=Y1;y++) for(let x=X0;x<=X1;x++) if(x===X0||x===X1||y===Y0||y===Y1) set(x,y,cfg.wall);
+  for(let d=-1;d<=1;d++){ set(CX+d,Y0,cfg.floor); set(CX+d,Y1,cfg.floor); set(X0,CY+d,cfg.floor); set(X1,CY+d,cfg.floor); }
+  const B=(a,b,c,d,dx,dy)=>{ for(let y=b;y<=d;y++) for(let x=a;x<=c;x++) set(x,y,(x===a||x===c||y===b||y===d)?cfg.bwall:WOOD); set(dx,dy,DOOR); };
+  B(X0+1,Y0+1,X0+7,Y0+6, X0+4,Y0+6); B(X1-7,Y0+1,X1-1,Y0+6, X1-4,Y0+6);
+  for(const hx of [X0+1,X0+6,X0+14,X0+19]) B(hx,Y1-5,hx+4,Y1-1, hx+2,Y1-5);
+  for(const [dx,dy] of [[3,1],[4,1],[3,2],[4,2]]) set(CX+dx,CY+dy,cfg.pond);
+  rc.x0=X0; rc.x1=X1; rc.y0=Y0; rc.y1=Y1; if(rc.cx!=null){ rc.cx=CX; rc.cy=CY; } if(M.spawn){ M.spawn.x=X0+4; M.spawn.y=Y0+3; } }
+expandTown(MAPS.over, TOWN, {ground:[G,FLOW], alt:8, floor:STONE, wall:WALL, bwall:WALL, pond:WATER});
+expandTown(MAPS.ash, MAPS.ash.townRect, {ground:[ASH,CRACK], alt:10, floor:BASALT, wall:BWALL, bwall:BWALL, pond:LAVA});
+expandTown(MAPS.fae, MAPS.fae.townRect, {ground:[MOSS,FFLOW], alt:15, floor:FSTONE, wall:HEDGE, bwall:LOGW, pond:WATER});
+expandTown(MAPS.ice, MAPS.ice.townRect, {ground:[SNOW,DRIFT], alt:10, floor:STONE, wall:WALL, bwall:WALL, pond:ICEF});
+expandTown(MAPS.sea, MAPS.sea.townRect, {ground:[SANDF,KELP], alt:8, floor:NACRE, wall:REEFW, bwall:REEFW, pond:BUBBLE});
 for(const m of Object.values(MAPS)) m.explored = new Uint8Array(m.W*m.H);
 const tileAt=(m,x,y)=>(x<0||y<0||x>=m.W||y>=m.H)?(m.oob??(m.dark?CWALL:TREE)):m.t[y*m.W+x];
 function arrivalNear(m,x,y){ for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){ const nx=x+dx,ny=y+dy, tt=tileAt(m,nx,ny); if(!BLOCKS.has(tt)&&!LINKS_T.has(tt)) return {x:nx,y:ny}; } return {x,y:y+1}; }
@@ -1757,8 +1784,8 @@ function stats(){
   s.warm=Object.values(player.eq).some(it=>it&&ITEMS[it.id]?.warm===true); s.gill=Object.values(player.eq).some(it=>it&&ITEMS[it.id]?.gill);
   const B=player.buffs||{}; if(B.fury>0) s.def=Math.round(s.def*1.2); if(B.ironskin>0) s.def=Math.round(s.def*1.5); if(B.bark>0) s.def=Math.round(s.def*1.4);
   if(B.wind>0) s.atkspd+=15; if(B.eagle>0) s.crit+=20; if(B.tiger>0){ s.atkspd+=35; s.crit+=5; } if(B.haste>0) s.atkspd+=40; if(B.balance>0) s.lifesteal+=15;
-  s.maxHp=C.hp0+L*C.hpLv+s.hp; s.maxMp=C.mp0+L*C.mpLv+s.mp; s.critCh=Math.min(60,s.crit);
-  s.stepDur=Math.round((ONLINE?Net.step:Math.max(140,250-L*3-s.speed))*(player.slowT>0?1.6:1)*(B.wind>0?0.75:1)); s.as=Math.round(C.as/(1+s.atkspd/100)); s.cls=C;
+  s.maxHp=C.hp0+L*C.hpLv+s.hp; s.maxMp=C.mp0+L*C.mpLv+s.mp; applyMods(s); s.critCh=Math.min(60,s.crit);
+  s.stepDur=Math.round(Math.max(140,250-L*3-s.speed)*(player.slowT>0?1.6:1)*(B.wind>0?0.75:1)*mountSpeed()); s.as=Math.round(C.as/(1+s.atkspd/100)); s.cls=C;
   return s;
 }
 function attackRange(st){ const wk=ITEMS[player.eq.weapon?.id]?.wk; return (st.cls.range>1 && st.cls.wk.includes(wk)) ? st.cls.range : 1; }
@@ -1830,7 +1857,7 @@ function useItem(it){
   if(d.warm>1){ player.buffs.warm=d.warm; removeOne(it); log('Você bebe a '+d.name+'. O frio não te alcança por 10 minutos.','sys'); burst(player,'#ff9a3a',10,60); uiDirty=true; return; }
   if(d.air){ player.air=100; removeOne(it); floatAt(player,'+fôlego','#9ae0ff'); burst(player,'#9ae0ff',10,60); uiDirty=true; return; }
   if(d.ammo){ if(!canUseAmmo(d)) { log('Só o Caçador usa flechas especiais.','sys'); return; } setAmmo(player.ammo===it.id?null:it.id); return; }
-  if(d.heal){ if(player.potCd>0) return; if(player.hp>=st.maxHp){ log('Sua vida já está cheia.','sys'); return; } player.potCd=1000; heal(d.heal); removeOne(it); sess.used.hp++; burst(player,'#e05050',8); return; }
+  if(d.heal){ if(player.potCd>0) return; if(player.hp>=st.maxHp){ log('Sua vida já está cheia.','sys'); return; } player.potCd=1000; heal(Math.round(d.heal*(inTower()&&TW.curse==='weakpot'?0.5:1))); removeOne(it); sess.used.hp++; burst(player,'#e05050',8); return; }
   if(d.mana){ if(player.potCd>0) return; if(player.mp>=st.maxMp){ log('Sua mana já está cheia.','sys'); return; } player.potCd=1000; sess.used.mp++; player.mp=Math.min(st.maxMp,player.mp+d.mana); floatAt(player,'+'+d.mana,'#7aa8ff'); removeOne(it); burst(player,'#5080e0',8); return; }
   log(d.name+': vende por '+sellPrice(it)+' ouro nos mercadores.','sys');
 }
@@ -1975,14 +2002,14 @@ function setupWorld(){
   npcs=[
     {kind:'npc', id:'priest', name:'Irmã Lúcia', map:'over', x:x0+4, y:y0+2, look:'priest'},
     {kind:'npc', id:'merchant', name:'Doran, o Mercador', map:'over', x:x1-4, y:y0+2, look:'merchant'},
-    {kind:'npc', id:'guard', name:'Capitão Bento', map:'over', x:TOWN.cx-1, y:y0+9, look:'guard'},
+    {kind:'npc', id:'guard', name:'Capitão Bento', map:'over', x:TOWN.cx-3, y:y0+7, look:'guard'},
   ];
   { const O=MAPS.over, A=MAPS.ash, r=A.townRect;
     npcs.push({kind:'npc', id:'boat', name:'Capitã Odila', map:'over', x:O.boatman.x, y:O.boatman.y, look:'boatman'},
       {kind:'npc', id:'boat2', name:'Capitão Brás', map:'ash', x:A.boatman.x, y:A.boatman.y, look:'boatman'},
       {kind:'npc', id:'priest2', name:'Irmã Brasa', map:'ash', x:r.x0+4, y:r.y0+2, look:'firepriest', town:'Cinzaforte'},
       {kind:'npc', id:'merchant2', name:'Varga, a Ferreira', map:'ash', x:r.x1-4, y:r.y0+2, look:'smith'},
-      {kind:'npc', id:'depot', name:'Depósito', map:'over', x:TOWN.cx-4, y:TOWN.cy+4, look:'chest'},
+      {kind:'npc', id:'depot', name:'Depósito', map:'over', x:TOWN.x0+21, y:TOWN.y1-3, look:'chest'},
       {kind:'npc', id:'depot2', name:'Depósito', map:'ash', x:r.x0+4, y:r.y1-3, look:'chest'},
       {kind:'npc', id:'firesage', name:'Mestre Ígnio', map:'ash', x:r.x1-4, y:r.y1-3, look:'firesage'}); }
   { const F=MAPS.fae, q=F.townRect;
@@ -1998,8 +2025,12 @@ function setupWorld(){
       {kind:'npc', id:'merchant'+n, name:merch, map:reg, x:q.x1-4, y:q.y0+2, look:'merchant'},
       {kind:'npc', id:'depot'+n, name:'Depósito', map:reg, x:q.x0+4, y:q.y1-3, look:'chest'},
       {kind:'npc', id:'spellmaster'+n, name:reg==='ice'?'Arquimaga Hrefna':'Oráculo Maréleo', map:reg, x:q.x1-4, y:q.y1-3, look:reg==='ice'?'icemage':'seamage'}); }
-  { const sp=freeSpot('over',TOWN.x1-4,TOWN.y1-3); npcs.push({kind:'npc', id:'spellmaster', name:'Mestre Aldric, o Arcanista', map:'over', x:sp.x, y:sp.y, look:'mage'}); }
-  for(const n of npcs) if(n.id.startsWith('spellmaster')){ const p=freeSpot(n.map,n.x,n.y); n.x=p.x; n.y=p.y; }
+  npcs.push({kind:'npc', id:'spellmaster', name:'Mestre Aldric, o Arcanista', map:'over', x:TOWN.x0+16, y:TOWN.y1-3, look:'mage'},
+    {kind:'npc', id:'towerportal', name:'Torre das Brumas', map:'over', x:TOWN.cx, y:TOWN.cy, look:'portal'},
+    {kind:'npc', id:'tailor', name:'Celina, a Alfaiate', map:'over', x:TOWN.x0+3, y:TOWN.y1-3, look:'tailor'},
+    {kind:'npc', id:'forger', name:'Bruna, a Forjadora', map:'over', x:TOWN.x0+8, y:TOWN.y1-3, look:'smith'});
+  for(const [reg,n,tl,fg] of [['ash',2,'Cinzia, a Costureira','Fornalho, o Forjador'],['fae',3,'Lírio, o Tecelão','Tálio, o Forjador'],['ice',4,'Sigrid, a Peleteira','Bjorn, o Forjador'],['sea',5,'Nácar, a Tecelã','Coralino, o Forjador']]){ const q=MAPS[reg].townRect;
+    npcs.push({kind:'npc', id:'forger'+n, name:fg, map:reg, x:q.x0+8, y:q.y1-3, look:'smith'}, {kind:'npc', id:'tailor'+n, name:tl, map:reg, x:q.x0+16, y:q.y1-3, look:'tailor'}); }
   for(const n of npcs){ n.px=n.x; n.py=n.y; n.moving=false; n.mt=0; n.mdur=1; n.phase=R(); n.dir='down'; }
   placeDummies();
 }
@@ -2054,7 +2085,7 @@ function tryPlayerStep(dx,dy){
   const nx=player.x+dx, ny=player.y+dy;
   player.dir = dx>0?'right':dx<0?'left':dy>0?'down':'up'; if(dx) player.face=dx;
   if(!passPlayer(cur,nx,ny) || occupied(cur.id,nx,ny,player) || cornerBlocked(cur,player.x,player.y,dx,dy)) return false;
-  if(ONLINE&&!netSend({t:'step',dx,dy,seq:++Net.seq})) return false;
+  if(ONLINE&&cur.id!=='tower'&&!netSend({t:'step',dx,dy,seq:++Net.seq})) return false;
   startStep(player,nx,ny,Math.round(stats().stepDur*(dx&&dy?1.4:1))); return true;
 }
 const NUMDIR={Numpad7:[-1,-1],Numpad8:[0,-1],Numpad9:[1,-1],Numpad4:[-1,0],Numpad6:[1,0],Numpad1:[-1,1],Numpad2:[0,1],Numpad3:[1,1]};
@@ -2113,7 +2144,7 @@ function walkTo(x,y,adjacent,ref,maxN=4000,quiet=false){
 }
 
 // ============================================================ combate
-const dmgMul = () => player.buffs.fury>0 ? 1.35 : 1;
+const dmgMul = () => (player.buffs.fury>0 ? 1.35 : 1)*modDmg();
 function rollP(base, def, st, extraCrit=0, canMiss=true){
   if(canMiss && R()<0.05) return {miss:true};
   const K=20+player.level*1.2; let d=base*K/(K+def)*(0.85+R()*0.3)*dmgMul(); const crit=R()*100 < st.critCh+extraCrit; if(crit) d*=st.critdmg/100;
@@ -2143,20 +2174,21 @@ function killMonster(m){
   if(target===m){ target=null; player.follow=false; }
   const lv=m.def.lvl+Math.round((m.mult-1)*10), items=[];
   const AF=bot.on?AUTO_PENALTY:1;
-  if(!m.sp.temp) for(const [id,ch,a,b] of m.def.loot) if(R()<ch*AF) items.push(ITEMS[id].slot ? makeItem(id, rollRarity(lv, m.def.boss), lv) : {id, n:Math.max(1,Math.round(ri(a,b)*(id==='gold'?AF:1)))});
+  if(!m.sp.temp) for(const [id,ch,a,b] of m.def.loot) if(R()<ch*AF) items.push(ITEMS[id].slot ? makeItem(id, rollRarity(lv, m.def.boss), lv) : {id, n:Math.max(1,Math.round(ri(a,b)*(id==='gold'?AF*goldMul():1)))});
   const extra = m.sp.temp ? 0 : m.def.boss ? (bot.on?2:3) : (R() < (0.04+lv*0.006)*AF ? 1 : 0);
   for(let i=0;i<extra;i++){ const id=randomGearId(lv, monRegion(m.type)); if(id) items.push(makeItem(id, rollRarity(lv, m.def.boss), lv)); }
   tomeDrop(m, items);
   corpses.push({map:m.map, x:m.x, y:m.y, type:m.type, items, t:0, life:120000});
   burst(m, m.def.undead?'#d8d0bc':'#8a1a10', 18, 90); if(m.def.boss) trauma=Math.min(1,trauma+0.4);
-  gainXp(Math.max(1,Math.round((m.sp.temp?m.xp/2:m.xp)*XP_RATE*(bot.on?AUTO_PENALTY:1))), m);
+  if(m.sp.tower){ if(tBless('kheal')){ const s2=stats(), v=Math.round(s2.maxHp*0.04*tBless('kheal')); player.hp=Math.min(s2.maxHp,player.hp+v); floatAt(player,'+'+v,'#7ee07a'); } }
+  else gainXp(Math.max(1,Math.round((m.sp.temp?m.xp/2:m.xp)*XP_RATE*(bot.on?AUTO_PENALTY:1))), m);
   const what = items.length? items.map(i=>(i.n>1?i.n+' ':'')+itemName(i)).join(', ') : 'nada';
   log('Você derrotou: '+m.def.name+'. Saque: '+what+'.','loot');
   let best=null; for(const it of items) if((it.r||0)>=2 && (!best||it.r>best.r)) best=it;
   if(best){ log(RAR[best.r]+': '+itemName(best)+' caiu no corpo!', 'r'+best.r); if(best.r>=3) floatAt(m, RAR[best.r]+'!', RAR_COL[best.r], true); }
-  if(m.type==='wolf' && quests.wolves.state===1){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
-  if(m.def.boss){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+m.def.name+'!','lvl'); }
-  if(m.type==='boss' && quests.king.state===1){ quests.king.state=2; uiDirty=true; log('Missão: o Rei das Criptas caiu. Conte ao Capitão Bento.','npc'); }
+  if(m.type==='wolf' && quests.wolves.state===1 && !m.sp.tower){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
+  if(m.def.boss && !m.sp.tower){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+m.def.name+'!','lvl'); }
+  if(m.type==='boss' && quests.king.state===1 && !m.sp.tower){ quests.king.state=2; uiDirty=true; log('Missão: o Rei das Criptas caiu. Conte ao Capitão Bento.','npc'); }
 }
 function gainXp(n, src){
   player.xp+=n; if(sess) sess.xp+=n; if(src) floatAt(src, '+'+n+' xp', '#e7c86a');
@@ -2175,15 +2207,18 @@ function hurtPlayer(dmg, src){
 }
 function heal(n){ const st=stats(); const v=Math.min(n, st.maxHp-player.hp); player.hp+=v; floatAt(player,'+'+v,'#7ee07a'); log('Você recuperou '+v+' de vida.','heal'); }
 function die(src){
+  if(inTower()) return towerDie(src);
+  const blessed=!!player.blessed; player.blessed=false;
   player.dead=true; target=null; player.path=null; player.follow=false; player.poison=null; closeDialog();
-  const floor=totalXp(player.level); const lost=Math.max(0,Math.min(player.xp-floor, Math.floor(player.xp*0.08))); const goldLost=Math.floor(player.gold*0.1);
+  const floor=totalXp(player.level); const lost=Math.max(0,Math.min(player.xp-floor, Math.floor(player.xp*(blessed?0.02:0.08)))); const goldLost=blessed?0:Math.floor(player.gold*0.1);
   player.xp-=lost; player.gold-=goldLost; player.deathInfo={src, lost, goldLost};
   const drop=[]; if(goldLost>0) drop.push({id:'gold',n:goldLost,r:0,a:[]});
-  for(const c of containers()) for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(!isBag(it) && R()<0.1){ c.items.splice(i,1); drop.push(it); } }
+  for(const c of containers()) for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(!blessed && !isBag(it) && R()<0.1){ c.items.splice(i,1); drop.push(it); } }
   corpses=corpses.filter(c=>!c.player);
   corpses.push({map:cur.id, x:player.x, y:player.y, player:true, name:player.name, items:drop, t:0, life:600000});
   const where=zoneName(cur,player.x,player.y), nItems=drop.filter(d=>d.id!=='gold').length;
   $('deathText').textContent = 'Derrotado por: '+src+'. Você perdeu '+lost+' de experiência. '+(drop.length?'Seu corpo ficou em '+where+' com '+(goldLost?goldLost+' moedas':'')+(goldLost&&nItems?' e ':'')+(nItems?nItems+' item(ns)':'')+' que caíram. Volte em até 10 minutos para pegar.':'Nada caiu do seu corpo.');
+  if(blessed){ $('deathText').textContent+=' A bênção protegeu você: nenhum item nem ouro caiu, e a perda de experiência foi menor.'; log('A bênção do templo protegeu seus itens e seu ouro.','lvl'); }
   $('deathScreen').hidden=false; log('Você morreu para '+src+'.','dmg'); uiDirty=true;
 }
 function respawn(){
@@ -2313,11 +2348,12 @@ function cast(i){
   if(s.learn && !player.learned?.[s.learn]){ log(s.name+': '+spellHow(s)+'.','sys'); return; }
   if(player.level<s.lvl){ log(s.name+' exige nível '+s.lvl+'.','sys'); return; }
   if((player.spellCd[i]||0)>0) return;
-  if(player.mp<s.mana){ log('Mana insuficiente.','sys'); floatAt(player,'sem mana','#7aa8ff'); return; }
+  const cost=Math.round(s.mana*manaMul());
+  if(player.mp<cost){ log('Mana insuficiente.','sys'); floatAt(player,'sem mana','#7aa8ff'); return; }
   const st0=stats(), st={...st0, spMul:skillMul(mainSkill())}; castHealMul=skillMul('ml');
   curSpell=s; let ok; try{ ok=s.run(st, player.level); } finally{ curSpell=null; castHealMul=1; } if(ok===false) return;
-  { const el=SPELL_FX[s.name]?.el||'arcane'; fx('rune',player.x,player.y,{r:0.85,el,life:480,ground:true}); if(AIM[s.name]===1&&target&&!target.dead) fx('slash',target.x,target.y,{el,ang:Math.atan2(target.y-player.y,target.x-player.x),life:320}); }
-  player.mp-=s.mana; player.spellCd[i]=s.cd; uiDirty=true; train('ml', s.mana);
+  { const el=SPELL_FX[s.name]?.el||'arcane'; fx('rune',player.x,player.y,{r:0.85,el,life:480,ground:true,mine:true}); if(AIM[s.name]===1&&target&&!target.dead) fx('slash',target.x,target.y,{el,ang:Math.atan2(target.y-player.y,target.x-player.x),life:320,mine:true}); }
+  player.mp-=cost; player.spellCd[i]=Math.round(s.cd*cdMul()); uiDirty=true; train('ml', cost);
 }
 
 // ============================================================ IA dos monstros
@@ -2801,7 +2837,7 @@ function useTome(it){ const d=ITEMS[it.id], s=tomeSpell(d);
   if(player.learned[s.learn]){ log('Você já conhece '+s.name+'.','sys'); return; }
   removeOne(it); learnSpell(s); }
 function tomeDrop(m, items){ if(!m.def.boss||m.sp.temp) return; const lv=m.def.lvl, tier=lv>=66?2:lv>=16?1:0; if(!tier) return;
-  if(R()>=(tier===1?0.12:0.08)*(bot.on?AUTO_PENALTY:1)) return;
+  if(R()>=(tier===1?0.12:0.08)*(bot.on?AUTO_PENALTY:1)*(1+eco('saber')*0.1)) return;
   const cls=R()<0.65?player.cls:CLASS_ORDER[Math.floor(R()*CLASS_ORDER.length)], k=SP_NEW[cls].findIndex(s=>s.get.how==='grimorio'&&s.get.tier===tier);
   if(k>=0) items.push({id:TOME_ID(cls,k), n:1, r:3, a:[]}); }
 const tomeIconCache={};
@@ -2854,7 +2890,7 @@ const SPELL_FX={
 const BUFF_FX={fury:['fire','ring'],ironskin:['phys','bubble'],eagle:['holy','orbit'],haste:['wind','streak'],focus:['arcane','orbit'],arcshield:['ice','bubble'],bless:['nature','orbit'],bark:['earth','ring'],tiger:['fire','streak'],balance:['water','orbit'],wall:['phys','bubble'],wind:['wind','streak'],jade:['nature','bubble'],tide:['water','orbit'],warm:null};
 let curSpell=null, vfx=[];
 const curFx=()=>SPELL_FX[curSpell?.name]||{};
-function fx(kind, x, y, o={}){ vfx.push({...o, kind, x, y, map:cur.id, t:-(o.delay||0), life:o.life||520, seed:(R()*1e9)|0}); }
+function fx(kind, x, y, o={}){ if(player.cos?.tint&&(curSpell||o.mine)&&o.el&&o.el!=='heal'){ const T2=COSK[player.cos.tint]; if(T2) o={...o, el:T2.el}; } vfx.push({...o, kind, x, y, map:cur.id, t:-(o.delay||0), life:o.life||520, seed:(R()*1e9)|0}); }
 function updateVfx(dt){ for(const f of vfx) f.t+=dt; vfx=vfx.filter(f=>f.t<f.life);
   for(const p of projectiles){ if(!p.fx||p.fx==='arrow'||p.map!==cur.id) continue; p.trT=(p.trT||0)-dt; if(p.trT>0) continue; p.trT=28; const q=projPos(p), E=EL[PROJ_EL[p.fx]||'arcane'];
     particles.push({map:p.map,x:q.x+ri(-2,2),y:q.y+ri(-2,2),vx:ri(-12,12),vy:-18,t:0,life:220+R()*160,color:E[R()<0.5?1:0],size:p.fx==='fire'?3:2}); } }
@@ -2939,6 +2975,7 @@ function botStatus(t){ if(bot.msg===t) return; bot.msg=t; const el=$('botMsg'); 
 function nearestWp(){ const R=route(); let bi=0,bd=1e9; R.forEach((p,i)=>{ const d=Math.abs(p.x-player.x)+Math.abs(p.y-player.y); if(d<bd){ bd=d; bi=i; } }); return bi; }
 function toggleBot(force, why){
   if(!player.bot) return; const on = force===undefined ? !bot.on : force;
+  if(on && !bot.on && inTower()){ log('A caça automática não funciona na Torre das Brumas.','sys'); return; }
   if(on && !bot.on){ const stay=player.bot.how==='stay'; if(!stay&&!route().length){ log('Marque pelo menos um ponto de rota neste andar, ou escolha "Atacar aqui, sem rota" na aba Geral da caça.','sys'); return; } bot.anchor={map:cur.id,x:player.x,y:player.y}; bot.on=true; bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática ligada.','sys'); }
   else if(!on && bot.on){ bot.on=false; bot.mode='hunt'; bot.sub=''; player.path=null; log(why||'Caça automática desligada.','sys'); }
   bot.msg=''; renderBot();
@@ -3169,6 +3206,226 @@ function botKite(B,st){
   if(!best) return false;
   player.follow=false; walkTo(best.x,best.y,false,null,300,true); if(!player.path){ player.follow=true; return false; }
   botStatus('Mantendo distância de '+target.def.name); return true; }
+// ============================================================ Torre das Brumas (torre infinita)
+// Portal em Pedraluz. Andares sem fim: ondas de monstros que ficam mais fortes, chefinho a cada 5, chefe a cada 10.
+// Não dá XP nem itens: dá Fragmentos (loja de visual), Ecos (Árvore de Ecos), títulos e recorde.
+const TOWER_LVL=8;
+let TW={on:false};
+function towerData(){ const d=player.tower||(player.tower={}); d.best??=0; d.frags??=0; d.ecos??=0; d.ecoSpent??={}; d.titles??=[]; d.title??=null; d.runs??=0; return d; }
+const eco=k=>(player.tower?.ecoSpent?.[k]||0);
+const inTower=()=>TW.on&&cur.id==='tower';
+const tBless=k=>inTower()?TW.bless.filter(x=>x===k).length:0;
+const ECO=[
+  {k:'vigor', n:'Vigor', d:'+2% de vida máxima', max:5, ic:'heart'},
+  {k:'mente', n:'Mente', d:'+2% de mana máxima', max:5, ic:'drop'},
+  {k:'furia', n:'Ferocidade', d:'+2% de dano', max:5, ic:'flame'},
+  {k:'couro', n:'Couraça', d:'+2% de defesa', max:5, ic:'shield'},
+  {k:'olho', n:'Precisão', d:'+1% de chance de crítico', max:5, ic:'eye'},
+  {k:'pressa', n:'Pressa', d:'+2% de velocidade de ataque', max:5, ic:'wind'},
+  {k:'fortuna', n:'Fortuna', d:'+4% de ouro dos monstros', max:5, ic:'boom'},
+  {k:'saber', n:'Erudição', d:'+10% de chance de grimório nos chefes', max:5, ic:'focus'},
+];
+const TBLESS=[
+  {k:'dmg', n:'Fúria da Bruma', d:'+10% de dano'}, {k:'def', n:'Pele de Névoa', d:'+10% de defesa'}, {k:'hp', n:'Vigor Antigo', d:'+8% de vida máxima'},
+  {k:'crit', n:'Olhar Afiado', d:'+4% de chance de crítico'}, {k:'as', n:'Mãos Rápidas', d:'+8% de velocidade de ataque'}, {k:'leech', n:'Sede', d:'+3% de roubo de vida'},
+  {k:'kheal', n:'Colheita', d:'recupera 3% da vida a cada abate'}, {k:'mana', n:'Fonte Clara', d:'magias custam 10% menos mana'}, {k:'cd', n:'Tempo Curto', d:'recarga das magias 10% menor'},
+];
+const TCURSE=[
+  {k:'fast', n:'Pressa Sombria', d:'monstros andam e atacam 30% mais rápido'}, {k:'tough', n:'Carne de Pedra', d:'monstros com +40% de vida'},
+  {k:'weakpot', n:'Poções Ralas', d:'poções curam metade'}, {k:'dark', n:'Névoa Densa', d:'o andar fica escuro'},
+];
+const TITLES=[{k:'t5',n:'Curioso da Torre',need:5},{k:'t10',n:'Escalador da Bruma',need:10},{k:'t25',n:'Desafiante da Torre',need:25},{k:'t50',n:'Senhor da Bruma',need:50},{k:'t75',n:'Terror das Alturas',need:75},{k:'t100',n:'Lenda da Torre',need:100}];
+// bônus permanentes (Árvore de Ecos) e da subida atual (bênçãos), aplicados em stats()
+function applyMods(s){
+  s.maxHp=Math.round(s.maxHp*(1+eco('vigor')*0.02+tBless('hp')*0.08)); s.maxMp=Math.round(s.maxMp*(1+eco('mente')*0.02));
+  s.def=Math.round(s.def*(1+eco('couro')*0.02+tBless('def')*0.10)); s.crit+=eco('olho')+tBless('crit')*4; s.atkspd+=eco('pressa')*2+tBless('as')*8; s.lifesteal+=tBless('leech')*3; }
+const modDmg=()=>(1+eco('furia')*0.02)*(1+tBless('dmg')*0.10);
+const manaMul=()=>Math.pow(0.9,tBless('mana')), cdMul=()=>Math.pow(0.9,tBless('cd'));
+const BLESS_MAX=2;
+const goldMul=()=>1+eco('fortuna')*0.04;
+// cada andar equivale a um nível de monstro (andar 10 ≈ 20, 50 ≈ 84, 100 ≈ 164); vida, ataque e defesa seguem as curvas dos monstros do jogo
+const towerLvl=f=>4+f*1.6;
+const towerMult=f=>Math.pow(towerLvl(f)/5,1.344);
+
+// ---- mapa do andar (uma sala com pilares; muda a cada andar)
+function makeTowerMap(f){ const W=21,H=17,t=new Uint8Array(W*H).fill(CFL), rn=mulberry32(9000+f*7);
+  for(let x=0;x<W;x++){ t[x]=CWL; t[(H-1)*W+x]=CWL; } for(let y=0;y<H;y++){ t[y*W]=CWL; t[y*W+W-1]=CWL; }
+  const np=2+Math.floor(rn()*5); for(let i=0;i<np;i++){ const x=3+Math.floor(rn()*(W-6)), y=3+Math.floor(rn()*(H-8)); t[y*W+x]=CWL; if(rn()<.5&&x<W-4) t[y*W+x+1]=CWL; }
+  for(let x=8;x<=12;x++) for(const y of [H-2,H-3]) t[y*W+x]=CARPET;
+  const M=MAPS.tower||(MAPS.tower={id:'tower', links:{}});
+  Object.assign(M,{name:'Torre das Brumas · andar '+f, W,H,t, explored:new Uint8Array(W*H).fill(1), dark:false, darkA:.8, lights:[{x:10,y:H-3,r:90},{x:2,y:H-2,r:70}], oob:CWALL, spawn:{x:10,y:H-3}, mult:1, torch:new Set([1*W+5,1*W+10,1*W+15])});
+  if(!npcs.some(n=>n.id==='towerexit')){ const n={kind:'npc', id:'towerexit', name:'Portal de saída', map:'tower', x:2, y:H-2, look:'portal', px:2, py:H-2, moving:false, mt:0, mdur:1, phase:0, dir:'down'}; npcs.push(n); }
+  return M; }
+let TPOOL=null, TBOSS=null;
+function towerPool(){ if(TPOOL) return TPOOL; TPOOL=Object.keys(MON).filter(t=>{ const d=MON[t]; return !d.boss&&!d.dummy&&!d.life&&monRegion(t)==='over'; }).sort((a,b)=>MON[a].lvl-MON[b].lvl);
+  TBOSS=Object.keys(MON).filter(t=>MON[t].boss&&monRegion(t)==='over').sort((a,b)=>MON[a].lvl-MON[b].lvl); return TPOOL; }
+function towerSpawn(type, x, y, f, elite, boss){ const m=spawnMonster({map:'tower', type, x, y, temp:true, tower:true, mon:null, timer:0}); const d=m.def;
+  const r=Math.max(1, towerLvl(f)*(boss?1.08:1)/(d.lvl||1)), ka=Math.pow(r,1.344)*1.15*(elite?1.3:1);
+  m.hp=m.maxHp=Math.round(d.hp*Math.pow(r,1.145)*1.3*(TW.curse==='tough'?1.4:1)*(elite?2.6:1)); m.atk=Math.round(d.atk*ka); m.dfn=Math.round(d.def*Math.pow(r,0.897)); m.mult=ka;
+  if(elite||TW.curse==='fast') m.def={...d, name:elite?'Eco de '+d.name:d.name, step:d.step*(TW.curse==='fast'?0.7:1), as:d.as*(TW.curse==='fast'?0.7:1)};
+  m.state='chase'; m.react=0; m.sp.respawn=false; return m; }
+function towerFloorSpawn(f){ const pool=towerPool(), M=MAPS.tower, idx=Math.min(pool.length-1, Math.floor((f-1)/3));
+  const free=[]; for(let y=1;y<M.H-1;y++) for(let x=1;x<M.W-1;x++) if(passMon(M,x,y)&&Math.max(Math.abs(x-player.x),Math.abs(y-player.y))>=4) free.push({x,y});
+  const take=()=>free.splice(Math.floor(R()*free.length),1)[0];
+  if(f%10===0&&TBOSS.length){ const b=TBOSS[(f/10-1)%TBOSS.length], p=take(); towerSpawn(b,p.x,p.y,f,false,true); floatAt(player,'CHEFE DO ANDAR!','#ff8a7a',true); }
+  const n=Math.min(10, 3+Math.floor(f/3)) - (f%10===0?2:0);
+  for(let i=0;i<n&&free.length;i++){ const t=pool[Math.max(0, idx-Math.floor(R()*3))], p=take(); towerSpawn(t,p.x,p.y,f); }
+  if(f%5===0&&f%10!==0&&free.length){ const p=take(); towerSpawn(pool[idx],p.x,p.y,f,true); floatAt(player,'Um eco poderoso surge!','#c8a8ff',true); } }
+
+// ---- subida
+function startTower(from){ const D=towerData(); D.runs++; TW={on:true, floor:from-1, start:from, deaths:0, bless:[], curse:null, frags:0, choosing:false, spawned:false, ecosGot:0}; towerNext(); }
+function towerNext(){ TW.floor++; TW.choosing=false; const f=TW.floor; for(const m of [...monsters]) if(m.map==='tower') removeMon(m);
+  TW.curse = f>=4&&f%5!==0&&R()<0.25 ? TCURSE[Math.floor(R()*TCURSE.length)].k : null;
+  const M=makeTowerMap(f); if(TW.curse==='dark') M.dark=true;
+  changeMap('tower', M.spawn.x, M.spawn.y, 'Torre das Brumas: andar '+f+'.'); player.dir='up';
+  const C=TCURSE.find(c=>c.k===TW.curse); if(C){ log('Maldição do andar: '+C.n+' ('+C.d+'). Este andar vale o dobro de Fragmentos.','dmg'); floatAt(player,C.n,'#c06aff',true); }
+  timers.push({t:700, fn:()=>{ if(!inTower()||TW.floor!==f) return; towerFloorSpawn(f); TW.spawned=true; battleKey=null; }}); TW.spawned=false; uiDirty=true; }
+function towerTick(dt){ if(!TW.on) return;
+  if(cur.id!=='tower'){ TW.on=false; return; }
+  if(player.dead){ if(dlg.hidden) towerDeathDialog(); return; }
+  if(TW.choosing){ if(dlg.hidden) towerChoose(); return; }
+  if(TW.spawned&&!monsters.some(m=>m.map==='tower'&&!m.dead)) towerCleared(); }
+function towerCleared(){ const D=towerData(), f=TW.floor; TW.spawned=false;
+  const fr=(1+(f%10===0?3:0))*(TW.curse?2:1); D.frags+=fr; TW.frags+=fr; let extra='';
+  if(f>D.best){ if(Math.floor(f/5)>Math.floor(D.best/5)){ const n=Math.floor(f/5)-Math.floor(D.best/5); D.ecos+=n; TW.ecosGot+=n; extra+=' +'+n+' Eco'+(n>1?'s':'')+'!'; } D.best=f; }
+  for(const T of TITLES) if(D.best>=T.need&&!D.titles.includes(T.k)){ D.titles.push(T.k); log('Título conquistado: "'+T.n+'". Escolha em Visual → Título.','lvl'); floatAt(player,'Título: '+T.n,'#ffd54a',true); }
+  log('Andar '+f+' concluído! +'+fr+' Fragmentos.'+extra,'lvl'); burst(player,'#c8a8ff',26,100); fx('column',player.x,player.y,{el:'arcane',life:900}); save(); TW.choosing=true; TW.pick=null; towerChoose(); }
+function towerChoose(){ if(!TW.pick){ const pool=TBLESS.filter(b=>TW.bless.filter(x=>x===b.k).length<BLESS_MAX); TW.pick=[]; for(let i=0;i<3&&pool.length;i++) TW.pick.push(pool.splice(Math.floor(R()*pool.length),1)[0]); }
+  const have=TW.bless.length?'<p class="hint">Bênçãos desta subida: '+TW.bless.map(k=>TBLESS.find(b=>b.k===k).n).join(', ')+'</p>':'';
+  openDialog(player,'Andar '+TW.floor+' concluído',`<p>Escolha uma bênção para o próximo andar. Ela vale até você sair da torre (cada uma acumula no máximo 2 vezes).</p>${have}<div class="tbl">${TW.pick.map(b=>`<button type="button" class="tb" data-act="bless" data-k="${b.k}"><b>${b.n}</b><small>${b.d}</small></button>`).join('')}</div>
+    <p class="hint">Fragmentos nesta subida: ${TW.frags} · total: ${towerData().frags} · recorde: andar ${towerData().best}</p><div class="row"><button type="button" data-act="out">Sair da torre</button></div>`,(act,ds)=>{
+      if(act==='bless'&&TW.choosing){ TW.bless.push(ds.k); closeDialog(); towerNext(); } else if(act==='out'){ closeDialog(); exitTower(); } else closeDialog(); }); }
+const reviveCost=()=>Math.round((150+TW.floor*60)*Math.pow(2,TW.deaths));
+function towerDeathDialog(){ const c=reviveCost();
+  openDialog(player,'Você caiu no andar '+TW.floor,`<p>Morrer na torre não tira nada. Você pode pagar para continuar daqui ou sair com o que já ganhou.</p><p class="hint">Fragmentos nesta subida: ${TW.frags}. Cada volta custa o dobro da anterior.</p>
+    <div class="row"><button class="primary" type="button" data-act="rev" ${player.gold<c?'disabled':''}>Continuar (${fmtN(c)} ouro)</button><button type="button" data-act="out">Sair da torre</button></div>`,act=>{
+      if(act==='rev'&&player.gold>=c&&player.dead){ player.gold-=c; TW.deaths++; const st=stats(); player.dead=false; player.hp=st.maxHp; player.mp=st.maxMp; player.lock=600; closeDialog(); fx('column',player.x,player.y,{el:'holy',life:1000}); log('Você volta à luta (-'+fmtN(c)+' ouro).','lvl'); uiDirty=true;
+        for(const m of monsters) if(m.map==='tower'&&!m.dead&&cheb(m,player)<=1) knock(m); }
+      else if(act==='out'){ closeDialog(); exitTower(); } }); }
+function towerDie(src){ player.dead=true; target=null; player.path=null; player.follow=false; player.poison=null; closeDialog(); log('Você caiu na torre ('+src+').','dmg'); uiDirty=true; towerDeathDialog(); }
+function exitTower(){ const f=TW.floor, fr=TW.frags, ec=TW.ecosGot; TW.on=false; for(const m of [...monsters]) if(m.map==='tower') removeMon(m);
+  const st=stats(); player.dead=false; player.hp=Math.max(player.hp,1); if(player.hp<=1) player.hp=st.maxHp; const P=towerPortal();
+  { const q=freeSpot('over',P.x,P.y+1); changeMap('over', q.x, q.y, 'Você sai da Torre das Brumas.'); } log('Subida encerrada no andar '+f+'. Ganhou '+fr+' Fragmentos'+(ec?' e '+ec+' Eco'+(ec>1?'s':''):'')+'.','lvl'); save(); }
+const towerPortal=()=>npcs.find(n=>n.id==='towerportal')||MAPS.over.spawn;
+
+// ---- portal: subir, Árvore de Ecos, loja de Fragmentos, títulos e ranking
+let towerTab='subir';
+function openTower(){ const D=towerData(), tabs=[['subir','Subir'],['ecos','Árvore de Ecos'],['loja','Loja de Fragmentos'],['rank','Recordes']];
+  let body='';
+  if(towerTab==='subir'){ const starts=[1]; for(let f=11;f<=D.best+1;f+=10) starts.push(f);
+    body=`<p>Uma torre que não tem fim. Cada andar é uma sala com monstros; vença todos para subir. A cada 5 andares surge um eco poderoso e a cada 10, um chefe.</p>
+      <ul class="tlist"><li><b>Não dá XP nem itens.</b> Dá <b>Fragmentos</b> (1 por andar, 4 nos andares de chefe), <b>Ecos</b> a cada 5 andares de recorde (Árvore de Ecos) e <b>títulos</b>.</li><li>Cada andar é mais forte: o andar 10 equivale a monstros de nível 20, o 50 a nível 84 e o 100 a nível 164.</li><li>Entre os andares você escolhe uma <b>bênção</b>. Andares <b>amaldiçoados</b> pagam o dobro.</li><li>Morrer aqui não tira nada; dá para pagar ouro para continuar.</li></ul>
+      <div class="bankrow"><div><small>Seu recorde</small><b>andar ${D.best}</b></div><div><small>Fragmentos</small><b>${D.frags}</b></div></div>
+      ${player.level<TOWER_LVL?`<p class="bad">A torre libera no nível ${TOWER_LVL}.</p>`:`<div class="row">${starts.map(f=>`<button type="button" class="${f===starts[starts.length-1]?'primary':''}" data-act="go" data-f="${f}">Começar no andar ${f}</button>`).join('')}</div>`}`; }
+  if(towerTab==='ecos'){ const spent=Object.values(D.ecoSpent).reduce((a,b)=>a+b,0), cost=2000+spent*1500;
+    body=`<p>Ecos livres: <b>${D.ecos}</b>. Você ganha 1 Eco a cada 5 andares de recorde. Os bônus valem para sempre, em todo lugar.</p><div class="ecog">${ECO.map(e=>{ const r=eco(e.k); return `<div class="eco"><b>${e.n}</b><small>${e.d} por ponto</small><span class="pips">${Array.from({length:e.max},(_,i)=>`<i class="${i<r?'on':''}"></i>`).join('')}</span><button type="button" data-act="eco" data-k="${e.k}" ${D.ecos<1||r>=e.max?'disabled':''}>+1</button></div>`; }).join('')}</div>
+      <div class="row"><button type="button" data-act="ecoreset" ${!spent||player.gold<cost?'disabled':''}>Devolver todos os Ecos (${fmtN(cost)} ouro)</button></div>`; }
+  if(towerTab==='loja'){ const own=cosOwned();
+    body=`<p>Fragmentos: <b>${D.frags}</b>. Tudo aqui é só visual. Depois de comprar, escolha em <b>Visual</b> (botão no topo).</p>${['aura','name','tint'].map(cat=>`<h4>${COS_CAT[cat]}</h4><div class="cosg">${COS.filter(c=>c.cat===cat).map(c=>`<div class="cos"><span class="sw" style="background:${c.col}"></span><b>${c.n}</b>${own.includes(c.k)?'<small class="good">comprado</small>':`<button type="button" data-act="buyf" data-k="${c.k}" ${D.frags<c.frags?'disabled':''}>${c.frags} frag.</button>`}</div>`).join('')}</div>`).join('')}`; }
+  if(towerTab==='rank'){ const rows=towerRanking();
+    body=`<p>Recordes dos personagens deste navegador.</p><div class="list">${rows.map((r,i)=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><b>${i+1}º</b><div class="meta"><b>${esc(r.name)}</b><small>${(CLASSES[r.cls]||CLASSES.guerreiro).name} · nível ${r.level}${r.title?' · '+esc(r.title):''}</small></div><b>andar ${r.best}</b></div>`).join('')||'<p class="hint">Ninguém subiu ainda.</p>'}</div>`; }
+  openDialog(towerPortal(),'Torre das Brumas',`<div class="tabs">${tabs.map(([k,l])=>`<button type="button" data-act="ttab" data-t="${k}" aria-pressed="${towerTab===k}">${l}</button>`).join('')}</div>${body}<div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
+    if(act==='ttab'){ towerTab=ds.t; return openTower(); }
+    if(act==='go'){ if(player.level<TOWER_LVL) return; closeDialog(); if(bot.on) toggleBot(false); startTower(+ds.f); return; }
+    if(act==='eco'){ const e=ECO.find(x=>x.k===ds.k); if(e&&D.ecos>0&&eco(e.k)<e.max){ D.ecos--; D.ecoSpent[e.k]=eco(e.k)+1; uiDirty=true; skillsDirty=true; save(); } return openTower(); }
+    if(act==='ecoreset'){ const spent=Object.values(D.ecoSpent).reduce((a,b)=>a+b,0), cost=2000+spent*1500; if(spent&&player.gold>=cost){ player.gold-=cost; D.ecos+=spent; D.ecoSpent={}; log('Seus Ecos voltaram. Distribua de novo como quiser.','sys'); uiDirty=true; save(); } return openTower(); }
+    if(act==='buyf'){ const c=COS.find(x=>x.k===ds.k); if(c&&D.frags>=c.frags&&!cosOwned().includes(c.k)){ D.frags-=c.frags; cosOwned().push(c.k); log('Comprado: '+c.n+'. Escolha em Visual.','lvl'); save(); } return openTower(); }
+    closeDialog(); }); }
+function towerRanking(){ const out=[]; const me={name:player.name, cls:player.cls, level:player.level, best:towerData().best, title:titleName()};
+  try{ if(typeof localChars==='function'&&!Cloud.on) for(const c of localChars()){ if(c.id===localSlot) continue; const b=c.d.tower?.best||0; if(b>0) out.push({name:c.d.name, cls:c.d.cls, level:c.d.level, best:b, title:TITLES.find(t=>t.k===c.d.tower?.title)?.n}); } }catch(e){}
+  if(me.best>0) out.push(me); return out.sort((a,b)=>b.best-a.best||b.level-a.level).slice(0,20); }
+
+// ============================================================ visual: roupas, montarias (ouro) e auras, cor do nome e das magias (Fragmentos)
+const COS_CAT={outfit:'Roupas',mount:'Montarias',aura:'Auras',name:'Cor do nome',tint:'Cor das magias',title:'Título'};
+const COS=[
+  {k:'o_explorer',cat:'outfit',n:'Traje de Explorador',gold:5000,lvl:5,look:{body:'#7a6a42',legs:'#3e3424',boots:'#2a1e12',band:'#c8a050',belt:'#4a2e14',cuffs:'#c8a050',chestTrim:'#c8a050'},col:'#7a6a42'},
+  {k:'o_sailor',cat:'outfit',n:'Roupa de Marinheiro',gold:10000,lvl:10,look:{body:'#e8ecf2',legs:'#2a4a7a',boots:'#1a1a22',band:'#2a4a7a',chestTrim:'#2a4a7a',trim:'#2a4a7a',belt:'#2a2a3a'},col:'#e8ecf2'},
+  {k:'o_druid',cat:'outfit',n:'Manto de Druida',gold:16000,lvl:15,look:{body:'#3a6a3a',legs:'#2a4a2a',boots:'#3a2a1a',hood:'#4a7a3a',hoodTrim:'#c8e08a',cape:'#2e5a2e',capeTrim:'#c8e08a',trim:'#c8e08a'},col:'#3a6a3a'},
+  {k:'o_noble',cat:'outfit',n:'Traje de Nobre',gold:30000,lvl:25,look:{body:'#7a1a2a',legs:'#1e1418',boots:'#120c0a',hat:'#1e1418',hatBand:'#d8b04a',feather:'#ffffff',cape:'#4a0a14',capeTrim:'#d8b04a',trim:'#d8b04a',chestTrim:'#d8b04a',cuffs:'#d8b04a'},col:'#7a1a2a'},
+  {k:'o_shadow',cat:'outfit',n:'Manto Sombrio',gold:60000,lvl:40,look:{body:'#221c2c',legs:'#141018',boots:'#0c0a10',hood:'#2e2640',hoodTrim:'#8a3aba',cape:'#16121e',capeTrim:'#8a3aba',trim:'#8a3aba'},col:'#221c2c'},
+  {k:'o_royal',cat:'outfit',n:'Veste Real',gold:160000,lvl:60,look:{body:'#d8b04a',legs:'#6a1a1a',boots:'#3a1a0a',crown:true,cape:'#8a1a1a',capeTrim:'#f4f4f4',trim:'#8a1a1a',chestTrim:'#fff0a0',pauldron:'#e0b030',cuffs:'#8a1a1a'},col:'#d8b04a'},
+  {k:'m_wolf',cat:'mount',n:'Lobo Cinzento',gold:12000,lvl:15,type:'wolf',col:'#8a8e96'},
+  {k:'m_bear',cat:'mount',n:'Urso Pardo',gold:36000,lvl:30,type:'bear',col:'#6a4a2a'},
+  {k:'m_stag',cat:'mount',n:'Cervo de Cristal',gold:70000,lvl:40,type:'crystalstag',col:'#c8b090'},
+  {k:'m_sala',cat:'mount',n:'Salamandra',gold:120000,lvl:55,type:'salamander',col:'#e0602a'},
+  {k:'m_frost',cat:'mount',n:'Lobo das Neves',gold:180000,lvl:70,type:'frostwolf',col:'#e8f0f8'},
+  {k:'m_hell',cat:'mount',n:'Cão Infernal',gold:280000,lvl:85,type:'hellhound',col:'#8a1a10'},
+  {k:'m_drake',cat:'mount',n:'Dragonete',gold:500000,lvl:100,type:'dragonling',col:'#c0402a'},
+  {k:'a_gold',cat:'aura',n:'Aura Dourada',frags:80,el:'holy',col:'#ffd54a'},{k:'a_mist',cat:'aura',n:'Aura de Bruma',frags:80,el:'wind',col:'#e0f4ff'},
+  {k:'a_ember',cat:'aura',n:'Aura de Brasas',frags:120,el:'fire',col:'#ff7a2a'},{k:'a_frost',cat:'aura',n:'Aura Gélida',frags:120,el:'ice',col:'#a8dcff'},
+  {k:'a_leaf',cat:'aura',n:'Aura da Floresta',frags:120,el:'nature',col:'#7ad04a'},{k:'a_void',cat:'aura',n:'Aura do Vazio',frags:200,el:'shadow',col:'#8a3aba'},
+  {k:'n_gold',cat:'name',n:'Nome Dourado',frags:50,c:'#ffd54a',col:'#ffd54a'},{k:'n_sky',cat:'name',n:'Nome Celeste',frags:50,c:'#7ac8ff',col:'#7ac8ff'},
+  {k:'n_rose',cat:'name',n:'Nome Rosado',frags:50,c:'#ff9ad0',col:'#ff9ad0'},{k:'n_violet',cat:'name',n:'Nome Violeta',frags:80,c:'#c89aff',col:'#c89aff'},{k:'n_white',cat:'name',n:'Nome Prateado',frags:80,c:'#f4f4f4',col:'#f4f4f4'},
+  {k:'t_holy',cat:'tint',n:'Magias Douradas',frags:150,el:'holy',col:'#fff0a0'},{k:'t_shadow',cat:'tint',n:'Magias Sombrias',frags:150,el:'shadow',col:'#8a3aba'},
+  {k:'t_ice',cat:'tint',n:'Magias de Gelo',frags:150,el:'ice',col:'#a8dcff'},{k:'t_nature',cat:'tint',n:'Magias da Floresta',frags:150,el:'nature',col:'#7ad04a'},{k:'t_arcane',cat:'tint',n:'Magias Arcanas',frags:150,el:'arcane',col:'#c07aff'},
+];
+const COSK=Object.fromEntries(COS.map(c=>[c.k,c]));
+function cosData(){ const c=player.cos||(player.cos={}); c.owned??=[]; return c; }
+const cosOwned=()=>cosData().owned;
+const cosOn=cat=>{ const k=player.cos?.[cat]; return k?COSK[k]:null; };
+function titleName(){ const k=player.tower?.title; return TITLES.find(t=>t.k===k)?.n||null; }
+const mountSpeed=()=>cosOn('mount')&&!inTower()?0.9:1;
+function drawCosAura(c,x,y){ const A=cosOn('aura'); if(!A) return; const E=EL[A.el]; c.save(); c.globalCompositeOperation='lighter';
+  const p=0.55+Math.sin(now/400)*0.15; c.globalAlpha=p; c.strokeStyle=E[1]; c.lineWidth=1.5; c.beginPath(); c.ellipse(x+16,y+28,13,4.5,0,0,7); c.stroke(); glowDot(c,x+16,y+27,14,E[0],0.3*p);
+  for(let i=0;i<3;i++){ const q=((now/1400+i/3)%1); c.globalAlpha=(1-q)*0.8; glowDot(c,x+8+i*8+Math.sin(now/300+i)*2,y+26-q*26,2.2,E[2],1); } c.restore(); }
+const riderCv=document.createElement('canvas'); riderCv.width=32; riderCv.height=48; const riderG=riderCv.getContext('2d');
+// montado: desenha só da cintura para cima e as pernas abertas dos dois lados do animal
+function drawRider(c,x,y,o){ riderG.clearRect(0,0,32,48); drawHuman(riderG,0,12,o,player.phase,false);
+  c.drawImage(riderCv,0,0,32,34,x,y-12,32,34); const L=o.legs||'#3a3028', Bt=o.boots||'#2a1e14', ol='#120c08', sh=shade(L,-35);
+  // sela: manta sobre o lombo cobre as coxas; dos lados só aparecem a correia do estribo e a bota
+  const sd0='#7a1e1e', sd1='#a83a2a', trim='#d8b04a';
+  rect(c,ol,x+5,y+18,22,7); rect(c,sd0,x+6,y+19,20,5); rect(c,sd1,x+6,y+19,20,2); rect(c,trim,x+6,y+23,20,1); rect(c,trim,x+15,y+19,2,4);
+  rect(c,'rgba(0,0,0,.35)',x+9,y+18,14,1);
+  for(const bx of [x+6,x+22]){ rect(c,'#3a2614',bx+1,y+24,1,3); rect(c,ol,bx-1,y+26,6,4); rect(c,Bt,bx,y+27,4,2); rect(c,'rgba(255,255,255,.18)',bx,y+27,2,1); } }
+function drawMount(c,x,y){ const M=cosOn('mount'); if(!M) return 0; drawCreatureArt(c,{type:M.type, phase:player.phase*0.7, face:player.face||1},x,y+3); return 9; }
+
+// ---- loja de roupas e montarias (ouro) e guarda-roupa
+let prevTry=null, prevRaf=0;
+const lookPrevHTML=()=>'<div class="lookprev"><canvas id="lookPrev" width="140" height="140" aria-label="Prévia do visual"></canvas><small id="lookPrevTxt"></small></div>';
+function runLookPreview(){ cancelAnimationFrame(prevRaf); const loop=()=>{ const cv2=document.getElementById('lookPrev'); if(!cv2||dlg.hidden){ prevTry=null; return; }
+  const g=cv2.getContext('2d'); g.setTransform(1,0,0,1,0,0); const bg=g.createRadialGradient(70,96,4,70,80,80); bg.addColorStop(0,'#3e3428'); bg.addColorStop(1,'#120e0a'); g.fillStyle=bg; g.fillRect(0,0,140,140);
+  g.fillStyle='rgba(255,255,255,.05)'; g.beginPath(); g.ellipse(70,112,44,10,0,0,7); g.fill(); g.imageSmoothingEnabled=false;
+  const C=cosData(), saved={...C}, D=towerData(), st=D.title; if(prevTry){ if(prevTry.cat==='title') D.title=prevTry.k; else C[prevTry.cat]=prevTry.k; }
+  const sv=player.dir; player.dir='down';
+  try{ g.setTransform(2.2,0,0,2.2,0,0); drawPlayer(g,16,30);
+    const T=cosOn('tint'); if(T){ const E=EL[T.el]; g.globalCompositeOperation='lighter'; for(let i=0;i<3;i++){ const q=now/500+i*2.1; glowDot(g,32+Math.cos(q)*15,56+Math.sin(q)*4,3,E[1],0.9); } g.globalCompositeOperation='source-over'; }
+    g.setTransform(1,0,0,1,0,0); g.textAlign='center'; g.font='600 12px "Pixelify Sans", monospace'; const nc=COSK[C.name]?.c||'#9fe08a'; g.fillStyle='#000'; g.fillText(player.name,71,136); g.fillStyle=nc; g.fillText(player.name,70,135);
+    const tn=titleName(); if(tn){ g.font='italic 500 10px "Pixelify Sans", monospace'; g.fillStyle='#e7c86a'; g.fillText('« '+tn+' »',70,122); }
+  } finally { for(const k of Object.keys(C)) delete C[k]; Object.assign(C,saved); D.title=st; player.dir=sv; }
+  const t=document.getElementById('lookPrevTxt'); if(t) t.textContent=prevTry?'Provando: '+(COSK[prevTry.k]?.n||TITLES.find(x=>x.k===prevTry.k)?.n||'nada'):'Seu visual agora';
+  prevRaf=requestAnimationFrame(loop); }; prevRaf=requestAnimationFrame(loop); }
+function openTailor(n){ const own=cosOwned();
+  const row=c=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><span class="sw" style="background:${c.col}"></span><div class="meta"><b>${c.n}</b><small>${c.cat==='mount'?'+10% de velocidade ao andar (fora da torre) · ':''}nível ${c.lvl}</small></div><div class="btns"><button data-act="try" data-k="${c.k}" aria-pressed="${prevTry?.k===c.k}">Provar</button>${own.includes(c.k)?'<span class="good">Seu</span>':`<button class="primary" data-act="buy" data-k="${c.k}" ${player.gold<c.gold||player.level<c.lvl?'disabled':''}>${fmtN(c.gold)} ouro</button>`}</div></div>`;
+  openDialog(n,n.name,`<div class="lookwrap">${lookPrevHTML()}<div class="lookside"><p>"Roupa nova e uma boa montaria: é assim que se chega com estilo. Prove à vontade."</p><h4>Roupas</h4><div class="list">${COS.filter(c=>c.cat==='outfit').map(row).join('')}</div><h4>Montarias</h4><div class="list">${COS.filter(c=>c.cat==='mount').map(row).join('')}</div></div></div><p class="hint">Depois de comprar, troque quando quiser em <b>Visual</b> (botão no topo).</p><div class="row"><button data-act="wardrobe">Abrir Visual</button><button data-act="close">Até logo</button></div>`,(act,ds)=>{
+    if(act==='try'){ const c=COSK[ds.k]; prevTry=prevTry?.k===c.k?null:{cat:c.cat,k:c.k}; const keep=prevTry; openTailor(n); prevTry=keep; return; }
+    if(act==='buy'){ const c=COSK[ds.k]; if(c&&player.gold>=c.gold&&player.level>=c.lvl&&!own.includes(c.k)){ player.gold-=c.gold; own.push(c.k); cosData()[c.cat]=c.k; prevTry=null; log('Você comprou '+c.n+' e já está usando.','lvl'); uiDirty=true; save(); } return openTailor(n); }
+    if(act==='wardrobe'){ prevTry=null; return openWardrobe(); } prevTry=null; closeDialog(); });
+  runLookPreview(); }
+let wardTab='outfit';
+function openWardrobe(){ const C=cosData(), own=C.owned, D=towerData();
+  const all = wardTab==='title' ? TITLES.map(t=>({...t, have:D.titles.includes(t.k), how:'andar '+t.need+' da torre'})) : COS.filter(c=>c.cat===wardTab).map(c=>({...c, have:own.includes(c.k), how:c.gold?fmtN(c.gold)+' ouro · alfaiate':c.frags+' Fragmentos · portal da torre'}));
+  const curK = wardTab==='title' ? D.title : C[wardTab]||null;
+  const none={k:'',n:wardTab==='outfit'?'Equipamento (padrão)':wardTab==='title'?'Sem título':'Nenhum',have:true};
+  const card=o=>`<div class="cos${(o.k||null)===curK?' on':''}">${o.col?`<span class="sw" style="background:${o.col}"></span>`:''}<b>${o.n}</b>${o.have?`<button type="button" data-act="wear" data-k="${o.k}" aria-pressed="${(o.k||null)===curK}">${(o.k||null)===curK?'Usando':'Usar'}</button>`:`<button type="button" data-act="try" data-k="${o.k}" title="${esc(o.how)}" aria-pressed="${prevTry?.k===o.k}">Provar</button>`}${o.have?'':`<small>${esc(o.how)}</small>`}</div>`;
+  openDialog(player,'Visual',`<div class="tabs">${Object.entries(COS_CAT).map(([k,l])=>`<button type="button" data-act="wtab" data-t="${k}" aria-pressed="${wardTab===k}">${l}</button>`).join('')}</div>
+    <div class="lookwrap">${lookPrevHTML()}<div class="lookside"><div class="cosg">${[none,...all].map(card).join('')}</div></div></div>
+    <div class="row"><button data-act="close">Fechar</button></div>`,(act,ds)=>{
+      if(act==='wtab'){ wardTab=ds.t; prevTry=null; return openWardrobe(); }
+      if(act==='try'){ const k=ds.k; const keep=prevTry?.k===k?null:{cat:wardTab,k}; openWardrobe(); prevTry=keep; return; }
+      if(act==='wear'){ const k=ds.k||null; if(wardTab==='title') D.title=k; else C[wardTab]=k; prevTry=null; uiDirty=true; save(); return openWardrobe(); }
+      prevTry=null; closeDialog(); });
+  runLookPreview(); }
+
+// ---- reforja (ferreira de Pedraluz): sorteia de novo os atributos de um item raro
+const reforgeCost=it=>Math.round(200+(ITEMS[it.id].lvl||1)*80*(it.r||1));
+function openForge(n){ const list=[...Object.values(player.eq).filter(Boolean),...allItems()].filter(it=>!isBag(it)&&ITEMS[it.id]?.slot&&(it.r||0)>=1&&(it.a||[]).length);
+  openDialog(n,n.name,`<p>"Traga um item com atributos. Eu derreto o encanto e forjo de novo: pode vir melhor ou pior, mas a raridade fica a mesma."</p><div class="list">${list.map((it,i)=>`<div class="it"><img alt="" src="${iconURL(it.id)}" width="32" height="32"><div class="meta"><b class="r${it.r}">${esc(itemName(it))}</b><small>${it.a.map(affLine).join(' · ')}</small></div><div class="btns"><button class="primary" data-act="rf" data-i="${i}" ${player.gold<reforgeCost(it)?'disabled':''}>${fmtN(reforgeCost(it))} ouro</button></div></div>`).join('')||'<p class="hint">Você não tem itens com atributos (Incomum ou melhor).</p>'}</div><div class="row"><button data-act="close">Até logo</button></div>`,(act,ds)=>{
+    if(act==='rf'){ const it=list[+ds.i], c=it&&reforgeCost(it); if(it&&player.gold>=c){ player.gold-=c; const old=it.a.map(affLine).join(', '); it.a=makeItem(it.id,it.r,ITEMS[it.id].lvl||player.level).a; log('Reforja: '+itemName(it)+' agora tem '+it.a.map(affLine).join(', ')+' (antes: '+old+').','lvl'); fx('tile',player.x,player.y,{el:'fire',life:700}); uiDirty=true; save(); } return openForge(n); }
+    closeDialog(); }); }
+
+// ---- bênção do templo: protege na próxima morte
+const blessCost=()=>Math.round(200+player.level*player.level*2);
+
 // ============================================================ interação com NPCs, corpos e lojas
 const dlg=$('dialog'), dlgTitle=$('dlgTitle'), dlgBody=$('dlgBody');
 let dlgHandler=null;
@@ -3202,7 +3459,9 @@ function talk(n){
   const nm=esc(player.name);
   if(/^priest\d?$/.test(n.id)){
     openDialog(n, n.name, `<p>"Que a luz de ${n.town||'Pedraluz'} te guarde, ${nm}. Se estiver ferido ou envenenado, posso cuidar de você. Sem custo."</p>
-      <div class="row"><button class="primary" data-act="heal">Curar minhas feridas</button><button data-act="close">Até logo</button></div>`, act=>{
+      <p class="hint">Bênção: na próxima morte você não perde itens nem ouro, e perde só 2% da experiência em vez de 8%. ${player.blessed?'<b class="good">Você já está abençoado.</b>':'Custa '+fmtN(blessCost())+' ouro (sobe com o nível).'}</p>
+      <div class="row"><button class="primary" data-act="heal">Curar minhas feridas</button>${player.blessed?'':`<button data-act="bless" ${player.gold<blessCost()?'disabled':''}>Receber bênção (${fmtN(blessCost())} ouro)</button>`}<button data-act="close">Até logo</button></div>`, act=>{
+        if(act==='bless'&&!player.blessed&&player.gold>=blessCost()){ player.gold-=blessCost(); player.blessed=true; fx('column',player.x,player.y,{el:'holy',life:1100}); log(n.name+': "Que a luz te proteja na próxima queda."','npc'); uiDirty=true; save(); }
         if(act==='heal'){ const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; player.poison=null; burst(player,'#fff3b0',20,70); log('Irmã Lúcia: "Pronto. Vá com cuidado lá fora."','npc'); uiDirty=true; }
         closeDialog(); });
   }
@@ -3214,12 +3473,16 @@ function talk(n){
       {map:'ash',name:'Cinzaforte, nas Terras Queimadas',cost:200,lvl:50,say:'Cinzaforte são três dias de mar, até a ilha de fogo.'},
       {map:'ice',name:'Invernália, nos Fiordes Gelados',cost:400,lvl:70,say:'Um quebra-gelo leva você ao norte, entre icebergs. Leve roupa de pele ou Poções Quentes.'},
       {map:'sea',name:'Coralina, a cidade submersa',cost:600,lvl:90,say:'O sino de mergulho desce até a bolha de ar no fundo do recife. Fora dela, falta ar.'}].filter(d=>d.map!==here);
-    const rows=DEST.map((d,i)=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${d.name}</b><small>${d.say}${d.lvl?` Exige nível ${d.lvl}.`:''}${player.level<d.lvl?' <span class="bad">"Lá fora é perigoso demais para você. Volte no nível '+d.lvl+'."</span>':''}</small></div><div class="btns"><button class="primary" data-act="go" data-i="${i}" ${(!ONLINE&&player.gold<d.cost)||player.level<d.lvl?'disabled':''}>Viajar${ONLINE?' (grátis no teste)':` (${d.cost} ouro)`}</button></div></div>`).join('');
+    const rows=DEST.map((d,i)=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${d.name}</b><small>${d.say}${d.lvl?` Exige nível ${d.lvl}.`:''}${player.level<d.lvl?' <span class="bad">"Lá fora é perigoso demais para você. Volte no nível '+d.lvl+'."</span>':''}</small></div><div class="btns"><button class="primary" data-act="go" data-i="${i}" ${player.gold<d.cost||player.level<d.lvl?'disabled':''}>Viajar (${d.cost} ouro)</button></div></div>`).join('');
     openDialog(n, n.name, `<p>"Para onde vamos? Eu levo você a qualquer porto."</p><div class="list">${rows}</div><div class="row"><button data-act="close">Agora não</button></div>`, (act,ds)=>{
-      const d=DEST[+ds.i]; if(ONLINE&&act==='go'&&d){ closeDialog(); netSend({t:'travel',to:d.map}); return; }
+      const d=DEST[+ds.i]; if(ONLINE&&act==='go'&&d){ closeDialog(); if(player.gold<d.cost||player.level<d.lvl) return; player.gold-=d.cost; uiDirty=true; netSend({t:'travel',to:d.map,level:player.level}); return; }
       if(act==='go' && d && player.gold>=d.cost && player.level>=d.lvl){ player.gold-=d.cost; closeDialog(); const M=MAPS[d.map]; changeMap(d.map, M.dock.x, M.dock.y, M.enter); uiDirty=true; } else closeDialog(); });
   }
   if(n.id.startsWith('spellmaster')){ openTrainer(n); return; }
+  if(n.id==='towerportal'){ openTower(); return; }
+  if(n.id==='towerexit'){ openDialog(n,'Portal de saída',`<p>Sair da torre agora? Você fica com os ${TW.frags||0} Fragmentos desta subida.</p><div class="row"><button class="primary" data-act="out">Sair</button><button data-act="close">Ficar</button></div>`,act=>{ closeDialog(); if(act==='out') exitTower(); }); return; }
+  if(/^tailor\d?$/.test(n.id)){ openTailor(n); return; }
+  if(/^forger\d?$/.test(n.id)){ openForge(n); return; }
   if(n.id==='sage'||n.id==='firesage'){
     const k=n.id==='sage'?'fae':'ash', q=quests[k], R=LEARNQ[k];
     const sp=classSpells().filter(s=>s.learn===k), names=sp.map(s=>`<b>${s.name}</b>`).join(' e ');
@@ -4179,21 +4442,168 @@ function drawMonster(c,m,x,y){
   if(m.slowT>0){ c.fillStyle='rgba(150,210,255,.28)'; c.beginPath(); c.ellipse(x+16,y+20,12,11,0,0,7); c.fill(); }
   if(m.rootT>0&&!m.def.rooted){ c.strokeStyle='#5a8a3a'; c.lineWidth=2; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(x+6+i*6,y+30); c.quadraticCurveTo(x+3+i*6,y+22,x+9+i*6,y+17); c.stroke(); } c.lineWidth=1; }
 }
+// ============================================================ personagens redesenhados (jogador e NPCs)
+// Arte 64×72 com contorno e luz automáticos, 4 direções (frente, costas, perfil), caminhada, cabelos, chapéus, capas e montado de lado.
+const HEROW=64, HEROH=72, HEROX=32, HEROY=65; const heroCache=new Map();
+function heroFrame(o, view, f, walking){
+  const key=view+'|'+f+'|'+(walking?1:0)+'|'+JSON.stringify(o); let cv=heroCache.get(key); if(cv) return cv;
+  if(heroCache.size>1200) heroCache.clear();
+  cv=document.createElement('canvas'); cv.width=HEROW; cv.height=HEROH; const g=cv.getContext('2d'); g.translate(0,8);
+  try{ paintHero(g,o,view,f/BFR,walking); }catch(e){ console.error(e); } g.setTransform(1,0,0,1,0,0); spritePost(g,HEROW,HEROH,o.oc||'#140e0a');
+  heroCache.set(key,cv); return cv; }
+// desenha com os pés no fundo do quadrado (como as criaturas)
+function drawHero(c,x,y,o,ph,walking){ const d=o.dir||'down', side=d==='left'||d==='right', f=Math.floor((((ph||0)%1)+1)%1*BFR);
+  const {dir,...look}=o; shadow(c,x,y,9);
+  const img=heroFrame(look, side?'side':d==='up'?'back':'front', f, walking);
+  c.save(); c.translate(x+16,y+30); if(d==='left') c.scale(-1,1); c.drawImage(img,-HEROX,-HEROY); c.restore(); }
+// montado: perfil sentado, virado para o mesmo lado do animal; o quadril fica sobre o lombo
+function drawRiderHero(c,x,y,o,ph,face){ const {dir,...look}=o, f=Math.floor((((ph||0)%1)+1)%1*BFR), img=heroFrame(look,'ride',f,false);
+  c.save(); c.translate(x+16,y+19); if(face<0) c.scale(-1,1); c.drawImage(img,-HEROX,-(44+8)); c.restore(); }
+
+function paintHero(g,o,view,t,walking){
+  const K=bossKit(g), {P,ln,qc,ci,el,r}=K, s=Math.sin(t*Math.PI*2);
+  const sw=walking?s:0, bob=walking?-Math.abs(s)*1.4:Math.sin(t*Math.PI*2)*0.35;
+  const sk=o.skin||'#e0b48a', skD=shade(sk,-30), skL=shade(sk,18);
+  const body=o.body||'#6a6a5a', bD=shade(body,-38), bL=shade(body,26), arm=o.arm||body, aD=shade(arm,-38);
+  const legs=o.legs||'#3e3428', lD=shade(legs,-30), boots=o.boots||'#2a1e14', btL=shade(boots,34);
+  const hair=o.hair, hs=o.hs||(hair?'short':'bald'), hD=hair?shade(hair,-35):null, hL=hair?shade(hair,30):null;
+  const belt=o.belt||shade(body,-60), trim=o.trim, eyeC=o.eye||'#2a1a10';
+  const robe=o.robe, rD=robe?shade(robe,-35):null;
+  const B=y=>y+bob;           // partes que balançam com o passo
+  const HC=22.5, HR=7.6;      // centro e raio da cabeça
+  // ---------- peças reaproveitadas
+  const capeBack=()=>{ if(!o.cape) return; const c2=shade(o.cape,-30); P(o.cape,[22,B(30),42,B(30),46,56,18,56]); for(const x of [24,32,40]) ln(c2,x,B(34),x+(x-32)*0.15,55,1); r(o.capeTrim||shade(o.cape,40),18,54,28,2); };
+  const capeFront=()=>{ if(!o.cape) return; const c2=shade(o.cape,-25); P(o.cape,[21,B(30),43,B(30),46,56,18,56]); ln(c2,32,B(32),32,55,1.2); ln(c2,26,B(33),23,55,1); ln(c2,38,B(33),41,55,1); r(o.capeTrim||shade(o.cape,40),18,54,28,2); el(o.capeTrim||'#d8b04a',32,B(31),2,1.6); };
+  const headwear=(face)=>{ // face: 'front' | 'back' | 'side'
+    const yy=B(HC);
+    if(o.helm){ const hm=o.helm, hmD=shade(hm,-38), hmL=shade(hm,40);
+      el(hm,32,yy-2,HR+1.4,HR); r(hm,32-HR-1.4,yy-2,(HR+1.4)*2,4); r(hmD,32-HR-1.6,yy+1,(HR+1.6)*2,2.2); el(hmL,28.5,yy-6,2.6,1.6,-0.4);
+      if(face==='front'){ r(hm,23.2,yy+1,3,7); r(hm,37.8,yy+1,3,7); r(hmD,31,yy+1,2,6); r('#120c08',26.5,yy+2,3.5,1.2); r('#120c08',34,yy+2,3.5,1.2); }
+      else if(face==='side'){ r(hm,25,yy+1,4,7); r(hmD,37.5,yy,2,6); r('#120c08',33.5,yy+2,5,1.2); } else { r(hm,25,yy,14,8); r(hmD,25,yy+6,14,2); }
+      ln(hmD,32,yy-HR-1,32,yy+1,1.2); return; }
+    if(o.hood){ const hd=o.hood, hdD=shade(hd,-40);
+      if(face==='back'){ el(hd,32,yy,HR+2,HR+1.5); P(hd,[24,yy+2,40,yy+2,41,B(33),23,B(33)]); qc(hdD,32,yy-HR,30,yy,32,yy+6,1.2); }
+      else if(face==='side'){ P(hd,[24,yy+8,23.5,yy-4,28,yy-HR-2,36,yy-HR-1,40,yy-4,38,yy-1,33,yy-HR+1.5,28,yy-3,28,yy+9]); P(hd,[23.5,yy+4,30,yy+8,30,B(33),23,B(33)]); r(hdD,28.5,yy-HR+2,9,1.5); }
+      else { P(hd,[22.5,yy+9,23,yy-4,27,yy-HR-2,37,yy-HR-2,41,yy-4,41.5,yy+9,38.5,yy+9,38.5,yy-2,34,yy-HR+1.5,30,yy-HR+1.5,25.5,yy-2,25.5,yy+9]); r(hdD,26,yy-HR+1.5,12,1.6); P(hd,[22.5,yy+7,41.5,yy+7,40,B(32),24,B(32)]); }
+      if(o.hoodTrim) r(o.hoodTrim,24,B(31),16,1.4); return; }
+    if(o.wizhat){ const w=o.wizhat, wD=shade(w,-38), band=o.hatBand||'#d8b04a';
+      el(wD,32,yy-HR+3,HR+5,2.6); el(w,32,yy-HR+2.4,HR+4.6,2.2);
+      const tipX=face==='side'?24:38; P(w,[25.5,yy-HR+2,38.5,yy-HR+2,35,yy-HR-8,tipX,yy-HR-15]); ln(wD,35,yy-HR+2,tipX,yy-HR-15,1); r(band,25.5,yy-HR+0.4,13,1.8); ci('#fff3a0',tipX,yy-HR-15,1.2); return; }
+    if(o.hat){ const h=o.hat, hD2=shade(h,-38); el(hD2,32,yy-HR+3.4,HR+6,2.6); el(h,32,yy-HR+2.8,HR+5.6,2.2); r(h,26,yy-HR-4,12,7); r(hD2,26,yy-HR+1,12,1.4); r(o.hatBand||shade(h,45),26,yy-HR,12,1.4); if(o.feather) qc(o.feather,37,yy-HR-1,44,yy-HR-8,46,yy-HR-12,1.6); return; }
+    if(o.crown){ const gd='#e0b030', gL='#fff0a0'; r(gd,25,yy-HR-1,14,3.4); for(const x of [25,30.5,36]) P(gd,[x,yy-HR-1,x+3,yy-HR-1,x+1.5,yy-HR-6]); r(gL,25,yy-HR-1,14,1); ci('#c0201a',32,yy-HR+0.6,1.2); ci('#3a8ad8',27.5,yy-HR+0.6,0.9); ci('#3a8ad8',36.5,yy-HR+0.6,0.9); }
+    if(o.band){ r(o.band,24.4,yy-3,15.2,2.2); r(shade(o.band,35),24.4,yy-3,15.2,0.8); if(face!=='front') { ln(o.band,face==='side'?25:30,yy-2,face==='side'?20:28,yy+5,1.4); ln(o.band,face==='side'?25:34,yy-2,face==='side'?21:36,yy+6,1.4); } } };
+  const hairBack=(face)=>{ if(!hair||o.helm||o.hood) return; const yy=B(HC);
+    if(hs==='long') P(hair,face==='side'?[24,yy-2,31,yy-4,30,B(36),23,B(35)]:[23,yy-1,41,yy-1,42.5,B(36),21.5,B(36)]);
+    if(hs==='braid'&&face!=='front'){ for(let k=0;k<4;k++) el(hair,face==='side'?24.5:32,yy+5+k*3.4,2.2,1.9); ci('#d8b04a',face==='side'?24.5:32,yy+18.5,1.2); }
+    if(hs==='tail'&&face==='side'){ qc(hair,25,yy-2,18,yy+4,21,yy+13,3.6); qc(hD,25,yy-1,19.5,yy+5,21,yy+12,1); }
+    if(hs==='tail'&&face==='back'){ qc(hair,32,yy-1,32,yy+8,32,yy+14,3.8); r(hD,30.5,yy-1,3,1.6); }
+    if(hs==='bun'&&face!=='front') ci(hair,face==='side'?25:32,yy-HR+1,3.4); };
+  const hairFront=(face)=>{ if(!hair||o.helm||o.hood) return; const yy=B(HC);
+    if(face==='back'){ el(hair,32,yy-1,HR+0.8,HR+0.6); P(hair,[24.5,yy,39.5,yy,38.5,yy+6,25.5,yy+6]); qc(hD,32,yy-HR,31,yy,32,yy+5,1); if(hs==='bun') ci(hair,32,yy-HR+1,3.4); return; }
+    if(face==='side'){ P(hair,[24.6,yy+3,24.4,yy-3,27,yy-HR+0.4,32,yy-HR-1,37,yy-HR+0.6,39.8,yy-3,36,yy-4.6,33,yy-2.4,30,yy-3.4,28,yy+4]); el(hL,31,yy-HR+1.2,3,1,-0.2);
+      if(hs==='bun') ci(hair,25,yy-HR+1,3.4); if(hs==='spiky') for(const [x,a] of [[27,-2.4],[31,-2],[35,-1.6]]) K.spike(x,yy-HR+1,a,4,hair,1.6); return; }
+    P(hair,[24.2,yy+2,24,yy-3,26.5,yy-HR,32,yy-HR-1.4,37.5,yy-HR,40,yy-3,39.8,yy+2,38,yy-2.4,35,yy-3.8,32,yy-2,29,yy-3.8,26,yy-2.4]);
+    el(hL,29.5,yy-HR+1,3,0.9,-0.2);
+    if(hs==='spiky') for(const [x,a] of [[26.5,-2.5],[30,-1.9],[34,-1.3],[37.5,-0.7]]) K.spike(x,yy-HR+1,a,4.2,hair,1.6);
+    if(hs==='long'||hs==='braid'){ r(hair,23,yy-2,2.4,10); r(hair,38.6,yy-2,2.4,10); }
+    if(hs==='braid'){ for(let k=0;k<4;k++) el(hair,40.5,yy+8+k*3.2,2,1.8); ci('#d8b04a',40.5,yy+20.5,1.2); }
+    if(hs==='tail') r(hair,23.4,yy-2,2,4);
+    if(hs==='bun') ci(hair,32,yy-HR-1,3.4); };
+  const face=(side)=>{ const yy=B(HC);
+    if(side){ el(sk,32,yy,HR-0.2,HR+0.4); P(sk,[38.5,yy-0.5,41.4,yy+2,38.6,yy+2.6]); r(skD,30,yy+HR-1.6,8,1.4); ci(sk,29.2,yy+1,1.9); ci(skD,29.2,yy+1,0.8);
+      r('#ffffff',34.6,yy-0.6,2.6,3); r(eyeC,36,yy+0.2,1.4,2); r(hair||skD,34.4,yy-2.4,3.6,1); r(skD,36,yy+4.6,2,0.9); return; }
+    el(sk,32,yy,HR,HR+0.6); ci(sk,24.3,yy+1.4,1.7); ci(sk,39.7,yy+1.4,1.7); el(skD,32,yy+HR-0.4,5,1.2);
+    r('#ffffff',27.4,yy-0.4,3.2,3.2); r('#ffffff',33.4,yy-0.4,3.2,3.2); r(eyeC,28.6,yy+0.4,2,2.4); r(eyeC,34.6,yy+0.4,2,2.4); r('#ffffff',28.6,yy+0.4,0.8,0.8); r('#ffffff',34.6,yy+0.4,0.8,0.8);
+    r(hair||skD,27,yy-2.4,3.8,1); r(hair||skD,33.2,yy-2.4,3.8,1); r(skD,31,yy+4.2,2.4,1); el('rgba(255,120,110,.25)',26.6,yy+3.2,1.6,0.9); el('rgba(255,120,110,.25)',37.4,yy+3.2,1.6,0.9);
+    if(o.beard){ P(o.beard,[25,yy+2,39,yy+2,38,yy+7,32,yy+10.5,26,yy+7]); r(skD,30.4,yy+3.6,3.4,1.2); } };
+  const torso=(back)=>{ const top=B(30.5), wa=B(44);
+    P(body,[24.5,top,39.5,top,41,wa,23,wa]); r(bD,37,top+1,3.6,wa-top-1); r(bL,25,top+1,3,8);
+    if(!back){ P(skD,[29.5,top,34.5,top,32,top+3.4]); P(bD,[28.4,top,35.6,top,32,top+5]); P(sk,[30,top,34,top,32,top+3]); ln(bD,32,top+5,32,wa-1,0.8); for(const yb of [top+7,top+10]) ci(shade(body,50),32,yb,0.7); }
+    else ln(bD,32,top+1,32,wa-1,1);
+    if(o.chestTrim){ ln(o.chestTrim,24.5,top+0.6,32,top+5,1); ln(o.chestTrim,39.5,top+0.6,32,top+5,1); }
+    r(belt,23,wa-3.2,18,2.6); if(!back){ r('#d8b04a',30.6,wa-3.4,2.8,3); r('#8a6a22',31.4,wa-2.6,1.2,1.4); }
+    if(trim) r(trim,23,wa-0.6,18,1.4);
+    if(o.pauldron){ el(o.pauldron,24,top+1.6,4.4,2.8); el(o.pauldron,40,top+1.6,4.4,2.8); el(shade(o.pauldron,40),23,top+0.8,2,1); } };
+  const legsFront=()=>{ if(robe){ P(robe,[23.5,B(42),40.5,B(42),44,56,20,56]); for(const x of [27,32,37]) ln(rD,x,B(45),x+(x-32)*0.25,55.5,1); if(o.robeTrim) r(o.robeTrim,20,54.4,24,1.6); el(boots,27,56.4,3,1.2); el(boots,37,56.4,3,1.2); return; }
+    const l1=Math.round(sw*1.6), l2=-l1;
+    for(const [x,dl] of [[25.5,l1],[33.5,l2]]){ P(legs,[x,B(43),x+5,B(43),x+5,53+dl,x,53+dl]); r(lD,x+3.6,B(44),1.4,9+dl); r(boots,x-0.6,52+dl,6.2,4.6); r(btL,x-0.2,52+dl,5,1); } };
+  const armsFront=()=>{ for(const [x,dir2,ph2] of [[19.5,-1,sw],[40.5,1,-sw]]){ const top=B(31), hy=B(41.5)+ph2*1.4;
+    P(arm,[x,top,x+4,top,x+4+dir2*0.4,hy-1,x-0.4*dir2,hy-1]); r(dir2<0?aD:aD,dir2<0?x:x+2.6,top+1,1.4,hy-top-2); el(arm,x+2,top+0.6,3,2.2); ci(sk,x+2,hy,2.3); ci(skL,x+1.4,hy-0.6,0.7); if(o.cuffs) r(o.cuffs,x-0.2,hy-3,4.4,1.4); } };
+  const shieldFront=()=>{ if(!o.shield) return; const sc=o.shield, sD=shade(sc,-40), y0=B(32)+sw*1.2; P(sD,[12.5,y0-0.6,23.5,y0-0.6,23.5,y0+11,18,y0+16.5,12.5,y0+11]); P(sc,[13.5,y0,22.5,y0,22.5,y0+10.4,18,y0+15,13.5,y0+10.4]); r(shade(sc,45),14.5,y0+1,1.4,8); ci('#d8b04a',18,y0+6,1.6); ln(sD,18,y0+0.5,18,y0+14.5,0.8); };
+  const weapon=(hx,hy,view)=>{ if(view==='side'&&!o.spear&&o.wk!=='fist'){ g.save(); g.translate(hx+(o.wk==='bow'?4:o.wk==='staff'?3:1),hy); g.rotate(o.wk==='bow'?0.18:o.wk==='wand'?0.5:o.wk==='staff'?0.42:0.95); weaponAt(0,0,'front'); g.restore(); } else weaponAt(hx,hy,view); };
+  const weaponAt=(hx,hy,view)=>{ const w=o.weapon; if(!w) return; const wD=shade(w,-40), wL=shade(w,45);
+    if(o.spear){ ln('#6a4a2a',hx,hy+12,hx,hy-34,2); P('#c9ccd2',[hx,hy-41,hx+2.4,hy-34,hx,hy-32,hx-2.4,hy-34]); r('#c0201a',hx-1.4,hy-32,2.8,2); return; }
+    switch(o.wk){
+      case 'bow': qc(wD,hx,hy-16,hx+9,hy,hx,hy+16,3); qc(w,hx,hy-16,hx+8.4,hy,hx,hy+16,1.8); ln('#e8e0cc',hx,hy-16,hx,hy+16,0.7); r('#6a4a2a',hx+6.4,hy-2,2.6,4); break;
+      case 'staff': ln('#3a2414',hx,hy+14,hx,hy-27,3); ln('#7a5230',hx,hy+14,hx,hy-27,1.6); ci(wD,hx,hy-29,3.6); ci(w,hx,hy-29,2.8); ci('#ffffff',hx-0.8,hy-30,0.9); break;
+      case 'wand': ln('#3a2414',hx-1,hy+2,hx+3,hy-9,2.2); ci(wD,hx+3.6,hy-10.4,2.4); ci(w,hx+3.6,hy-10.4,1.7); ci('#ffffff',hx+3,hy-11,0.6); break;
+      case 'fist': break;
+      default: { const bl=view==='back'?13:16; ln('#3a2414',hx,hy+1,hx,hy+4.5,2); r('#b08a40',hx-3.4,hy-1.4,6.8,1.8); P(wD,[hx-1.6,hy-1.4,hx+1.6,hy-1.4,hx+1.6,hy-bl,hx,hy-bl-3,hx-1.6,hy-bl]); P(w,[hx-1,hy-1.4,hx+1,hy-1.4,hx+1,hy-bl,hx,hy-bl-2.2,hx-1,hy-bl]); ln(wL,hx-0.4,hy-2,hx-0.4,hy-bl,0.6); } } };
+  const fists=(pts)=>{ if(o.wk!=='fist'||!o.weapon) return; for(const [x,y] of pts){ ci(shade(o.weapon,-30),x,y,2.7); ci(o.weapon,x,y,2.1); } };
+
+  if(view==='front'){
+    capeBack(); hairBack('front'); legsFront(); torso(false); armsFront(); shieldFront(); face(false); hairFront('front'); headwear('front');
+    weapon(42.5,B(41.5)-sw*1.4,'front'); fists([[21.5,B(41.5)+sw*1.4],[42.5,B(41.5)-sw*1.4]]); if(o.amulet) { ln('#d8b04a',29,B(31),32,B(35),0.7); ln('#d8b04a',35,B(31),32,B(35),0.7); ci(o.amulet,32,B(35.6),1.4); }
+    return; }
+  if(view==='back'){
+    weapon(42.5,B(41.5)-sw*1.4,'back'); if(o.shield){ const sc=o.shield; el(shade(sc,-40),32,B(37),7.4,8.4); el(sc,32,B(37),6.6,7.6); ci('#d8b04a',32,B(37),1.6); }
+    legsFront(); torso(true); armsFront(); hairBack('back'); el(sk,32,B(HC),HR,HR+0.6); hairFront('back'); if(!hair&&!o.helm&&!o.hood){ el(skD,32,B(HC)+3,5,2); } headwear('back'); capeFront(); return; }
+  // perfil (virado para a direita) e montado
+  const ride=view==='ride';
+  const swA=ride?0.2:sw;
+  if(o.cape){ const c2=shade(o.cape,-30); P(o.cape,[27,B(30),33,B(30),31-swA*2,ride?48:56,18-swA*2,ride?46:55]); ln(c2,24,B(36),21,ride?46:54,1); }
+  hairBack('side');
+  // braço e perna de trás
+  if(!ride){ ln(aD,32,B(32),32-swA*5,B(41),4.2); ci(skD,32-swA*5,B(42),2.1); }
+  if(o.shield&&!ride){ const sc=o.shield; P(shade(sc,-40),[23,B(31),29,B(31),29,B(42),26,B(46),23,B(42)]); P(sc,[23.8,B(31.8),28.2,B(31.8),28.2,B(41.4),26,B(45),23.8,B(41.4)]); }
+  if(ride){ // perna de trás escondida pelo animal; perna da frente dobrada sobre o lombo
+    P(body,[27.5,B(30.5),37.5,B(30.5),38.4,B(44),26.6,B(44)]); r(bD,27.6,B(31.5),2.6,12); r(belt,26.6,B(41),11.8,2.6); if(trim) r(trim,26.6,B(43.4),11.8,1.2);
+    P(robe||legs,[29,B(42.5),39,B(42.5),41,B(47),29,B(47)]); P(robe||legs,[37.6,B(44),41.6,B(44),41.4,B(51.5),37.4,B(51.5)]); r(robe?rD:lD,29,B(45.6),12,1.2);
+    P(boots,[36.6,B(50.5),42.4,B(50.5),45.4,B(53),45.4,B(55),36.6,B(55)]); r(btL,37,B(50.6),5,1);
+  } else {
+    if(robe){ P(robe,[27,B(42),38,B(42),41.5,56,23.5,56]); ln(rD,29,B(45),27,55.5,1); ln(rD,35,B(45),37,55.5,1); if(o.robeTrim) r(o.robeTrim,23.5,54.4,18,1.6); el(boots,33+sw*3,56.4,3.4,1.2); }
+    else { const fx=32-sw*5, nx=32+sw*5; ln(lD,32,B(43.5),fx,53.4,4.6); P(shade(boots,-20),[fx-2.4,52.4,fx+3.6,52.4,fx+4.6,56.6,fx-2.4,56.6]); }
+    P(body,[27.5,B(30.5),37.5,B(30.5),38.4,B(44),26.6,B(44)]); r(bD,27.6,B(31.5),2.6,12); r(bL,34.6,B(31.5),2.4,7); r(belt,26.6,B(41),11.8,2.6); r('#d8b04a',35.4,B(40.8),2,3); if(trim) r(trim,26.6,B(43.4),11.8,1.2);
+    if(!robe){ const nx=32+sw*5; ln(legs,32,B(43.5),nx,53.4,4.6); P(boots,[nx-2.4,52.4,nx+3.6,52.4,nx+4.6,56.6,nx-2.4,56.6]); r(btL,nx-2,52.6,5,1); } }
+  if(o.pauldron) el(o.pauldron,33,B(32),4.2,2.8);
+  face(true); hairFront('side'); headwear('side');
+  // braço da frente com a arma
+  const hx=ride?38.5:32+swA*5+1.5, hy=ride?B(39):B(41)-Math.abs(swA);
+  ln(shade(arm,-20),32,B(32),hx,hy,4.6); ln(arm,32,B(31.6),hx,hy-0.4,3.2); ci(sk,hx,hy+0.6,2.2); if(o.cuffs) r(o.cuffs,hx-2,hy-2.6,4,1.4);
+  if(o.wk==='fist'&&o.weapon){ ci(shade(o.weapon,-30),hx,hy+0.6,2.6); ci(o.weapon,hx,hy+0.6,2); }
+  weapon(hx+0.6,hy,'side');
+}
+// cabelo de cada classe e visual dos NPCs
+const CLASS_HS={guerreiro:'spiky', cacador:'tail', feiticeiro:'long', xama:'braid', monge:'bald'};
+
+function drawPortal(c,x,y){ const t=now/600; c.save(); c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(x+16,y+29,14,4,0,0,7); c.fill();
+  c.fillStyle='#3a3440'; c.fillRect(x+3,y-8,5,36); c.fillRect(x+24,y-8,5,36); c.fillRect(x+3,y-11,26,5); c.fillStyle='#5a5462'; c.fillRect(x+3,y-11,26,1); c.fillRect(x+3,y-8,1,36); c.fillRect(x+24,y-8,1,36);
+  c.fillStyle='#4a4450'; c.fillRect(x+2,y+26,28,4); c.fillStyle='#ffd54a'; c.fillRect(x+15,y-10,2,2);
+  c.globalCompositeOperation='lighter'; glowDot(c,x+16,y+10,19,'#8a4aff',.55+Math.sin(t*3)*.1); c.translate(x+16,y+10);
+  for(let i=0;i<3;i++){ c.save(); c.rotate(t*(i%2?-1:1)+i*2.1); c.strokeStyle=['#c07aff','#e8d8ff','#7ad0ff'][i]; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,8-i*2,14-i*3.5,0,0.4,5.3); c.stroke(); c.restore(); } c.restore(); }
 function drawNpc(c,n,x,y){
   if(n.look==='chest'){ drawChest(c,x,y); return; }
-  const look={sage:{skin:'#e8c4a0',robe:'#4a3a8a',body:'#4a3a8a',hair:'#d8d8e8'}, firesage:{skin:'#c99070',robe:'#8a2a10',body:'#8a2a10',hair:'#2a1a10',hat:'#3a1a0a'}, druid:{skin:'#e8c4a0',robe:'#3a6a3a',body:'#3a6a3a',hair:'#f0f0f0'}, gnome:{skin:'#e0b48a',body:'#7a4a8a',legs:'#4a3a2a',wizhat:'#c0302a',hair:'#f0f0f0'}, boatman:{skin:'#c99070',body:'#2a4a6a',legs:'#2a2a3a',hat:'#1a2a3a',hair:'#2a1a10'}, smith:{skin:'#b07050',body:'#4a3a2a',arm:'#b07050',legs:'#2a2018',hair:'#1a1210',weapon:'#8a8e96'}, firepriest:{skin:'#e8c4a0',robe:'#8a2a1a',body:'#8a2a1a',hair:'#e0e0e0'},
-    priest:{skin:'#e8c4a0',robe:'#ece6d4',body:'#ece6d4',hair:'#d9c39a'},
-    mage:{skin:'#e0b48a',robe:'#2a3a7a',body:'#2a3a7a',hair:'#c8c8d8',wizhat:'#3a2a8a'}, icemage:{skin:'#f0d8c8',robe:'#8ab8d8',body:'#8ab8d8',hair:'#f4faff',wizhat:'#c8e0ff'}, seamage:{skin:'#b8d8c8',robe:'#1a6a6a',body:'#1a6a6a',hair:'#5ad0e0'},
-    merchant:{skin:'#d9a57a',body:'#3e6b4a',legs:'#4a3a2a',hat:'#6b4a2a',hair:'#3a2a1a'},
-    guard:{skin:'#c99070',body:'#8a8f99',legs:'#4a4f58',helm:'#a4aab3',shield:'#3a5a8a',weapon:'#c9ccd2',spear:true}}[n.look];
-  drawHuman(c,x,y,{dir:'down',...look},n.phase,false);
+  if(n.look==='portal'){ drawPortal(c,x,y); return; }
+  const look={sage:{skin:'#e8c4a0',robe:'#4a3a8a',body:'#4a3a8a',hair:'#d8d8e8',hs:'long',robeTrim:'#d8b04a',trim:'#d8b04a',amulet:'#9ad8ff'}, firesage:{skin:'#c99070',robe:'#8a2a10',body:'#8a2a10',hair:'#2a1a10',hat:'#3a1a0a',beard:'#2a1a10',robeTrim:'#ffb02a',trim:'#ffb02a'}, druid:{skin:'#e8c4a0',robe:'#3a6a3a',body:'#3a6a3a',hair:'#f0f0f0',hs:'braid',robeTrim:'#c8e08a',band:'#7ad04a'}, gnome:{skin:'#e0b48a',body:'#7a4a8a',legs:'#4a3a2a',wizhat:'#c0302a',hair:'#f0f0f0',beard:'#f0f0f0'}, boatman:{skin:'#c99070',body:'#2a4a6a',legs:'#2a2a3a',hat:'#1a2a3a',hair:'#2a1a10',hs:'tail',chestTrim:'#e8e0cc',trim:'#e8e0cc'}, smith:{skin:'#b07050',body:'#4a3a2a',arm:'#b07050',legs:'#2a2018',hair:'#1a1210',hs:'bun',weapon:'#8a8e96',belt:'#2a1a10',trim:'#6a4a2a'}, firepriest:{skin:'#e8c4a0',robe:'#8a2a1a',body:'#8a2a1a',hair:'#e0e0e0',hs:'long',robeTrim:'#ffb02a',amulet:'#ff7a2a'},
+    priest:{skin:'#e8c4a0',robe:'#ece6d4',body:'#ece6d4',hair:'#d9c39a',hs:'long',robeTrim:'#d8b04a',amulet:'#ffd54a'},
+    tailor:{skin:'#e8c4a0',body:'#a03a6a',legs:'#3a2a3a',hair:'#8a3a1a',hs:'bun',band:'#ffd54a',chestTrim:'#ffd54a',trim:'#ffd54a',cuffs:'#ffd54a'},
+    mage:{skin:'#e0b48a',robe:'#2a3a7a',body:'#2a3a7a',hair:'#c8c8d8',wizhat:'#3a2a8a',beard:'#e8e8f0',robeTrim:'#d8b04a',hs:'long'}, icemage:{skin:'#f0d8c8',robe:'#8ab8d8',body:'#8ab8d8',hair:'#f4faff',wizhat:'#c8e0ff',hs:'long',robeTrim:'#ffffff',hatBand:'#3a8ad8'}, seamage:{skin:'#b8d8c8',robe:'#1a6a6a',body:'#1a6a6a',hair:'#5ad0e0',hs:'long',robeTrim:'#e8d8b0',amulet:'#ffffff'},
+    merchant:{skin:'#d9a57a',body:'#3e6b4a',legs:'#4a3a2a',hat:'#6b4a2a',hair:'#3a2a1a',beard:'#3a2a1a',belt:'#6b4a2a',chestTrim:'#d8b04a'},
+    guard:{skin:'#c99070',body:'#8a8f99',legs:'#4a4f58',helm:'#a4aab3',shield:'#3a5a8a',weapon:'#c9ccd2',spear:true,pauldron:'#a4aab3',trim:'#3a5a8a'}}[n.look];
+  drawHero(c,x,y,{dir:'down',...look},n.phase,false);
 }
 function drawPlayer(c,x,y){
   const e=player.eq, I=it=>it&&ITEMS[it.id], C=CLASSES[player.cls]||CLASSES.guerreiro, L=C.look;
+  drawCosAura(c,x,y); y-=drawMount(c,x,y);
   drawAuras(c,x,y,false);
-  const o={dir:player.dir, skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:I(e.armor)?.look||'#6a6a5a',
+  const o0={dir:player.dir, skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:I(e.armor)?.look||'#6a6a5a',
     helm:I(e.helmet)?.look, shield:I(e.shield)?.ok==='shield'?I(e.shield).look:null, weapon:I(e.weapon)?.look, legs:I(e.legs)?.look||'#3e3428', wk:I(e.weapon)?.icon==='quarter'?'staff':I(e.weapon)?.wk, boots:I(e.boots)?.look};
-  drawHuman(c,x,y,o,player.phase,player.moving); drawAuras(c,x,y,true);
+  const o={...o0, hs:L.bald?'bald':CLASS_HS[player.cls]||'short'}; { const A=I(e.armor), Hm=I(e.helmet);
+    if(A){ if(/Manto|Veste/.test(A.name)){ o.robe=A.look; o.robeTrim=shade(A.look,55); } if(/Placas|Couraça|Obsidiana|Guardião|Cota|Escamas|Abissal/.test(A.name)) o.pauldron=shade(A.look,18); if(A.name==='Gi de Treino'){ o.belt='#1a1a1a'; o.body='#e8e0cc'; } if(/Ieti/.test(A.name)){ o.trim='#f4f4f4'; o.cuffs='#f4f4f4'; } }
+    if(Hm){ if(/Capuz|Gorro/.test(Hm.name)){ o.hood=Hm.look; o.helm=null; if(/Gorro/.test(Hm.name)) o.hoodTrim='#f4f4f4'; } else if(/Coroa de Folhas/.test(Hm.name)){ o.band=Hm.look; o.helm=null; } else if(/Coroa/.test(Hm.name)){ o.crown=true; o.helm=null; } } }
+  { const OF=cosOn('outfit'); if(OF) Object.assign(o,{helm:null,hood:null,wizhat:null,band:null,robe:null,pauldron:null},OF.look); }
+  if(ONLINE&&c===ctx) netLook(o);
+  if(cosOn('mount')) drawRiderHero(c,x,y,o,player.phase,player.face||1); else drawHero(c,x,y,o,player.phase,player.moving); drawAuras(c,x,y,true);
   if(player.flash>0){ c.globalAlpha=.32; c.fillStyle='#ff4a30'; c.beginPath(); c.ellipse(x+16,y+17,10,13,0,0,7); c.fill(); c.globalAlpha=1; }
 }
 function drawCorpse(c,co,x,y){
@@ -4308,12 +4718,13 @@ function render(){
   // barras e nomes por cima
   ctx.textAlign='center'; ctx.font='500 10px "Pixelify Sans", monospace';
   for(const [e] of [...rows.values()].flat()){
-    const r=rpos(e), sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y)-(e.def?.boss?(BOSS_ART[e.type]?58:16):0);
+    const r=rpos(e), sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y)-(e.def?.boss?(BOSS_ART[e.type]?58:16):0)-(e===player?(cosOn('mount')?27:13):e.kind==='pc'?(e.mount?27:13):(e.kind==='npc'&&e.look!=='chest'&&e.look!=='portal')?13:0);
     const showName = e.kind==='npc' || e.kind==='pc' || e===target || e.def?.boss || e===player;
     if(e.kind!=='npc'&&e.kind!=='pc'){ const st=e===player?stats():null, mh=e===player?st.maxHp:e.maxHp, hp=Math.max(0,e.hp), k=clamp(hp/mh,0,1);
       rect(ctx,'#000',sx+3,sy-5,26,4); rect(ctx,k>0.5?'#4caf50':k>0.25?'#e0b030':'#e04a3a',sx+4,sy-4,Math.round(24*k),2); }
-    if(showName){ const name=e===player?player.name:e.kind==='npc'||e.kind==='pc'?e.name:e.def.name; const col=e===player||e.kind==='pc'?'#9fe08a':e.kind==='npc'?'#9cc3ee':'#ff8a7a';
-      ctx.fillStyle='#000'; ctx.fillText(name,sx+17,sy-8); ctx.fillStyle=col; ctx.fillText(name,sx+16,sy-9); }
+    if(showName){ const name=e===player?player.name:e.kind==='npc'||e.kind==='pc'?e.name:e.def.name; const col=e===player?(COSK[player.cos?.name]?.c||'#9fe08a'):e.kind==='pc'?(COSK[e.nameCol]?.c||'#9fe08a'):e.kind==='npc'?'#9cc3ee':'#ff8a7a';
+      ctx.fillStyle='#000'; ctx.fillText(name,sx+17,sy-8); ctx.fillStyle=col; ctx.fillText(name,sx+16,sy-9);
+      if(e===player&&titleName()){ ctx.save(); ctx.font='italic 500 9px "Pixelify Sans", monospace'; const tt='« '+titleName()+' »'; ctx.fillStyle='#000'; ctx.fillText(tt,sx+17,sy-18); ctx.fillStyle='#e7c86a'; ctx.fillText(tt,sx+16,sy-19); ctx.restore(); } }
   }
   for(const f of floats){ if(f.map!==m.id) continue; const k=f.t/f.life; const y=f.y-cam.y-k*(f.big?34:22); ctx.globalAlpha=clamp(1.4-k*1.4,0,1);
     ctx.font=(f.big?'700 18px':'700 13px')+' "Pixelify Sans", monospace'; ctx.fillStyle='#000'; ctx.fillText(f.text,f.x-cam.x+1,y+1); ctx.fillStyle=f.color; ctx.fillText(f.text,f.x-cam.x,y); }
@@ -4419,7 +4830,7 @@ let condKey='';
 function renderCond(){
   const st=stats(), cond=[];
   if(player.poison) cond.push(player.poison.fire?'Queimando':'Envenenado'); if(player.slowT>0) cond.push('Lento');
-  for(const k in player.buffs) if(player.buffs[k]>0&&BUFFS[k]) cond.push(BUFFS[k]+' '+Math.ceil(player.buffs[k]/1000)+'s');
+  for(const k in player.buffs) if(player.buffs[k]>0&&BUFFS[k]) cond.push(BUFFS[k]+' '+Math.ceil(player.buffs[k]/1000)+'s'); if(player.blessed) cond.push('Abençoado'); if(inTower()) cond.push('Torre: andar '+TW.floor+(TW.curse?' (maldição)':''));
   if(st.lifesteal) cond.push('Roubo de vida '+st.lifesteal+'%');
   if((cur.region||cur.id)==='ice'&&!inTownRect(cur,player.x,player.y)&&!(player.buffs.warm>0)&&!st.warm) cond.unshift('Congelando');
   if(player.cls==='cacador'){ const a=ammoId(); cond.unshift(a?'Flecha: '+ITEMS[a].name.replace('Flecha ','')+' ×'+countItem(a):'Flecha: comum'); }
@@ -4451,7 +4862,7 @@ function showInfo(it, hint){
 }
 // ---- lista de batalha
 let battleList=[], battleKey='', battleT=0;
-function renderBattle(){ if(ONLINE) return renderBattleOnline();
+function renderBattle(){
   const rx=Math.ceil(VW/2)+1, ry=Math.ceil(VH/2)+1;
   const list=monsters.filter(m=>!m.dead&&m.map===cur.id&&Math.abs(m.x-player.x)<=rx&&Math.abs(m.y-player.y)<=ry).sort((a,b)=>cheb(a,player)-cheb(b,player)).slice(0,20);
   const key=list.map(m=>uidOf(m)+':'+Math.ceil(m.hp/m.maxHp*25)+(m===target?'*':'')).join(',');
@@ -4650,7 +5061,7 @@ function update(dt){
   rebuildOcc();
   battleT-=dt; if(battleT<=0){ battleT=200; renderBattle(); }
   for(const m of [...monsters]) if(m.map===cur.id && !m.dead) updateMonster(m,dt);
-  updateFields(dt);
+  updateFields(dt); towerTick(dt);
   for(const sp of spawns) if(!sp.mon){ sp.timer-=dt; if(sp.timer<=0){ const far = sp.map!==cur.id || Math.abs(sp.x-player.x)+Math.abs(sp.y-player.y)>9; if(far && !occupied(sp.map,sp.x,sp.y)) spawnMonster(sp); else sp.timer=3000; } }
   for(const n of npcs) n.phase+=dt/900;
   for(const p of projectiles){ p.t+=dt; if(p.t>=p.dur&&!p.done){ p.done=true; p.onHit&&p.onHit(); } } projectiles=projectiles.filter(p=>!p.done);
@@ -4677,8 +5088,8 @@ function frame(t){
 // ============================================================ salvar / carregar
 function encFog(){ const o={}; for(const m of Object.values(MAPS)){ const E=m.explored; let any=false, runs=[], v=0, n=0; for(let i=0;i<E.length;i++){ const b=E[i]?1:0; if(b) any=true; if(b===v) n++; else { runs.push(n.toString(36)); v=b; n=1; } } runs.push(n.toString(36)); if(any) o[m.id]=runs.join('.'); } return o; }
 function decFog(o){ for(const [id,str] of Object.entries(o||{})){ const m=MAPS[id]; if(!m||typeof str!=='string') continue; let i=0, v=0; for(const r of str.split('.')){ const n=parseInt(r,36)||0; if(v) m.explored.fill(1,i,Math.min(i+n,m.explored.length)); i+=n; v^=1; } } miniDirty=true; }
-function serialize(){ return {v:10, bar:player.bar, ammo:player.ammo||null, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
-function save(){ if(ONLINE||!running) return; const d=serialize();
+function serialize(){ return {v:10, tower:player.tower||null, cos:player.cos||null, blessed:!!player.blessed, bar:player.bar, ammo:player.ammo||null, skills:player.skills, bestiary:player.bestiary, savedAt:Date.now(), adm:!!player.adm, fog:encFog(), bot:player.bot, auto:player.auto, depot:player.depot, bossT:Object.fromEntries(spawns.filter(s=>MON[s.type].boss&&!s.mon).map(s=>[s.type,Math.round(s.timer)])), bossKills:player.bossKills, cls:player.cls, name:player.name, level:player.level, xp:player.xp, hp:player.hp, mp:player.mp, gold:player.gold, eq:player.eq, learned:player.learned, corpse:(()=>{ const c=corpses.find(c=>c.player&&c.items.length); return c?{map:c.map,x:c.x,y:c.y,items:c.items,left:c.life-c.t,at:Date.now()}:null; })(), map:cur.id, x:player.x, y:player.y, quests, dead:player.dead}; }
+function save(){ if(!running) return; if(ONLINE){ netSave(); return; } const d=serialize();
   if(Cloud.on&&Cloud.charId){ Cloud.queue(d); try{ localStorage.setItem(SAVE_KEY+':'+Cloud.charId, JSON.stringify(d)); }catch(e){} return; }
   if(!localSlot) localSlot='c'+Date.now().toString(36);
   try{ localStorage.setItem(LKEY+localSlot, JSON.stringify(d)); localStorage.setItem(SAVE_KEY+':last', localSlot); }catch(e){} }
@@ -4692,7 +5103,7 @@ function applySave(s){
   const fix0 = it => typeof it==='string' ? {id:it,n:1,r:0,a:[]} : {r:0,a:[],...it};
   const fix = it => { const f=fix0(it); delete f._u; if(f.items) f.items=f.items.filter(x=>ITEMS[typeof x==='string'?x:x.id]).map(fix); return f; };
   player.cls = CLASSES[s.cls] ? s.cls : 'guerreiro';
-  player.name=s.name; player.level=s.level; player.xp=s.xp; player.gold=s.gold;
+  player.name=s.name; player.level=s.level; player.xp=s.xp; player.gold=s.gold; player.tower=s.tower||null; player.cos=s.cos||null; player.blessed=!!s.blessed; TW={on:false};
   if((s.v||0)<10){ const L=s.level, a=oldTotalXp(L), b=oldTotalXp(L+1), fr=Math.max(0,Math.min(0.999,(s.xp-a)/Math.max(1,b-a))); player.xp=Math.round(totalXp(L)+fr*(totalXp(L+1)-totalXp(L))); }
   player.xp=Math.max(player.xp, totalXp(player.level));
   const oldInv=(s.inv||[]).filter(it=>ITEMS[typeof it==='string'?it:it.id]).map(fix);
@@ -4712,7 +5123,7 @@ function applySave(s){
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
   if(s.corpse){ const left=s.corpse.left-(Date.now()-s.corpse.at); if(left>0&&MAPS[s.corpse.map]) corpses.push({map:s.corpse.map,x:s.corpse.x,y:s.corpse.y,player:true,name:s.name,items:(s.corpse.items||[]).filter(it=>ITEMS[it.id]).map(fix),t:0,life:left}); }
   Object.assign(quests.wolves, s.quests?.wolves||{}); Object.assign(quests.king, s.quests?.king||{});
-  const m=MAPS[s.map]||MAPS.over; cur=m; let x=s.x, y=s.y;
+  const m=(s.map!=='tower'&&MAPS[s.map])||MAPS.over; cur=m; let x=s.x, y=s.y; if(s.map==='tower'){ const P=towerPortal(), q=freeSpot('over',P.x,P.y+1); x=q.x; y=q.y; }
   if(!passPlayer(m,x,y)||occupied(m.id,x,y)){ cur=MAPS.over; x=MAPS.over.spawn.x; y=MAPS.over.spawn.y; }
   player.x=player.px=x; player.y=player.py=y;
   const st=stats(); player.hp=clamp(s.hp||st.maxHp,1,st.maxHp); player.mp=clamp(s.mp??st.maxMp,0,st.maxMp);
@@ -4728,7 +5139,7 @@ $('btnHelp').addEventListener('click',()=>{ if(!running) return; openDialog(play
 $('btnRespawn').addEventListener('click',respawn);
 
 // ============================================================ trocar de personagem
-$('btnChars').addEventListener('click', async ()=>{ if(!running) return; if(ONLINE){ netSend({t:'logout'}); leaveOnlineWorld(); return; } save(); if(Cloud.on&&Cloud.charId) await Cloud.flush(); location.reload(); });
+$('btnChars').addEventListener('click', async ()=>{ if(!running) return; if(ONLINE){ netSave(true); netSend({t:'logout'}); leaveOnlineWorld(); return; } save(); if(Cloud.on&&Cloud.charId) await Cloud.flush(); location.reload(); });
 
 // ============================================================ painel de ADM (testes)
 // Offline: abra o jogo com ?admin no endereço (e ?admin=0 para desligar). Na nuvem: profiles.is_admin = true.
@@ -4811,6 +5222,7 @@ function openAdm(note){
   });
 }
 $('btnAdm').addEventListener('click',()=>{ if(running) openAdm(); });
+$('btnLook').addEventListener('click',()=>{ if(running) openWardrobe(); });
 $('btnBook').addEventListener('click',()=>{ if(running){ bookSel=null; openSpellbook(); } });
 $('btnBest').addEventListener('click',()=>{ if(running){ bestSel=null; openBestiary(); } });
 // ============================================================ galeria de sprites (ADM)
@@ -4821,7 +5233,7 @@ function renderGallery(){
   const mons=Object.keys(MON).filter(t=>hit(t,MON[t].name)), bosses=mons.filter(t=>MON[t].boss), crit=mons.filter(t=>!MON[t].boss);
   const items=Object.keys(ITEMS).filter(id=>id!=='gold'&&hit(id,ITEMS[id].name)).sort((a,b)=>(ITEMS[a].icon||'').localeCompare(ITEMS[b].icon||'')||(ITEMS[a].lvl||0)-(ITEMS[b].lvl||0));
   const spells=[]; for(const c of CLASS_ORDER) SPELLS[c].forEach((s,i)=>{ if(hit(s.name,CLASSES[c].name)) spells.push({c,s,i}); });
-  const TABS=[['itens','Itens',items.length],['criaturas','Criaturas',crit.length],['chefes','Chefes',bosses.length],['magias','Magias',spells.length]];
+  const TABS=[['itens','Itens',items.length],['criaturas','Criaturas',crit.length],['chefes','Chefes',bosses.length],['magias','Magias',spells.length],['personagens','Personagens',GAL_HEROES().length]];
   $('galTabs').innerHTML=TABS.map(([k,l,n])=>`<button type="button" data-g="${k}" aria-pressed="${galTab===k}">${l} <small>${n}</small></button>`).join('')
     +(galTab==='itens'?`<select id="galReg" aria-label="Região"><option value="">Todas as regiões</option>${Object.entries(KIT).map(([k,v])=>`<option value="${k}" ${galReg===k?'selected':''}>${v.name}</option>`).join('')}</select><label class="galold"><input type="checkbox" id="galOld" ${galOld?'checked':''}> Antes → depois</label>`:'');
   const info=(arr)=>arr.filter(Boolean).join(' · ');
@@ -4829,10 +5241,22 @@ function renderGallery(){
   if(galTab==='itens') html=items.filter(id=>!galReg||itemRegion(id)===galReg).map(id=>{ const d=ITEMS[id]; return `<div class="gc">${galOld?`<div class="gpair"><img class="gi old" alt="antes" src="${iconURLOld(id)}"><span>→</span><img class="gi" alt="depois" src="${iconURL(id)}"></div>`:`<img class="gi" alt="" src="${iconURL(id)}">`}<b>${esc(d.name)}</b><code>${id}</code><small>${esc(info([d.slot?({weapon:'arma',shield:'mão esq.',helmet:'elmo',armor:'armadura',legs:'calça',boots:'botas',ring:'anel',amulet:'colar',bag:'mochila'})[d.slot]:(d.heal||d.mana||d.warm>1||d.air?'poção':d.ammo?'flecha':'material'), d.lvl?'nv '+d.lvl:'', KIT[itemRegion(id)].name]))}</small></div>`; }).join('');
   if(galTab==='criaturas'||galTab==='chefes') html=(galTab==='chefes'?bosses:crit).map(t=>{ const d=MON[t]; const big=d.boss; return `<div class="gc${big?' big':''}"><canvas data-mon="${t}" width="${big?200:96}" height="${big?200:96}"></canvas><b>${esc(d.name)}</b><code>${t}</code><small>${esc(info(['nv '+d.lvl, 'vida '+fmtN(d.hp), d.ranged?'ataca de longe':'', d.breath?'sopro':'', d.charge?'investida':'']))}</small></div>`; }).join('');
   if(galTab==='magias') html=spells.map(({c,s,i})=>`<div class="gc">${i<8?`<div class="gpair"><img class="gi old" alt="antes" src="${spellIconOld(s)}"><span>→</span><img class="gi" alt="depois" src="${spellIconURL(s)}"></div>`:`<img class="gi" alt="" src="${spellIconURL(s)}">`}<b>${esc(s.name)}</b><code>${CLASSES[c].name} · ${i+1}${i>=8?' · nova':''}</code><small>${esc(s.desc)}</small><small>${esc(spellHow(s))}</small></div>`).join('');
+  if(galTab==='personagens') html=GAL_HEROES().filter(h=>hit(h.n,h.k)).map(h=>`<div class="gc"><canvas data-hero="${esc(h.k)}" width="150" height="110"></canvas><b>${esc(h.n)}</b><code>${esc(h.k)}</code></div>`).join('');
   $('galGrid').innerHTML=html||'<p class="hint">Nada encontrado.</p>'; galTick(true);
 }
+function GAL_HEROES(){ const out=[]; const base=c=>{ const C=CLASSES[c], L=C.look, eq={}; for(const id of C.start) eq[ITEMS[id].slot]=ITEMS[id];
+    return {skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:eq.armor?.look||'#6a6a5a', shield:eq.shield?.ok==='shield'?eq.shield.look:null, weapon:eq.weapon?.look, legs:'#3e3428', wk:eq.weapon?.icon==='quarter'?'staff':eq.weapon?.wk, hs:L.bald?'bald':CLASS_HS[c]}; };
+  for(const c of CLASS_ORDER) out.push({k:'classe:'+c, n:CLASSES[c].name, o:base(c)});
+  for(const C of COS.filter(c=>c.cat==='outfit')) out.push({k:'roupa:'+C.k, n:C.n, o:{...base('guerreiro'),helm:null,hood:null,wizhat:null,band:null,...C.look}});
+  for(const C of COS.filter(c=>c.cat==='mount')) out.push({k:'montaria:'+C.k, n:C.n, o:base('cacador'), mount:C.type});
+  const seen=new Set(); for(const n of npcs){ if(n.look==='chest'||n.look==='portal'||seen.has(n.look)) continue; seen.add(n.look); out.push({k:'npc:'+n.look, n:n.name, npc:n.look}); }
+  return out; }
 function galTick(force){
-  if(!galOpen) return; for(const cv2 of $('galGrid').querySelectorAll('canvas[data-mon]')){ const t=cv2.dataset.mon, d=MON[t], g=cv2.getContext('2d'); const big=d.boss;
+  if(!galOpen) return;
+  for(const cv2 of $('galGrid').querySelectorAll('canvas[data-hero]')){ const h=GAL_HEROES().find(x=>x.k===cv2.dataset.hero); if(!h) continue; const g=cv2.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv2.width,cv2.height); g.imageSmoothingEnabled=false;
+    if(h.npc){ g.scale(1.8,1.8); drawNpc(g,{look:h.npc,phase:now/900},26,24); continue; }
+    if(h.mount){ g.scale(1.5,1.5); const fake={type:h.mount,phase:now/1400,face:1}; drawCreatureArt(g,fake,34,36); drawRiderHero(g,34,36-9,h.o,now/1400,1); continue; }
+    g.scale(1.35,1.35); [['down',2],['right',38],['up',74]].forEach(([d,x])=>drawHero(g,x,40,{...h.o,dir:d},now/700,true)); } for(const cv2 of $('galGrid').querySelectorAll('canvas[data-mon]')){ const t=cv2.dataset.mon, d=MON[t], g=cv2.getContext('2d'); const big=d.boss;
     const m={kind:'mon', type:t, def:d, x:0, y:0, px:0, py:0, phase:now/700, moving:true, face:1, dir:'down', flash:0, hp:1, maxHp:1, slowT:0, rootT:0, mult:1};
     g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv2.width,cv2.height); g.imageSmoothingEnabled=false;
     if(big){ g.scale(1.7,1.7); drawMonster(g,m,42,74); } else { g.scale(1.4,1.4); drawMonster(g,m,18,36); } }
@@ -4853,6 +5277,7 @@ function begin(fromSave, forcedName){
     player.eq={}; for(const id of C.start) player.eq[ITEMS[id].slot]=makeItem(id,0);
     player.eq.legs=makeItem('leatherlegs',0);
     player.eq.bag={id:'basicbag',n:1,r:0,a:[],items:[{id:'hp',n:3,r:0,a:[]}]}; if(C.mpLv>10) player.eq.bag.items.push({id:'mp',n:3,r:0,a:[]});
+    player.tower=null; player.cos=null; player.blessed=false; TW={on:false};
     player.learned={fae:false,ash:false}; player.bot=BOT_DEF(); player.adm=false; player.bar=BAR_DEF(); player.ammo=null; player.skills=SKILL_DEF(); player.bestiary={};
     quests.wolves={state:0,count:0}; quests.king={state:0}; quests.fae={state:0,base:0}; quests.ash={state:0,base:0};
     cur=MAPS.over; const s=MAPS.over.spawn; player.x=player.px=s.x; player.y=player.py=s.y;
@@ -5001,10 +5426,10 @@ function fixLinkChokes(){
 }
 fixLinkChokes();
 setupWorld();
-if(ONLINE){ for(const m of monsters) m.dead=true; monsters.length=0; spawns.length=0; }
 // ============================================================ online: conexão com o servidor
-// O servidor é quem manda: posição de todos, escadas, barcos e chat. Aqui o cliente só pede e mostra.
-const Net={ws:null, token:null, user:null, chars:[], charId:null, seq:0, others:new Map(), online:0, adm:false, step:250, retry:0, bye:false, inWorld:false};
+// O servidor guarda contas, personagens (progresso), posição de todos, escadas, barcos, chat e o visual de cada um.
+// Nesta etapa os monstros e o combate rodam no navegador de cada jogador (cada um vê os seus).
+const Net={ws:null, token:null, user:null, chars:[], charId:null, seq:0, others:new Map(), online:0, adm:false, retry:0, bye:false, inWorld:false};
 const TOKEN_KEY='brumaval-online-token', CHAR_KEY='brumaval-online-char';
 function netUrl(){ const s=(window.BRUMAVAL_ONLINE||{}).server; if(s) return s.replace(/^http/,'ws').replace(/\/$/,'')+'/ws'; return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws'; }
 function netSend(m){ if(Net.ws&&Net.ws.readyState===1){ Net.ws.send(JSON.stringify(m)); return true; } return false; }
@@ -5016,50 +5441,58 @@ function netClosed(ws){ if(ws!==Net.ws||Net.bye) return;
   if(Net.inWorld&&Net.retry<8){ Net.retry++; if(Net.retry===1) log('Conexão perdida. Reconectando…','dmg'); setTimeout(async()=>{ try{ await netConnect(); netSend({t:'resume',token:Net.token,char:Net.charId}); }catch(e){ netClosed(Net.ws); } }, Math.min(5000,600*Net.retry)); return; }
   if(Net.inWorld) leaveOnlineWorld('A conexão com o servidor caiu.'); else onlineStart('A conexão com o servidor caiu.'); }
 
+// ---- progresso: o personagem inteiro é guardado no servidor (no máximo a cada 8 s, e na hora ao sair)
+let netSaveT=0, saveTimer=null;
+function netSave(now2){ if(!Net.inWorld||!running) return; const go=()=>{ saveTimer=null; netSaveT=Date.now(); netSend({t:'save', data:serialize()}); };
+  if(now2) { clearTimeout(saveTimer); go(); return; } if(saveTimer) return; const wait=Math.max(0,8000-(Date.now()-netSaveT)); saveTimer=setTimeout(go,wait); }
+// ---- visual: o que os outros veem (roupa, equipamento, montaria) e a velocidade do passo
+let lookKey='', lookT=0;
+function netLook(o){ if(!Net.inWorld||now-lookT<400) return; lookT=now; const {dir,...lk}=o, mount=cosOn('mount')?.type||null, st=stats();
+  const msg={t:'look', look:lk, mount, name:player.cos?.name||null, level:player.level, spd:st.stepDur}; const k=JSON.stringify(msg); if(k===lookKey) return; lookKey=k; netSend(msg); }
+// trocas de mapa feitas aqui (renascer, sair da torre) avisam o servidor; as que vêm do servidor não
+let netWarping=false; { const _cm=changeMap; changeMap=function(id,x,y,msg){ _cm(id,x,y,msg); if(Net.inWorld&&!netWarping&&id!=='tower'&&MAPS[id]) netSend({t:'sync', map:id, x:player.x, y:player.y}); }; }
+
 // ---- outros jogadores
-const LOOK_CACHE={};
-function classLook(cls){ if(LOOK_CACHE[cls]) return LOOK_CACHE[cls]; const C=CLASSES[cls]||CLASSES.guerreiro, L=C.look, eq={}; for(const id of C.start) eq[ITEMS[id].slot]=ITEMS[id]; eq.legs=ITEMS.leatherlegs;
-  return LOOK_CACHE[cls]={skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:eq.armor?.look||'#6a6a5a', helm:eq.helmet?.look, shield:eq.shield?.ok==='shield'?eq.shield.look:null, weapon:eq.weapon?.look, legs:eq.legs?.look||'#3e3428', wk:eq.weapon?.icon==='quarter'?'staff':eq.weapon?.wk, boots:eq.boots?.look}; }
-function addOther(p){ const o={kind:'pc', id:p.id, name:p.name, cls:p.cls, level:p.level, adm:p.adm, map:p.map||cur.id, x:p.x, y:p.y, px:p.x, py:p.y, dir:p.dir||'down', face:1, moving:false, mt:0, mdur:1, phase:R(), hp:1, maxHp:1}; Net.others.set(p.id,o); battleKey=null; return o; }
+function classLook(cls){ const C=CLASSES[cls]||CLASSES.guerreiro, L=C.look, eq={}; for(const id of C.start) eq[ITEMS[id].slot]=ITEMS[id];
+  return {skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:eq.armor?.look||'#6a6a5a', shield:eq.shield?.ok==='shield'?eq.shield.look:null, weapon:eq.weapon?.look, legs:'#3e3428', wk:eq.weapon?.icon==='quarter'?'staff':eq.weapon?.wk, hs:L.bald?'bald':CLASS_HS[cls]}; }
+function addOther(p){ const o={kind:'pc', id:p.id, name:p.name, cls:p.cls, level:p.level, adm:p.adm, map:p.map||cur.id, x:p.x, y:p.y, px:p.x, py:p.y, dir:p.dir||'down', face:1, moving:false, mt:0, mdur:1, phase:R(), hp:1, maxHp:1,
+  lk:p.look||classLook(p.cls), mount:p.mount||null, nameCol:p.nameCol||null}; Net.others.set(p.id,o); battleKey=null; return o; }
 function updateOthers(dt){ for(const o of Net.others.values()){ o.phase+=dt/(o.moving?260:900); if(o.moving){ o.mt+=dt; if(o.mt>=o.mdur) o.moving=false; } } }
-function drawOther(c,o,x,y){ drawHuman(c,x,y,{dir:o.dir,...classLook(o.cls)},o.phase,o.moving); }
-const othersHere=()=>[...Net.others.values()].filter(o=>o.map===cur.id);
-function renderBattleOnline(){ const rx=Math.ceil(VW/2)+1, ry=Math.ceil(VH/2)+1;
-  const list=othersHere().filter(o=>Math.abs(o.x-player.x)<=rx&&Math.abs(o.y-player.y)<=ry).sort((a,b)=>cheb(a,player)-cheb(b,player)).slice(0,20);
-  const key='pc:'+list.map(o=>o.id+o.level).join(','); if(key===battleKey) return; battleKey=key; battleList=[];
-  $('battleCount').textContent=list.length?'· '+list.length:'';
-  $('battle').innerHTML=list.length?list.map(o=>`<div class="bl pc"><span class="bn">${esc(o.name)}</span><small>${CLASSES[o.cls]?.name||''} · nível ${o.level}</small></div>`).join(''):'<p class="hint" style="margin:0">Ninguém por perto.</p>'; }
+function drawOther(c,o,x,y){ if(o.mount){ drawCreatureArt(c,{type:o.mount, phase:o.phase*0.7, face:o.face||1},x,y+3); drawRiderHero(c,x,y-9,o.lk,o.phase,o.face||1); }
+  else drawHero(c,x,y,{...o.lk,dir:o.dir},o.phase,o.moving); }
 
 // ---- mensagens do servidor
 function netOn(m){
   switch(m.t){
-    case 'auth': Net.token=m.token; Net.user=m.user; Net.chars=m.chars; Net.adm=!!m.adm; sset(TOKEN_KEY,m.token); if(!Net.inWorld&&!m.resuming) onlineChars(); if(Net.retry===0&&Net.inWorld) {} break;
+    case 'auth': Net.token=m.token; Net.user=m.user; Net.chars=m.chars; Net.adm=!!m.adm; sset(TOKEN_KEY,m.token); if(!Net.inWorld) onlineChars(); break;
     case 'autherr': if(m.expired){ sset(TOKEN_KEY,null); Net.token=null; if(Net.inWorld){ leaveOnlineWorld('Sua sessão expirou. Entre de novo.'); return; } onlineLogin(); return; } { const el=$('authMsg'); if(el) el.textContent=m.text; for(const b of document.querySelectorAll('#loginForm button')) b.disabled=false; } break;
     case 'err': { const el=$('charMsg'); if(el&&!running){ el.textContent=m.text; const b=$('btnNew'); if(b) b.disabled=false; } else log(m.text,'sys'); } break;
     case 'chars': Net.chars=m.chars; if(!running) onlineChars(); break;
     case 'enter': enterOnline(m); break;
-    case 'join': if(m.p.map===cur.id){ addOther(m.p); } break;
+    case 'join': if(m.p.map===cur.id) addOther(m.p); break;
     case 'leave': Net.others.delete(m.id); battleKey=null; break;
-    case 'mv': { let o=Net.others.get(m.id); if(!o) break; if(o.moving){ o.px=o.x; o.py=o.y; } startStep(o,m.x,m.y,m.dur); o.dir=m.dir; break; }
+    case 'mv': { const o=Net.others.get(m.id); if(!o) break; if(o.moving){ o.px=o.x; o.py=o.y; } startStep(o,m.x,m.y,m.dur); o.dir=m.dir; break; }
     case 'turn': { const o=Net.others.get(m.id); if(o) o.dir=m.dir; break; }
-    case 'lvl': { const o=Net.others.get(m.id); if(o){ o.level=m.level; battleKey=null; } break; }
+    case 'look': { const o=Net.others.get(m.id); if(o){ o.lk=m.look||o.lk; o.mount=m.mount||null; o.nameCol=m.name||null; o.level=m.level||o.level; } break; }
+    case 'lvl': { const o=Net.others.get(m.id); if(o) o.level=m.level; break; }
     case 'ack': break;
     case 'fix': if(m.map===cur.id){ player.x=player.px=m.x; player.y=player.py=m.y; player.moving=false; player.path=null; player.follow=false; } break;
-    case 'warp': { Net.others.clear(); changeMap(m.map,m.x,m.y,m.text||undefined); for(const p of m.others) addOther(p); battleKey=null; break; }
+    case 'roster': { if(m.map!==cur.id) break; Net.others.clear(); for(const p of m.others) addOther(p); battleKey=null; break; }
+    case 'warp': { Net.others.clear(); netWarping=true; try{ changeMap(m.map,m.x,m.y,m.text||undefined); } finally { netWarping=false; } for(const p of m.others) addOther(p); battleKey=null; break; }
     case 'chat': { const who=(m.ch==='mundo'?'[Mundo] ':'')+m.from+' ['+m.level+']'; log(who+': '+m.text, m.ch==='mundo'?'chatw':'chat');
       const sp=m.id===Net.charId?player:Net.others.get(m.id); if(sp&&(sp===player||sp.map===cur.id)&&m.ch!=='mundo') say(sp,m.from,m.text); break; }
     case 'sys': log(m.text, m.big?'lvl':'sys'); break;
-    case 'you': if(m.level){ player.level=m.level; player.xp=totalXp(m.level); const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; } if(m.step) Net.step=m.step; uiDirty=true; skillsDirty=true; break;
+    case 'you': if(m.level&&m.level!==player.level){ player.level=m.level; player.xp=Math.max(player.xp,totalXp(m.level)); const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; buildActions(); netSave(); } uiDirty=true; skillsDirty=true; break;
     case 'count': Net.online=m.online; onlineBadge(); break;
     case 'kicked': Net.bye=true; leaveOnlineWorld(m.text); break;
     case 'pong': Net.ping=Date.now()-m.at; onlineBadge(); break;
   }
 }
-// ---- falas em cima da cabeça (amarelo, como nos jogos do gênero)
+// ---- falas em cima da cabeça
 let speech=[];
 function say(e,from,text){ speech=speech.filter(s=>s.e!==e); speech.push({e,map:cur.id,from,text:text.length>60?text.slice(0,58)+'…':text,t:0,life:2600+Math.min(4000,text.length*60)}); }
 function drawSpeech(){ ctx.save(); ctx.textAlign='center'; ctx.font='600 11px "Pixelify Sans", monospace';
-  for(const s of speech){ if(s.map!==cur.id) continue; const r=rpos(s.e), x=Math.round(r.x*T-cam.x)+16, y=Math.round(r.y*T-cam.y)-22; ctx.globalAlpha=clamp((s.life-s.t)/400,0,1);
+  for(const s of speech){ if(s.map!==cur.id) continue; const r=rpos(s.e), x=Math.round(r.x*T-cam.x)+16, y=Math.round(r.y*T-cam.y)-34; ctx.globalAlpha=clamp((s.life-s.t)/400,0,1);
     for(const [i,l] of [[0,s.from+' diz:'],[1,s.text]]){ ctx.fillStyle='#000'; ctx.fillText(l,x+1,y+i*12-11); ctx.fillStyle=i?'#ffe14a':'#f0c030'; ctx.fillText(l,x,y+i*12-12); } }
   ctx.restore(); }
 function updateSpeech(dt){ for(const s of speech) s.t+=dt; speech=speech.filter(s=>s.t<s.life); }
@@ -5099,19 +5532,21 @@ function onlineChars(){
     if(p){ p.disabled=true; msg('Entrando no mundo…'); netSend({t:'play',id:p.dataset.play}); }
     if(d){ if(d.dataset.armed!=='1'){ d.dataset.armed='1'; d.textContent='Confirmar'; msg('Clique em "Confirmar" para apagar esse personagem para sempre.'); return; } netSend({t:'delete',id:d.dataset.del}); } });
 }
-function enterOnline(m){ const y=m.you; Net.charId=y.id; Net.step=y.step||250; Net.online=m.online||0; Net.others.clear(); sset(CHAR_KEY,y.id);
-  if(Net.inWorld&&running){ // reconexão: só corrige a posição
-    if(cur.id!==y.map) changeMap(y.map,y.x,y.y); else { player.x=player.px=y.x; player.y=player.py=y.y; player.moving=false; player.path=null; }
-    for(const p of m.others) addOther(p); if(Net.retry) log('Conectado de novo.','sys'); Net.retry=0; onlineBadge(); return; }
-  chosenClass=y.cls; begin(null, y.name);
-  player.level=y.level; player.xp=totalXp(y.level); cur=MAPS[y.map]; player.x=player.px=y.x; player.y=player.py=y.y; player.dir=y.dir||'down'; player.moving=false;
-  const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; reveal(); miniDirty=true; uiDirty=true; skillsDirty=true;
-  for(const p of m.others) addOther(p); Net.inWorld=true; Net.retry=0; onlineBadge();
-  $('chatBar').hidden=false; log('Você está no Brumaval Online. Aperte Enter para falar. Canal Mundo a partir do nível 5. /quem lista quem está online.','npc'); }
+function enterOnline(m){ const y=m.you; Net.charId=y.id; Net.online=m.online||0; Net.others.clear(); sset(CHAR_KEY,y.id); lookKey='';
+  const place=()=>{ netWarping=true; try{ if(cur.id!==y.map) changeMap(y.map,y.x,y.y,'Você está em '+(MAPS[y.map]?.name||y.map)+'.'); else { player.x=player.px=y.x; player.y=player.py=y.y; } } finally { netWarping=false; } player.moving=false; player.path=null; };
+  if(Net.inWorld&&running){ place(); for(const p of m.others) addOther(p); if(Net.retry) log('Conectado de novo.','sys'); Net.retry=0; onlineBadge(); return; }
+  Net.inWorld=true; // antes do begin, para o save inicial já ir ao servidor
+  chosenClass=y.cls;
+  if(y.save&&y.save.level){ begin({...y.save, name:y.name, cls:y.cls, map:y.map, x:y.x, y:y.y}); }
+  else { begin(null, y.name); }
+  place(); reveal(); miniDirty=true; uiDirty=true; skillsDirty=true;
+  for(const p of m.others) addOther(p); Net.retry=0; onlineBadge();
+  $('chatBar').hidden=false; log('Você está no Brumaval Online. Aperte Enter para falar. Canal Mundo a partir do nível 5. /quem lista quem está online. Nesta versão, cada jogador vê os próprios monstros.','npc'); }
 function leaveOnlineWorld(note){ Net.inWorld=false; running=false; Net.others.clear(); speech=[]; $('chatBar').hidden=true; onlineStart(note); }
 function onlineBadge(){ const el=$('acct'); if(!el) return; el.hidden=false; el.textContent='online · '+Net.online+(Net.online===1?' jogador':' jogadores')+(Net.ping!=null?' · '+Net.ping+' ms':''); }
 setInterval(()=>{ if(Net.inWorld) netSend({t:'ping',at:Date.now()}); },5000);
-function sendChat(){ const i=$('chatIn'), t=i.value.trim(); if(!t) { i.blur(); return; } if(!netSend({t:'say',text:t,ch:$('chatCh').value})) log('Sem conexão com o servidor.','sys'); i.value=''; i.blur(); }
+addEventListener('pagehide',()=>{ if(Net.inWorld) netSave(true); });
+function sendChat(){ const i=$('chatIn'), t=i.value.trim(); if(!t){ i.blur(); return; } if(!netSend({t:'say',text:t,ch:$('chatCh').value})) log('Sem conexão com o servidor.','sys'); i.value=''; i.blur(); }
 $('chatBar').addEventListener('submit',e=>{ e.preventDefault(); sendChat(); });
 $('chatIn').addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.target.value=''; e.target.blur(); } e.stopPropagation(); });
 
@@ -5122,7 +5557,7 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(!ONLINE && data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
-window.__game = {Net, netSend, get speech(){return speech}, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {Net, netSend, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>

@@ -411,6 +411,23 @@ for(const D of [ICED,SEAD]) for(const ids of Object.values(D)) for(const id of i
 { const r=mulberry32(4242); for(const ids of Object.values(SEAD)) for(const id of ids){ const M=MAPS[id]; let n=Math.floor(M.W*M.H/230), tries=0;
   while(n>0&&tries++<4000){ const x=1+Math.floor(r()*(M.W-2)), y=1+Math.floor(r()*(M.H-2)), k=y*M.W+x, tt=M.t[k]; if(BLOCKS.has(tt)||LINKS_T.has(tt)||SAFE.has(tt)) continue;
     if(M.entry&&Math.abs(M.entry.x-x)+Math.abs(M.entry.y-y)<3) continue; if(M.exit&&Math.abs(M.exit.x-x)+Math.abs(M.exit.y-y)<3) continue; if(M.boss&&Math.abs(M.boss.x-x)+Math.abs(M.boss.y-y)<3) continue; M.t[k]=BUBBLE; n--; } } }
+// ---- cidades maiores: o muro cresce e entra uma fileira de 4 casinhas embaixo para os NPCs (vale para as cinco cidades)
+function expandTown(M, rc, cfg){ const W=M.W, H=M.H, t=M.t, set=(x,y,v)=>{ if(x>=0&&y>=0&&x<W&&y<H) t[y*W+x]=v; };
+  const CX=Math.round((rc.x0+rc.x1)/2), CY=Math.round((rc.y0+rc.y1)/2), X0=rc.x0-4, X1=rc.x1+4, Y0=rc.y0-2, Y1=rc.y1+3;
+  for(let y=Y0-2;y<=Y1+2;y++) for(let x=X0-2;x<=X1+2;x++){ if(x<0||y<0||x>=W||y>=H) continue; const k=t[y*W+x];
+    if(x<X0||x>X1||y<Y0||y>Y1){ if(BLOCKS.has(k)&&k!==BOAT) set(x,y,cfg.ground[(hash2(x*7+3,y*13+W)%100)<cfg.alt?1:0]); } else set(x,y,cfg.floor); }
+  for(let y=Y0;y<=Y1;y++) for(let x=X0;x<=X1;x++) if(x===X0||x===X1||y===Y0||y===Y1) set(x,y,cfg.wall);
+  for(let d=-1;d<=1;d++){ set(CX+d,Y0,cfg.floor); set(CX+d,Y1,cfg.floor); set(X0,CY+d,cfg.floor); set(X1,CY+d,cfg.floor); }
+  const B=(a,b,c,d,dx,dy)=>{ for(let y=b;y<=d;y++) for(let x=a;x<=c;x++) set(x,y,(x===a||x===c||y===b||y===d)?cfg.bwall:WOOD); set(dx,dy,DOOR); };
+  B(X0+1,Y0+1,X0+7,Y0+6, X0+4,Y0+6); B(X1-7,Y0+1,X1-1,Y0+6, X1-4,Y0+6);
+  for(const hx of [X0+1,X0+6,X0+14,X0+19]) B(hx,Y1-5,hx+4,Y1-1, hx+2,Y1-5);
+  for(const [dx,dy] of [[3,1],[4,1],[3,2],[4,2]]) set(CX+dx,CY+dy,cfg.pond);
+  rc.x0=X0; rc.x1=X1; rc.y0=Y0; rc.y1=Y1; if(rc.cx!=null){ rc.cx=CX; rc.cy=CY; } if(M.spawn){ M.spawn.x=X0+4; M.spawn.y=Y0+3; } }
+expandTown(MAPS.over, TOWN, {ground:[G,FLOW], alt:8, floor:STONE, wall:WALL, bwall:WALL, pond:WATER});
+expandTown(MAPS.ash, MAPS.ash.townRect, {ground:[ASH,CRACK], alt:10, floor:BASALT, wall:BWALL, bwall:BWALL, pond:LAVA});
+expandTown(MAPS.fae, MAPS.fae.townRect, {ground:[MOSS,FFLOW], alt:15, floor:FSTONE, wall:HEDGE, bwall:LOGW, pond:WATER});
+expandTown(MAPS.ice, MAPS.ice.townRect, {ground:[SNOW,DRIFT], alt:10, floor:STONE, wall:WALL, bwall:WALL, pond:ICEF});
+expandTown(MAPS.sea, MAPS.sea.townRect, {ground:[SANDF,KELP], alt:8, floor:NACRE, wall:REEFW, bwall:REEFW, pond:BUBBLE});
 for(const m of Object.values(MAPS)) m.explored = new Uint8Array(m.W*m.H);
 const tileAt=(m,x,y)=>(x<0||y<0||x>=m.W||y>=m.H)?(m.oob??(m.dark?CWALL:TREE)):m.t[y*m.W+x];
 function arrivalNear(m,x,y){ for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){ const nx=x+dx,ny=y+dy, tt=tileAt(m,nx,ny); if(!BLOCKS.has(tt)&&!LINKS_T.has(tt)) return {x:nx,y:ny}; } return {x,y:y+1}; }

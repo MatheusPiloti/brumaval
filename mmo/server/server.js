@@ -57,7 +57,7 @@ const online = new Map();     // id do personagem -> jogador no mundo
 let nextConn = 1;
 
 function charList(acc) { return Object.values(db.chars).filter(c => c.owner === acc).map(c => ({ id: c.id, name: c.name, cls: c.cls, level: c.level, map: c.map, online: online.has(c.id) })); }
-function pub(p) { return { id: p.id, name: p.name, cls: p.cls, level: p.level, x: p.x, y: p.y, dir: p.dir, map: p.map, adm: p.adm || undefined }; }
+function pub(p) { return { id: p.id, name: p.name, cls: p.cls, level: p.level, x: p.x, y: p.y, dir: p.dir, map: p.map, adm: p.adm || undefined, look: p.look || undefined, mount: p.mount || undefined, nameCol: p.nameCol || undefined }; }
 function send(ws, msg) { if (ws.readyState === 1) ws.send(JSON.stringify(msg)); }
 function toMap(map, msg, except) { const s = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p !== except && p.ws.readyState === 1) p.ws.send(s); }
 function toAll(msg) { const s = JSON.stringify(msg); for (const p of online.values()) if (p.ws.readyState === 1) p.ws.send(s); }
@@ -74,7 +74,7 @@ function freeNear(map, x, y, self) {
   }
   return { x, y };
 }
-function saveChar(p) { const c = db.chars[p.id]; if (!c) return; Object.assign(c, { map: p.map, x: p.x, y: p.y, dir: p.dir, level: p.level, lastSeen: Date.now() }); markDirty(); }
+function saveChar(p) { const c = db.chars[p.id]; if (!c) return; Object.assign(c, { map: p.map, x: p.x, y: p.y, dir: p.dir, level: p.level, look: p.look || null, mount: p.mount || null, nameCol: p.nameCol || null, lastSeen: Date.now() }); markDirty(); }
 
 function warp(p, map, x, y, text) {
   const from = p.map; const spot = freeNear(map, x, y, p);
@@ -136,10 +136,10 @@ function enterWorld(conn, id) {
   const c = db.chars[id]; if (!c || c.owner !== conn.acc) return send(conn.ws, { t: 'err', text: 'Personagem não encontrado.' });
   for (const o of online.values()) if (o.owner === conn.acc) { send(o.ws, { t: 'kicked', text: 'Sua conta entrou em outro lugar.' }); leaveWorld(o); try { o.ws.close(); } catch (e) {} }
   if (!MAPS[c.map]) { c.map = 'over'; c.x = MAPS.over.spawn.x; c.y = MAPS.over.spawn.y; }
-  const p = { id: c.id, owner: conn.acc, name: c.name, cls: c.cls, level: c.level || 1, map: c.map, x: c.x, y: c.y, dir: c.dir || 'down', ws: conn.ws, queue: [], next: 0, adm: isAdm(conn.acc) };
+  const p = { id: c.id, owner: conn.acc, name: c.name, cls: c.cls, level: c.level || 1, map: c.map, x: c.x, y: c.y, dir: c.dir || 'down', ws: conn.ws, queue: [], next: 0, adm: isAdm(conn.acc), look: c.look || null, mount: c.mount || null, nameCol: c.nameCol || null };
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
-  send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
+  send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
   toMap(p.map, { t: 'join', p: pub(p) }, p);
   toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'entrou', p.name, '(' + conn.acc + ')', 'online:', online.size);
@@ -197,6 +197,21 @@ function onMessage(conn, m) {
       const D = MAPS[to]; return warp(p, to, D.dock.x, D.dock.y, D.enter || ('Você chega a ' + D.name + '.'));
     }
     case 'ping': return send(ws, { t: 'pong', at: m.at });
+    case 'save': { // progresso do personagem (itens, nível, magias...) guardado como veio do jogo
+      const now = Date.now(); if (now - (p.savedT || 0) < 2500) return; p.savedT = now;
+      if (!m.data || typeof m.data !== 'object') return; const txt = JSON.stringify(m.data); if (txt.length > 1200000) return send(ws, { t: 'sys', text: 'Save grande demais.' });
+      const c = db.chars[p.id]; if (!c) return; c.save = m.data; const lv = Math.max(1, Math.min(1000, m.data.level | 0)); if (lv !== p.level) { p.level = lv; toMap(p.map, { t: 'lvl', id: p.id, level: lv }, p); } c.level = lv; markDirty(); return; }
+    case 'look': { if (m.look && typeof m.look === 'object' && JSON.stringify(m.look).length < 4000) p.look = m.look;
+      p.mount = typeof m.mount === 'string' && m.mount.length < 24 ? m.mount : null; p.nameCol = typeof m.name === 'string' && m.name.length < 24 ? m.name : null;
+      if (m.level) p.level = Math.max(1, Math.min(1000, m.level | 0)); if (m.spd) p.step = Math.max(90, Math.min(400, m.spd | 0));
+      return toMap(p.map, { t: 'look', id: p.id, look: p.look, mount: p.mount, name: p.nameCol, level: p.level }, p); }
+    case 'sync': { // troca de mapa feita pelo jogo (renascer no templo, sair da torre)
+      const M = MAPS[m.map]; if (!M || !passPlayer(M, m.x | 0, m.y | 0)) return send(ws, { t: 'fix', x: p.x, y: p.y, map: p.map });
+      const from = p.map; if (from !== m.map) toMap(from, { t: 'leave', id: p.id }, p);
+      p.map = m.map; p.x = m.x | 0; p.y = m.y | 0; p.queue.length = 0; p.next = 0;
+      if (from !== m.map) { send(ws, { t: 'roster', map: p.map, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub) }); toMap(p.map, { t: 'join', p: pub(p) }, p); }
+      else toMap(p.map, { t: 'mv', id: p.id, x: p.x, y: p.y, dir: p.dir, dur: 1 }, p);
+      saveChar(p); return; }
   }
 }
 function login(conn, acc) {
@@ -219,7 +234,7 @@ const server = http.createServer((req, res) => {
   if (url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ ok: true, online: online.size })); }
   res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }); res.end('Não encontrado');
 });
-const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 4096 });
+const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 1500000 });
 const perIp = new Map();
 wss.on('connection', (ws, req) => {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();

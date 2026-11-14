@@ -10,21 +10,27 @@ A versão com todos no mesmo mundo. O jogo solo (`src/`) continua separado e nã
 | `deploy/install.sh` | Instala ou atualiza tudo numa VPS Ubuntu/Debian, com HTTPS automático. |
 | `tools/` | Scripts de apoio (extração dos mapas e a conversão inicial do cliente). |
 
-## Etapa atual: 1 de 4 (mundo compartilhado)
+## Etapa atual: 2a (jogo completo, monstros de cada um)
 
-Já funciona:
-- **Contas e personagens:** contas com usuário e senha (senha guardada com hash), até 5 personagens por conta, nomes únicos no servidor.
-- **Mundo compartilhado:** todos se veem andando, em tempo real, em todos os 70 mapas.
-- **Validação no servidor:** paredes, quinas, velocidade (nada de speed hack), escadas e barcos são checados pelo servidor.
-- **Colisão:** fora da cidade os jogadores bloqueiam a passagem uns dos outros; dentro da cidade, não.
-- **Chat:** Local (quem está na tela, com a fala em cima da cabeça) e Mundo (a partir do nível 5).
-- **Conexão:** reconecta sozinho se a conexão cair, e a mesma conta não fica logada em dois lugares.
-- **Posição salva:** a posição é salva no servidor; ao voltar, o personagem aparece onde estava.
+O cliente online é o jogo solo inteiro: monstros, combate, itens, magias, torre, roupas e montarias.
 
-Ainda não tem (próximas etapas):
-- **2.** Monstros, combate, loot, XP e morte rodando no servidor. Por enquanto não existem monstros no online.
-- **3.** Magias, itens, inventário, lojas e depósito no servidor. Hoje o inventário que aparece na tela é só visual e não é salvo.
-- **4.** Grupo, troca de itens, PvP aberto com caveiras e guildas.
+O servidor cuida de:
+- contas;
+- progresso de cada personagem (nível, itens, ouro, magias e visual são salvos no servidor);
+- posição de todos, escadas, barcos e chat;
+- visual de cada um: você vê a roupa, o equipamento e a montaria dos outros.
+
+Limitação desta etapa: os monstros rodam no navegador de cada jogador, então cada um vê e mata os seus. Na Torre das Brumas, o andar também é só seu.
+
+Próximas etapas:
+- **2b.** Monstros compartilhados, rodando no servidor: todos batem no mesmo bicho e dividem o saque.
+- **3.** Grupo, troca de itens, PvP aberto com caveiras e guildas.
+
+Para atualizar o cliente a partir do jogo solo:
+
+```bash
+cp src/game.html mmo/client/game.html && python3 mmo/tools/make_online.py
+```
 
 ## Comandos no chat
 
