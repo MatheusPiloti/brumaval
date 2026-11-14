@@ -202,7 +202,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}
 .chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
-[data-p=bosses],#btnSave,#btnLogout{display:none!important}
+#btnSave,#btnLogout{display:none!important}
 .log .xp{color:#e7c86a}.log .dmg{color:#ec8a7c}.log .heal{color:#9fd48a}.log .npc{color:#9cc3ee}.log .loot{color:#d8bf94}.log .sys{color:var(--muted)}.log .lvl{color:var(--accent);font-weight:700}
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px}
@@ -4881,7 +4881,7 @@ function renderContainers(){
 const fmtT = ms => { const s=Math.max(0,Math.ceil(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function renderBosses(){
   $('bosses').innerHTML=BOSSES.map(b=>{ const n=player.bossKills[b.type]||0, sp=spawns.find(s=>s.type===b.type), d=MON[b.type];
-    const st = !sp||sp.mon ? '<span class="rn r1">vivo</span>' : `renasce em ${fmtT(sp.timer)}`;
+    const st = !sp||sp.mon||sp.netAlive ? '<span class="rn r1">vivo</span>' : `renasce em ${fmtT(sp.timer)}`;
     return `<div>${d.name} <small>· nível ${b.lvl}+ · ${st} · respawn ${d.respawn/60000} min${n?` · derrotado ${n}×`:''}<br>${b.where}</small></div>`; }).join('');
 }
 function showInfo(it, hint){
@@ -5643,6 +5643,7 @@ function netOnMob(m){
     case 'mtalk': { const o=netMobs.get(m.id); if(!o||o.map!==cur.id) return true; const K=m.kind&&FIELD_KIND[m.kind]; const text=K?K.say:m.text; floatAt(o,text,K?K.p[0]:'#ffb0a0',true);
       if(m.say){ log(o.def.name+': "'+text+'"','dmg'); trauma=Math.min(1,trauma+0.35); if(m.enrage) log(o.def.name+' fica furioso e ataca mais rápido!','dmg'); } return true; }
     case 'fields': if(m.map===cur.id) for(const [x,y,dmg,life,warn,kind] of m.list) addField(cur.id,x,y,dmg,life,warn,kind); return true;
+    case 'bosses': for(const b of m.list){ for(const sp of spawns) if(sp.type===b.type){ sp.netAlive=b.alive; sp.timer=b.timer; } } uiDirty=true; return true;
     case 'ink': { player.inkT=5000; log((m.src||'O Kraken')+' solta uma nuvem de tinta! Você mal enxerga.','dmg'); return true; }
   }
   return false;

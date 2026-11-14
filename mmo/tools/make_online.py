@@ -13,7 +13,7 @@ NET=open(os.path.join(ROOT,'mmo/tools/online.js'),encoding='utf-8').read()
 rep("const SAVE_KEY = 'brumaval-save-v1';","const SAVE_KEY = 'brumaval-save-v1';\nconst ONLINE = true; // cliente do Brumaval Online")
 # chat embaixo do registro + estilos
 rep('    <div class="log" id="log" aria-live="polite"></div>','    <div class="log" id="log" aria-live="polite"></div>\n    <form class="chatbar" id="chatBar" hidden autocomplete="off"><select id="chatCh" aria-label="Canal"><option value="local">Local</option><option value="mundo">Mundo</option></select><input id="chatIn" maxlength="200" placeholder="Enter para falar · /quem" aria-label="Mensagem"><button type="submit">Falar</button></form>')
-rep(".log div{padding:1px 0}",".log div{padding:1px 0}\n.log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}\n.chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}\n.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}\n[data-p=bosses],#btnSave,#btnLogout{display:none!important}")
+rep(".log div{padding:1px 0}",".log div{padding:1px 0}\n.log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}\n.chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}\n.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}\n#btnSave,#btnLogout{display:none!important}")
 # progresso salvo no servidor
 rep("function save(){ if(!running) return;","function save(){ if(!running) return; if(ONLINE){ netSave(); return; }")
 # passo: avisa o servidor (na torre o andar é só seu)
@@ -57,6 +57,7 @@ rep("function isAdmin(){ if(Cloud.on)","function isAdmin(){ if(ONLINE) return !!
 rep("    if(act==='summon'){","    if(act==='summon'&&ONLINE){ netSend({t:'gm',cmd:'summon',type:ADM.mon,n:ADM.mn}); msg='Pedido ao servidor: '+ADM.mn+'× '+MON[ADM.mon].name+' perto de você.'; }\n    else if(act==='summon'){")
 rep("    if(act==='bosses'){","    if(act==='bosses'&&ONLINE){ netSend({t:'gm',cmd:'bosses'}); msg='O servidor vai renascer os chefes mortos (onde não houver jogador perto).'; }\n    else if(act==='bosses'){")
 rep("    if(act==='clear'){","    if(act==='clear'&&ONLINE){ netSend({t:'gm',cmd:'clear'}); msg='O servidor removeu os monstros deste andar.'; }\n    else if(act==='clear'){")
+rep("const st = !sp||sp.mon ?","const st = !sp||sp.mon||sp.netAlive ?")
 rep("function respawn(){","function respawn(){ if(ONLINE) netSend({t:'state',dead:false});")
 rep("const boot = data => { if(data && data.save){ begin(data.save); } };","const boot = data => { if(!ONLINE && data && data.save){ begin(data.save); } };")
 rep("window.__game = {","window.__game = {Net, netSend, get speech(){return speech}, ")

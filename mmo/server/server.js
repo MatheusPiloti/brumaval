@@ -101,6 +101,9 @@ const playersOn = map => { const out = []; for (const p of online.values()) if (
 const mobsApi = require('./mobs.js')(S, { players: playersOn, toMap: (map, msg, except) => { const s2 = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p.id !== except && p.ws.readyState === 1) p.ws.send(s2); },
   toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); } }, simCtx);
 const sendMobs = p => send(p.ws, mobsApi.snapshot(p.map));
+// painel Chefes: quem está vivo e quanto falta para renascer
+const bossList = () => mobsApi.spawns.filter(sp => S.MON[sp.type].boss).map(sp => ({ type: sp.type, alive: !!sp.mob, timer: Math.max(0, Math.round(sp.timer)) }));
+setInterval(() => { if (online.size) toAll({ t: 'bosses', list: bossList() }); }, 5000);
 let lastTick = Date.now(); setInterval(() => { const n = Date.now(), dt = Math.min(200, n - lastTick); lastTick = n; try { mobsApi.tick(dt); } catch (e) { console.error('erro nos monstros', e); } }, 50);
 
 // ---------------------------------------------------------------- movimento (com fila curta para esconder a latência)
@@ -166,7 +169,7 @@ function enterWorld(conn, id) {
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
   send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
-  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p);
+  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); send(p.ws, { t: 'bosses', list: bossList() });
   toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'entrou', p.name, '(' + conn.acc + ')', 'online:', online.size);
 }

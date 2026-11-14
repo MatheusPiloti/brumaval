@@ -176,6 +176,7 @@ function netOnMob(m){
     case 'mtalk': { const o=netMobs.get(m.id); if(!o||o.map!==cur.id) return true; const K=m.kind&&FIELD_KIND[m.kind]; const text=K?K.say:m.text; floatAt(o,text,K?K.p[0]:'#ffb0a0',true);
       if(m.say){ log(o.def.name+': "'+text+'"','dmg'); trauma=Math.min(1,trauma+0.35); if(m.enrage) log(o.def.name+' fica furioso e ataca mais rápido!','dmg'); } return true; }
     case 'fields': if(m.map===cur.id) for(const [x,y,dmg,life,warn,kind] of m.list) addField(cur.id,x,y,dmg,life,warn,kind); return true;
+    case 'bosses': for(const b of m.list){ for(const sp of spawns) if(sp.type===b.type){ sp.netAlive=b.alive; sp.timer=b.timer; } } uiDirty=true; return true;
     case 'ink': { player.inkT=5000; log((m.src||'O Kraken')+' solta uma nuvem de tinta! Você mal enxerga.','dmg'); return true; }
   }
   return false;
