@@ -1,6 +1,7 @@
 // Monstros compartilhados: o servidor cria, move, faz atacar, renascer e soltar saque.
 // Segue as mesmas regras do jogo (src/game.html: updateMonster, bossTick, killMonster), mas com vários jogadores.
 'use strict';
+const BOSS_RESPAWN = 5 * 60 * 1000; // chefes renascem em 5 minutos (por enquanto)
 const BOT_LOOT = 1; // caça automática sem penalidade por enquanto (era 0.5)
 module.exports = function createMobs(S, io, ctx) {
   // io: { players(map) -> [{id,x,y,dead,cls,name}], toMap(map,msg,exceptId), toPlayer(id,msg) }
@@ -127,7 +128,7 @@ module.exports = function createMobs(S, io, ctx) {
   }
   function kill(m) {
     const d = m.def, temp = !!m.sp.temp, lv = d.lvl + Math.round((m.mult - 1) * 10);
-    remove(m); if (!temp) m.sp.timer = d.respawn || (25000 + R() * 15000);
+    remove(m); if (!temp) m.sp.timer = d.boss ? BOSS_RESPAWN : (d.respawn || (25000 + R() * 15000));
     const total = [...m.dmg.values()].reduce((a, b) => a + b, 0) || 1, xp = temp ? m.xp / 2 : m.xp;
     const ranked = [...m.dmg.entries()].sort((a, b) => b[1] - a[1]), top = ranked[0]?.[0] || null;
     const items = [];

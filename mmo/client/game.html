@@ -5464,7 +5464,7 @@ function fixLinkChokes(){
 }
 fixLinkChokes();
 setupWorld();
-if(ONLINE){ for(const sp of spawns) if(!MON[sp.type].dummy){ if(sp.mon){ const i=monsters.indexOf(sp.mon); if(i>=0) monsters.splice(i,1); } sp.mon=null; sp.net=true; } }
+if(ONLINE){ for(const t in MON) if(MON[t].boss) MON[t].respawn=5*60*1000; for(const sp of spawns) if(!MON[sp.type].dummy){ if(sp.mon){ const i=monsters.indexOf(sp.mon); if(i>=0) monsters.splice(i,1); } sp.mon=null; sp.net=true; } }
 // ============================================================ online: conexão com o servidor
 // O servidor guarda contas, personagens (progresso), posição de todos, escadas, barcos, chat e o visual de cada um.
 // Nesta etapa os monstros e o combate rodam no navegador de cada jogador (cada um vê os seus).

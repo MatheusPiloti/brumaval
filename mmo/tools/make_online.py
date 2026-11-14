@@ -42,7 +42,7 @@ rep("$('btnChars').addEventListener('click', async ()=>{ if(!running) return;","
 # visual do jogador vai para o servidor (os outros veem roupa, montaria e equipamento)
 rep("  if(cosOn('mount')) drawRiderHero(c,x,y,o,player.phase,player.face||1); else drawHero(c,x,y,o,player.phase,player.moving);",
     "  if(ONLINE&&c===ctx) netLook(o);\n  if(cosOn('mount')) drawRiderHero(c,x,y,o,player.phase,player.face||1); else drawHero(c,x,y,o,player.phase,player.moving);")
-rep("fixLinkChokes();\nsetupWorld();\nstartScreen();","fixLinkChokes();\nsetupWorld();\nif(ONLINE){ for(const sp of spawns) if(!MON[sp.type].dummy){ if(sp.mon){ const i=monsters.indexOf(sp.mon); if(i>=0) monsters.splice(i,1); } sp.mon=null; sp.net=true; } }\n"+NET+"\nif(ONLINE) onlineStart(); else startScreen();")
+rep("fixLinkChokes();\nsetupWorld();\nstartScreen();","fixLinkChokes();\nsetupWorld();\nif(ONLINE){ for(const t in MON) if(MON[t].boss) MON[t].respawn=5*60*1000; for(const sp of spawns) if(!MON[sp.type].dummy){ if(sp.mon){ const i=monsters.indexOf(sp.mon); if(i>=0) monsters.splice(i,1); } sp.mon=null; sp.net=true; } }\n"+NET+"\nif(ONLINE) onlineStart(); else startScreen();")
 # monstros: os do servidor não rodam a inteligência aqui; os pontos de nascimento ficam (bestiário), mas quem cria é o servidor
 rep("  for(const m of [...monsters]) if(m.map===cur.id && !m.dead) updateMonster(m,dt);","  for(const m of [...monsters]) if(m.map===cur.id && !m.dead && !m.net) updateMonster(m,dt);")
 rep("for(const sp of spawns) if(!sp.mon){ sp.timer-=dt;","for(const sp of spawns) if(!sp.mon&&!sp.net){ sp.timer-=dt;")
