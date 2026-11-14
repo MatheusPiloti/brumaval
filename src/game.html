@@ -258,6 +258,8 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .cls b{font-family:var(--display);font-size:15px;font-weight:500;color:var(--accent)}
 .cls small{color:var(--muted);font-size:12px;line-height:1.25}
 .zoom{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:4px}
+.lootbtn{position:absolute;right:8px;bottom:8px;z-index:2;padding:6px 10px;font-weight:600;background:rgba(20,15,10,.82);border-color:var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.6)}.lootbtn kbd{font-size:10px;padding:0 4px;border:1px solid var(--line);border-radius:3px;margin-left:4px;color:var(--muted)}
+.lootbtn.has{color:#ffd54a;animation:lootpulse 1.2s ease-in-out infinite}@keyframes lootpulse{50%{box-shadow:0 0 10px var(--accent)}}
 
 .hud{position:absolute;top:8px;left:8px;right:84px;display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:2;pointer-events:none}
 .hud .bar{margin:0;height:18px;box-shadow:0 1px 4px rgba(0,0,0,.7)}.hud .bar span{line-height:16px;font-size:12px}
@@ -300,6 +302,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <div class="viewport" id="viewport">
       <canvas id="cv" width="544" height="416" aria-label="Mundo do jogo"></canvas>
       <div class="hud" id="hud" aria-hidden="true"><div class="bar hp"><i id="thpFill"></i><span id="thpTxt"></span></div><div class="bar mp"><i id="tmpFill"></i><span id="tmpTxt"></span></div></div>
+      <button type="button" class="lootbtn" id="btnLoot" title="Pegar tudo dos corpos colados em você (tecla L)">Saquear <kbd id="lootKey">L</kbd></button>
       <div class="zoom"><button type="button" id="zOut" aria-label="Afastar a câmera" title="Afastar (tecla -)">−</button><button type="button" id="zIn" aria-label="Aproximar a câmera" title="Aproximar (tecla +)">+</button></div>
       <div id="afk" hidden role="dialog" aria-label="Painel AFK"><div class="afkw">
         <div class="afkh"><h2>Painel da caçada</h2><span class="afkst" id="afkState"></span><div class="spacer"></div><button type="button" id="afkBot">Caça automática</button><button type="button" id="afkReset">Zerar contadores</button><button type="button" class="primary" id="afkClose">Voltar ao jogo</button></div>
@@ -2494,7 +2497,7 @@ function fireRain(m,rn){
 }
 
 // ---- cura automática (configurável por personagem)
-const AUTO_DEF=()=>({heal:{on:true,pct:60}, hp:{on:true,pct:35}, mp:{on:false,pct:30}});
+const AUTO_DEF=()=>({heal:{on:false,pct:60}, hp:{on:false,pct:35}, mp:{on:false,pct:30}});
 let autoT=0;
 function autoHeal(dt){
   autoT-=dt; if(autoT>0) return; autoT=150;
@@ -2700,7 +2703,7 @@ function spellIconURL(s){ return spellIconCache[s.name]||(spellIconCache[s.name]
 
 
 // ============================================================ atalhos configuráveis
-const KEY_DEF={...Object.fromEntries(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','KeyQ','KeyE','KeyR','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyT',...Array(60).fill('')].map((k,i)=>['b'+i,k])), next:'Space', bot:'KeyB'};
+const KEY_DEF={...Object.fromEntries(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','KeyQ','KeyE','KeyR','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyT',...Array(60).fill('')].map((k,i)=>['b'+i,k])), next:'Space', bot:'KeyB', loot:'KeyL'};
 let KEYS={...KEY_DEF}; try{ const old=JSON.parse(localStorage.getItem('brumaval-keys')||'{}')||{};
   if(old.s0!==undefined||old.hp!==undefined){ for(let i=0;i<8;i++) if(old['s'+i]!==undefined) old['b'+i]=old['s'+i]; if(old.hp!==undefined) old.b8=old.hp; if(old.mp!==undefined) old.b9=old.mp; for(const k of ['s0','s1','s2','s3','s4','s5','s6','s7','hp','mp']) delete old[k]; }
   Object.assign(KEYS, old); for(const k of Object.keys(KEYS)) if(!(k in KEY_DEF)) delete KEYS[k];
@@ -2708,14 +2711,14 @@ let KEYS={...KEY_DEF}; try{ const old=JSON.parse(localStorage.getItem('brumaval-
 const RESERVED=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape','Minus','Equal','NumpadAdd','NumpadSubtract','Tab','Enter']);
 function keyLabel(code){ if(!code) return '—'; if(code.includes('+')){ const p=code.split('+'); return p.slice(0,-1).join('+')+'+'+keyLabel(p[p.length-1]); } if(/^Digit\d$/.test(code)) return code.slice(5); if(/^Key[A-Z]$/.test(code)) return code.slice(3); if(/^Numpad\d$/.test(code)) return 'Num '+code.slice(6);
   return {Space:'Espaço',Backquote:'´',Backslash:'\\',Comma:',',Period:'.',Slash:'/',Semicolon:'ç',Quote:'~',BracketLeft:'[',BracketRight:']',ShiftLeft:'Shift',ShiftRight:'Shift dir.',ControlLeft:'Ctrl',AltLeft:'Alt',CapsLock:'Caps'}[code]||code; }
-const keyActions=()=>[...Array.from({length:barVis},(_,i)=>({id:'b'+i, label:'Atalho '+(i+1)+': '+(slotInfo(player.bar?.[i])?.name||'vazio')})), {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}];
+const keyActions=()=>[...Array.from({length:barVis},(_,i)=>({id:'b'+i, label:'Atalho '+(i+1)+': '+(slotInfo(player.bar?.[i])?.name||'vazio')})), {id:'next',label:'Mirar o inimigo mais próximo'}, {id:'bot',label:'Ligar ou desligar a caça automática'}, {id:'loot',label:'Saquear os corpos ao seu redor'}];
 let capturing=null;
 const saveKeys=()=>{ try{ localStorage.setItem('brumaval-keys',JSON.stringify(KEYS)); }catch(e){} };
 const MODS=new Set(['ShiftLeft','ShiftRight','ControlLeft','ControlRight','AltLeft','AltRight','MetaLeft','MetaRight']);
 const comboOf=e=>MODS.has(e.code)?e.code:(e.ctrlKey?'Ctrl+':'')+(e.altKey?'Alt+':'')+(e.shiftKey?'Shift+':'')+e.code;
 function actionFor(code){ for(const k in KEYS) if(KEYS[k]===code) return k; return null; }
 function targetNext(){ const near=monsters.filter(m=>!m.dead&&m.map===cur.id&&cheb(m,player)<=7).sort((a,b)=>cheb(a,player)-cheb(b,player)); if(near.length){ const i=near.indexOf(target); setTarget(near[(i+1)%near.length], true); } }
-function doAction(a,fromKey){ if(/^b\d+$/.test(a)) slotAction(+a.slice(1),fromKey); else if(a==='next') targetNext(); else if(a==='bot') toggleBot(); }
+function doAction(a,fromKey){ if(/^b\d+$/.test(a)) slotAction(+a.slice(1),fromKey); else if(a==='next') targetNext(); else if(a==='bot') toggleBot(); else if(a==='loot') lootAround(); }
 function openKeys(){
   const rows=keyActions().map(A=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${esc(A.label)}</b></div><div class="btns"><span class="kbd${capturing===A.id?' wait':''}">${capturing===A.id?'aperte a tecla…':esc(keyLabel(KEYS[A.id]))}</span><button data-act="set" data-a="${A.id}">Mudar</button><button data-act="clr" data-a="${A.id}" aria-label="Remover o atalho de ${esc(A.label)}">×</button></div></div>`).join('');
   openDialog(player,'Atalhos',`<p class="hint" style="margin-top:0">Clique em "Mudar" e aperte a tecla nova (letras, números, F1–F12, teclado numérico, e também combinações como Shift+1 ou Ctrl+Q). Dica: o botão direito num quadrado da barra também muda a tecla dele. WASD, setas, Esc, Enter, + e − são reservados. Se a tecla já estiver em uso, os atalhos trocam de lugar.</p><div class="list">${rows}</div><div class="row"><button data-act="def">Restaurar padrão</button><button class="primary" data-act="close">Fechar</button></div>`,(act,ds)=>{
@@ -2733,7 +2736,8 @@ addEventListener('keydown',e=>{ if(!capturing) return; e.preventDefault(); e.sto
 $('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
 
 // ============================================================ caça automática por rota
-const BOT_DEF=()=>({how:'route', routes:{}, spells:null, minMana:20, range:7, loot:{gold:true,pots:true,mats:true,bags:true,rar:2}, stopNoPots:true, dist:0, refill:{on:true,minHp:5,hp:100,minMp:0,mp:50,full:true,strong:false,ammo:500,minAmmo:0}});
+// a caça automática começa sem nada ligado: o jogador escolhe magias, saque, cura e reabastecimento quando quiser usar
+const BOT_DEF=()=>({how:'route', routes:{}, spells:{}, minMana:0, range:7, loot:{gold:false,pots:false,mats:false,bags:false,rar:5}, stopNoPots:false, dist:0, refill:{on:false,minHp:5,hp:100,minMp:0,mp:50,full:false,strong:false,ammo:500,minAmmo:0}});
 let bot={on:false, wp:0, mark:false, msg:'', lastLootFail:-1e9, think:0, stuck:0, mode:'hunt', sub:'', huntMap:null, town:null, fullAt:-1e9};
 const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Disparo Triplo':6,'Chuva de Flechas':6,'Flecha Envenenada':6,
   'Bola de Fogo':6,'Raio Encadeado':6,'Meteoro':6,'Lança de Gelo':6,'Chuva de Granizo':6};
@@ -2998,7 +3002,7 @@ function botTick(dt){
 let botTab='geral';
 function renderBot(){
   const el=$('botui'); if(!el||!player.bot) return; const B=player.bot, R=route(), sp=classSpells();
-  if(!B.spells){ B.spells={}; sp.forEach((s,i)=>{ if(s.kind==='ataque') B.spells[i]=true; }); }
+  if(!B.spells) B.spells={};
   if(!B.how) B.how='route';
   const TABS=[['geral','Geral'],['ataque','Ataque'],['cura','Cura'],['saque','Saque'],['cidade','Cidade']];
   const rarOpts=[['5','nenhum equipamento'],['0','todos'],['1','Incomum ou melhor'],['2','Raro ou melhor'],['3','Épico ou melhor'],['4','só Lendário']];
@@ -3433,6 +3437,15 @@ function interact(ref){
   if(ref.kind==='npc') talk(ref);
   else if(ref.items) openCorpse(ref);
 }
+// pega tudo dos corpos (e itens no chão) colados no personagem, de uma vez
+function lootAround(){ if(!running||player.dead) return; const near=corpses.filter(c=>c.map===cur.id&&c.items.length&&cheb(player,c)<=1);
+  if(!near.length){ log('Não há corpos com saque ao seu lado.','sys'); return; }
+  let got=0, full=false;
+  for(const c of near){ if(onlineLoot&&onlineLoot(c)){ got+=c.items.length; continue; }
+    for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(addItem(it)){ c.items.splice(i,1); got++; log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); } else { full=true; break; } } }
+  if(full) log('A mochila está cheia: parte do saque ficou no corpo.','sys'); if(dialogRef&&dialogRef.items&&!dialogRef.items.length) closeDialog(); uiDirty=true; }
+let onlineLoot=null; // o cliente online usa isto para pedir o saque ao servidor
+setInterval(()=>{ const b=$('btnLoot'); if(!b) return; b.hidden=!running; if(!running) return; b.classList.toggle('has', corpses.some(c=>c.map===cur.id&&c.items.length&&cheb(player,c)<=1)); const k=$('lootKey'); const t=KEYS.loot?keyLabel(KEYS.loot):''; if(k&&k.textContent!==t){ k.textContent=t; k.hidden=!t; } },300);
 function openCorpse(c){
   const render=()=>{
     if(!c.items.length){ closeDialog(); log('Não há mais nada aqui.','sys'); return; }
@@ -5096,7 +5109,7 @@ function applySave(s){
   player.xp=Math.max(player.xp, totalXp(player.level));
   const oldInv=(s.inv||[]).filter(it=>ITEMS[typeof it==='string'?it:it.id]).map(fix);
   player.bossKills=s.bossKills||{};
-  { const D=AUTO_DEF(), A=s.auto||{}; player.auto={heal:{...D.heal,...A.heal}, hp:{...D.hp,...A.hp}, mp:{...D.mp,...A.mp}}; }
+  { const D=AUTO_DEF(), A=JSON.stringify(s.auto)==='{"heal":{"on":true,"pct":60},"hp":{"on":true,"pct":35},"mp":{"on":false,"pct":30}}'?{}:(s.auto||{}); player.auto={heal:{...D.heal,...A.heal}, hp:{...D.hp,...A.hp}, mp:{...D.mp,...A.mp}}; }
   player.depot={gold:Math.max(0,s.depot?.gold||0), items:(s.depot?.items||[]).filter(it=>ITEMS[it.id]).map(fix)};
   for(const [type,ms] of Object.entries(s.bossT||{})){ const sp=spawns.find(x=>x.type===type); if(sp&&sp.mon){ monsters.splice(monsters.indexOf(sp.mon),1); sp.mon=null; sp.timer=ms; } }
   player.eq={}; for(const k in (s.eq||{})){ const it=fix(s.eq[k]); if(ITEMS[it.id]) player.eq[k]=it; }
@@ -5106,7 +5119,8 @@ function applySave(s){
   { const W=ITEMS[player.eq.weapon?.id], O=player.eq.shield; if(O && W && W.hands===2 && !(ITEMS[O.id].ok==='quiver'&&W.wk==='bow')){ delete player.eq.shield; player.eq.bag.items.push(O); } }
   player.learned={fae:false,ash:false,...(s.learned||{})}; player.adm=!!s.adm; player.bar=Array.isArray(s.bar)&&s.bar.length?[...s.bar.slice(0,BAR_N),...Array(Math.max(0,BAR_N-s.bar.length)).fill(null)]:BAR_DEF(); player.ammo=ITEMS[s.ammo]?.ammo?s.ammo:null;
   { const D=SKILL_DEF(), old=s.skills||{}; if(!old.melee&&(old.sword||old.axe||old.club)){ const b=['sword','axe','club'].map(k=>old[k]).filter(Boolean).sort((a,b)=>b.lv-a.lv||b.p-a.p)[0]; old.melee=b; } for(const k in old) if(D[k]) D[k]={lv:+s.skills[k].lv||D[k].lv, p:+s.skills[k].p||0}; player.skills=D; player.bestiary=s.bestiary||{}; }
-  { const D=BOT_DEF(), S=s.bot||{}; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
+  { const D=BOT_DEF(), S0=s.bot||{}, untouched=S0.minMana===20&&S0.range===7&&S0.stopNoPots===true&&!S0.dist&&JSON.stringify(S0.loot)==='{"gold":true,"pots":true,"mats":true,"bags":true,"rar":2}'&&JSON.stringify(S0.refill)==='{"on":true,"minHp":5,"hp":100,"minMp":0,"mp":50,"full":true,"strong":false,"ammo":500,"minAmmo":0}';
+    const S=untouched?{how:S0.how||'route', routes:S0.routes||{}}:S0; player.bot={...D,...S,routes:S.routes||{},loot:{...D.loot,...(S.loot||{})}, refill:{...D.refill,...(S.refill||{})}}; }
   decFog(s.fog);
   Object.assign(quests.fae, s.quests?.fae||{}); Object.assign(quests.ash, s.quests?.ash||{});
   if(s.corpse){ const left=s.corpse.left-(Date.now()-s.corpse.at); if(left>0&&MAPS[s.corpse.map]) corpses.push({map:s.corpse.map,x:s.corpse.x,y:s.corpse.y,player:true,name:s.name,items:(s.corpse.items||[]).filter(it=>ITEMS[it.id]).map(fix),t:0,life:left}); }
@@ -5211,6 +5225,7 @@ function openAdm(note){
 }
 $('btnAdm').addEventListener('click',()=>{ if(running) openAdm(); });
 $('btnLook').addEventListener('click',()=>{ if(running) openWardrobe(); });
+$('btnLoot').addEventListener('click',()=>{ lootAround(); cv.focus?.(); });
 $('btnBook').addEventListener('click',()=>{ if(running){ bookSel=null; openSpellbook(); } });
 $('btnBest').addEventListener('click',()=>{ if(running){ bestSel=null; openBestiary(); } });
 // ============================================================ galeria de sprites (ADM)

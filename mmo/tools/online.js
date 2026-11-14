@@ -180,3 +180,6 @@ function netOnMob(m){
   }
   return false;
 }
+
+// botão Saquear: corpos do servidor pedem o saque ao servidor
+onlineLoot=c=>{ if(!c.net) return false; for(let i=c.items.length-1;i>=0;i--) netSend({t:'loot',cid:c.cid,i}); return true; };
