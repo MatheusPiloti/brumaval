@@ -271,4 +271,6 @@ wss.on('connection', (ws, req) => {
 setInterval(() => { for (const ws of wss.clients) { if (!ws.isAlive) { ws.terminate(); continue; } ws.isAlive = false; ws.ping(); } }, 30000);
 function shutdown() { for (const p of online.values()) saveChar(p); dirty = true; flush(); process.exit(0); }
 process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
+// mensagens do supervisor (atualização automática)
+process.on('message', m => { if (m === 'shutdown') { toAll({ t: 'sys', text: 'Servidor atualizando… você reconecta sozinho em alguns segundos.', big: true }); setTimeout(shutdown, 300); } else if (m && m.t === 'notice') toAll({ t: 'sys', text: m.text, big: true }); });
 server.listen(PORT, HOST, () => console.log(`Brumaval online em http://${HOST}:${PORT} · ${Object.keys(MAPS).length} mapas · dados em ${DATA_DIR}${ADMINS.size ? ' · ADM: ' + [...ADMINS].join(', ') : ''}`));

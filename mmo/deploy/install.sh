@@ -61,7 +61,7 @@ Environment=PORT=8080
 Environment=HOST=127.0.0.1
 Environment=DATA_DIR=$DATA
 Environment=ADMIN_USERS=$ADMIN
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node supervisor.js
 Restart=always
 RestartSec=3
 

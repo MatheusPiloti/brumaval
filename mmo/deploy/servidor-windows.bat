@@ -26,7 +26,7 @@ if not exist cloudflared.exe (
 )
 
 echo Ligando o servidor do jogo...
-start "Brumaval - jogo (nao feche)" cmd /k "set HOST=127.0.0.1&& set PORT=8080&& node server.js"
+start "Brumaval - jogo (nao feche)" cmd /k "set HOST=127.0.0.1&& set PORT=8080&& node supervisor.js"
 timeout /t 4 >nul
 
 echo.
@@ -36,6 +36,7 @@ echo     https://alguma-coisa.trycloudflare.com
 echo  Esse e o link do jogo. Mande para quem vai jogar.
 echo  Neste computador voce tambem pode abrir: http://localhost:8080
 echo  A primeira conta criada no jogo vira ADM.
+echo  O servidor se atualiza sozinho pelo GitHub (o link continua o mesmo).
 echo ==================================================================
 echo.
 cloudflared.exe tunnel --url http://localhost:8080
