@@ -49,6 +49,18 @@ ADMIN_USERS=seuusuario node server.js
 
 Abra http://localhost:8080 em duas abas, crie duas contas e ande com as duas.
 
+## Usar o seu próprio computador como servidor (Windows, grátis)
+
+1. Instale o Node.js (versão LTS) em https://nodejs.org.
+2. Baixe o projeto: https://github.com/matheuspiloti/brumaval/archive/refs/heads/main.zip e extraia.
+3. Abra a pasta `mmo/deploy` e dê dois cliques em `servidor-windows.bat`.
+4. Na janela, aparece um link `https://...trycloudflare.com`. É o endereço do jogo; mande para quem vai jogar.
+
+- O servidor só fica ligado enquanto o computador estiver ligado e a janela aberta.
+- O link muda toda vez que você abre o arquivo de novo.
+- Contas e personagens ficam em `mmo/server/data`.
+- A primeira conta criada vira ADM.
+
 ## Colocar na VPS
 
 1. **Contrate uma VPS** com Ubuntu 22.04 ou 24.04. 1 GB de RAM sobra para o teste. De graça: Oracle Cloud Always Free (região São Paulo ou Vinhedo); o instalador já abre o firewall interno que as máquinas da Oracle trazem.
