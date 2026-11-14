@@ -40,7 +40,9 @@ async function applyUpdate(sha) {
   } else { // instalado pelo .zip (Windows): baixa o .zip e copia por cima, sem tocar em data/ e node_modules/
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'brumaval-')); const zip = path.join(tmp, 'b.zip');
     fs.writeFileSync(zip, await get(`https://codeload.github.com/${REPO}/zip/refs/heads/${BRANCH}`, true));
-    execFileSync('tar', ['-xf', zip, '-C', tmp]);
+    const tries = [['tar', ['-xf', zip, '-C', tmp]], ['unzip', ['-q', '-o', zip, '-d', tmp]], ['powershell', ['-NoProfile', '-Command', `Expand-Archive -Force -LiteralPath '${zip}' -DestinationPath '${tmp}'`]]];
+    let done = false; for (const [cmd, args] of tries) { try { execFileSync(cmd, args, { stdio: 'ignore' }); done = true; break; } catch (e) {} }
+    if (!done) throw new Error('não consegui abrir o .zip (tar, unzip e PowerShell falharam)');
     const top = fs.readdirSync(tmp).map(n => path.join(tmp, n)).find(p => fs.statSync(p).isDirectory());
     const skip = new Set([path.join(top, 'mmo', 'server', 'data'), path.join(top, 'mmo', 'server', 'node_modules')]);
     fs.cpSync(top, ROOT, { recursive: true, force: true, filter: src => ![...skip].some(s => src === s || src.startsWith(s + path.sep)) });
