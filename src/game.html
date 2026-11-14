@@ -3365,13 +3365,11 @@ const riderCv=document.createElement('canvas'); riderCv.width=32; riderCv.height
 // montado: desenha só da cintura para cima e as pernas abertas dos dois lados do animal
 function drawRider(c,x,y,o){ riderG.clearRect(0,0,32,48); drawHuman(riderG,0,12,o,player.phase,false);
   c.drawImage(riderCv,0,0,32,34,x,y-12,32,34); const L=o.legs||'#3a3028', Bt=o.boots||'#2a1e14', ol='#120c08', sh=shade(L,-35);
-  // pernas abertas: coxa do quadril até o joelho (para fora) e canela descendo pelo lado do animal, com bota
-  c.save(); c.lineCap='round'; c.lineJoin='round';
-  for(const sd of [-1,1]){ const hx=x+16+sd*3, hy=y+20, kx=x+16+sd*11, ky=y+23, fx=x+16+sd*11, fy=y+29;
-    for(const [w,col] of [[6.5,ol],[4,L]]){ c.strokeStyle=col; c.lineWidth=w; c.beginPath(); c.moveTo(hx,hy); c.lineTo(kx,ky); c.lineTo(fx,fy); c.stroke(); }
-    c.strokeStyle=sh; c.lineWidth=1.2; c.beginPath(); c.moveTo(kx+sd*1.2,ky+1); c.lineTo(fx+sd*1.2,fy-1); c.stroke();
-    rect(c,ol,fx-3+(sd>0?0:-1),fy-1,7,5); rect(c,Bt,fx-2+(sd>0?0:-1),fy,5,3); rect(c,'rgba(255,255,255,.18)',fx-2+(sd>0?0:-1),fy,3,1); }
-  c.restore(); }
+  // sela: manta sobre o lombo cobre as coxas; dos lados só aparecem a correia do estribo e a bota
+  const sd0='#7a1e1e', sd1='#a83a2a', trim='#d8b04a';
+  rect(c,ol,x+5,y+18,22,7); rect(c,sd0,x+6,y+19,20,5); rect(c,sd1,x+6,y+19,20,2); rect(c,trim,x+6,y+23,20,1); rect(c,trim,x+15,y+19,2,4);
+  rect(c,'rgba(0,0,0,.35)',x+9,y+18,14,1);
+  for(const bx of [x+6,x+22]){ rect(c,'#3a2614',bx+1,y+24,1,3); rect(c,ol,bx-1,y+26,6,4); rect(c,Bt,bx,y+27,4,2); rect(c,'rgba(255,255,255,.18)',bx,y+27,2,1); } }
 function drawMount(c,x,y){ const M=cosOn('mount'); if(!M) return 0; drawCreatureArt(c,{type:M.type, phase:player.phase*0.7, face:player.face||1},x,y+3); return 9; }
 
 // ---- loja de roupas e montarias (ouro) e guarda-roupa
