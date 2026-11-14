@@ -131,9 +131,9 @@ module.exports = function createMobs(S, io, ctx) {
     const ranked = [...m.dmg.entries()].sort((a, b) => b[1] - a[1]), top = ranked[0]?.[0] || null;
     const items = [];
     if (!temp) {
-      const players = io.players(m.map), topP = players.find(p => p.id === top);
-      for (const [id, ch, a, b] of d.loot) if (R() < ch) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b))) });
-      const extra = d.boss ? 3 : (R() < (0.04 + lv * 0.006) ? 1 : 0);
+      const players = io.players(m.map), topP = players.find(p => p.id === top), pen = topP && topP.bot ? 0.5 : 1; // caça automática: metade do saque (como no solo)
+      for (const [id, ch, a, b] of d.loot) if (R() < ch * pen) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen : 1))) });
+      const extra = d.boss ? (pen < 1 ? 2 : 3) : (R() < (0.04 + lv * 0.006) * pen ? 1 : 0);
       if (topP) S.player.cls = topP.cls || 'guerreiro';
       for (let i = 0; i < extra; i++) { const id = S.randomGearId(lv, S.monRegion(m.type)); if (id) items.push(S.makeItem(id, S.rollRarity(lv, d.boss), lv)); }
     }

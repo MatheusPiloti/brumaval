@@ -150,7 +150,7 @@ function netOnMob(m){
     case 'mh': { const o=netMobs.get(m.id); if(!o) return true; o.hp=m.hp; o.maxHp=m.maxHp; if(m.dmg&&(m.by!==Net.charId||m.dot)&&o.map===cur.id){ o.flash=110; floatAt(o,String(m.dmg),m.col||(m.crit?'#ffd54a':'#ff6a5a'),m.crit); if(!m.dot) blood(o,o.def.undead); } return true; }
     case 'md': dropNetMob(m.id); return true;
     case 'kill': { const o=netMobs.get(m.id), d=MON[m.type]; if(!d) return true; sess.kills++; bestiaryKill(m.type);
-      if(m.xp) gainXp(m.xp, o||player);
+      if(m.xp) gainXp(bot.on?Math.max(1,Math.round(m.xp*AUTO_PENALTY)):m.xp, o||player);
       if(m.top) log('Você derrotou: '+d.name+'. Saque: '+(m.items?m.items.join(', '):'nada')+'.','loot'); else log('Você ajudou a derrotar: '+d.name+'.','loot');
       if(m.type==='wolf'&&quests.wolves.state===1){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
       if(m.boss){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+d.name+'!','lvl');
@@ -159,8 +159,8 @@ function netOnMob(m){
       return true; }
     case 'corpse': netCorpse(m.c); return true;
     case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(dialogRef===k) closeDialog(); } return true; }
-    case 'gotitem': { const it=m.item; if(addItem(it)) log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot');
-      else { corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
+    case 'gotitem': { const it=m.item; if(addItem(it)){ if(bot.on){ sessLoot(it); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
+      else { if(bot.on) bot.fullAt=now; corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
     case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def;
       if(m.kind==='melee'){ const r=roll(m.atk, def()); if(r.miss){ floatAt(player,'errou','#bbb'); return true; } hurtPlayer(Math.round(r.d*(m.mul||1)), src);
         if(m.grab&&R()<0.3&&!player.dead){ player.slowT=Math.max(player.slowT||0,2200); floatAt(player,'AGARRADO!','#d07ac0'); uiDirty=true; }

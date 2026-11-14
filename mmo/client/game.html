@@ -202,7 +202,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}
 .chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
-[data-p=bot],[data-p=bosses],#btnAfk,#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}
+[data-p=bosses],#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}
 .log .xp{color:#e7c86a}.log .dmg{color:#ec8a7c}.log .heal{color:#9fd48a}.log .npc{color:#9cc3ee}.log .loot{color:#d8bf94}.log .sys{color:var(--muted)}.log .lvl{color:var(--accent);font-weight:700}
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px}
@@ -2969,7 +2969,7 @@ function drawAuras(c,x,y,front){ const B=player.buffs||{};
 const BUFF_OF=name=>Object.keys(BUFFS).find(k=>BUFFS[k]===name);
 const route=()=>{ const B=player.bot; return B.routes[cur.id]||(B.routes[cur.id]=[]); };
 function lootWanted(it){ const L=player.bot.loot, d=ITEMS[it.id]; if(it.id==='gold') return L.gold; if(d.heal||d.mana) return L.pots; if(d.slot==='bag') return L.bags; if(d.slot) return (it.r||0)>=L.rar; return L.mats; }
-function botLoot(c){ let full=false;
+function botLoot(c){ if(ONLINE&&c.net){ for(let i=c.items.length-1;i>=0;i--) if(lootWanted(c.items[i])) netSend({t:'loot',cid:c.cid,i}); c.botDone=true; return; } let full=false;
   for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(!lootWanted(it)) continue;
     if(addItem(it)){ sessLoot(it); c.items.splice(i,1); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else full=true; }
   c.botDone=true; if(full) bot.fullAt=now; if(full&&now-bot.lastLootFail>15000){ bot.lastLootFail=now; log('Caça automática: a mochila está cheia; alguns itens ficaram no corpo.','sys'); } }
@@ -2980,7 +2980,7 @@ function toggleBot(force, why){
   if(on && !bot.on && inTower()){ log('A caça automática não funciona na Torre das Brumas.','sys'); return; }
   if(on && !bot.on){ const stay=player.bot.how==='stay'; if(!stay&&!route().length){ log('Marque pelo menos um ponto de rota neste andar, ou escolha "Atacar aqui, sem rota" na aba Geral da caça.','sys'); return; } bot.anchor={map:cur.id,x:player.x,y:player.y}; bot.on=true; bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática ligada.','sys'); }
   else if(!on && bot.on){ bot.on=false; bot.mode='hunt'; bot.sub=''; player.path=null; log(why||'Caça automática desligada.','sys'); }
-  bot.msg=''; renderBot();
+  bot.msg=''; renderBot(); if(ONLINE) netSend({t:'state',bot:bot.on});
 }
 function canHit(s, tg){ if(SELFR[s.name]!=null) return monsters.some(m=>!m.dead&&m.map===cur.id&&cheb(player,m)<=SELFR[s.name]); const r=AIM[s.name]; if(r==null) return true; return !!tg && cheb(player,tg)<=r && (r===1||los(cur,player,tg)); }
 function botTick(dt){
@@ -5582,7 +5582,7 @@ function netOnMob(m){
     case 'mh': { const o=netMobs.get(m.id); if(!o) return true; o.hp=m.hp; o.maxHp=m.maxHp; if(m.dmg&&(m.by!==Net.charId||m.dot)&&o.map===cur.id){ o.flash=110; floatAt(o,String(m.dmg),m.col||(m.crit?'#ffd54a':'#ff6a5a'),m.crit); if(!m.dot) blood(o,o.def.undead); } return true; }
     case 'md': dropNetMob(m.id); return true;
     case 'kill': { const o=netMobs.get(m.id), d=MON[m.type]; if(!d) return true; sess.kills++; bestiaryKill(m.type);
-      if(m.xp) gainXp(m.xp, o||player);
+      if(m.xp) gainXp(bot.on?Math.max(1,Math.round(m.xp*AUTO_PENALTY)):m.xp, o||player);
       if(m.top) log('Você derrotou: '+d.name+'. Saque: '+(m.items?m.items.join(', '):'nada')+'.','loot'); else log('Você ajudou a derrotar: '+d.name+'.','loot');
       if(m.type==='wolf'&&quests.wolves.state===1){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
       if(m.boss){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+d.name+'!','lvl');
@@ -5591,8 +5591,8 @@ function netOnMob(m){
       return true; }
     case 'corpse': netCorpse(m.c); return true;
     case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(dialogRef===k) closeDialog(); } return true; }
-    case 'gotitem': { const it=m.item; if(addItem(it)) log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot');
-      else { corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
+    case 'gotitem': { const it=m.item; if(addItem(it)){ if(bot.on){ sessLoot(it); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
+      else { if(bot.on) bot.fullAt=now; corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
     case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def;
       if(m.kind==='melee'){ const r=roll(m.atk, def()); if(r.miss){ floatAt(player,'errou','#bbb'); return true; } hurtPlayer(Math.round(r.d*(m.mul||1)), src);
         if(m.grab&&R()<0.3&&!player.dead){ player.slowT=Math.max(player.slowT||0,2200); floatAt(player,'AGARRADO!','#d07ac0'); uiDirty=true; }

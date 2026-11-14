@@ -216,7 +216,7 @@ function onMessage(conn, m) {
     case 'meff': return mobsApi.onEffect(p, m);
     case 'knock': return mobsApi.onKnock(p, m);
     case 'loot': { const it = mobsApi.onLoot(p, m); if (it) send(ws, { t: 'gotitem', item: it, cid: m.cid }); return; }
-    case 'state': p.dead = !!m.dead; return;
+    case 'state': if ('dead' in m) p.dead = !!m.dead; if ('bot' in m) p.bot = !!m.bot; return;
     case 'save': { // progresso do personagem (itens, nível, magias...) guardado como veio do jogo
       const now = Date.now(); if (now - (p.savedT || 0) < 2500) return; p.savedT = now;
       if (!m.data || typeof m.data !== 'object') return; const txt = JSON.stringify(m.data); if (txt.length > 1200000) return send(ws, { t: 'sys', text: 'Save grande demais.' });
