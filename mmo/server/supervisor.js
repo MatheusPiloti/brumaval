@@ -26,6 +26,7 @@ function get(url, asBuffer) { return new Promise((ok, fail) => {
 let child = null, stopping = false, updating = false;
 function start() {
   child = spawn(process.execPath, [path.join(__dirname, 'server.js')], { cwd: __dirname, stdio: ['inherit', 'inherit', 'inherit', 'ipc'], env: process.env });
+  child.on('message', m => { if (m && m.t === 'check') { say('ADM pediu para procurar atualização.'); check(); } });
   child.on('exit', code => { child = null; if (stopping) return; say('servidor parou (' + code + '). Ligando de novo...'); setTimeout(start, 1500); });
 }
 function stopChild() { return new Promise(res => { if (!child) return res(); const c = child; const t = setTimeout(() => { try { c.kill(); } catch (e) {} }, 8000);

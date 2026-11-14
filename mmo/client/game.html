@@ -202,7 +202,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}
 .chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
-[data-p=bosses],#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}
+[data-p=bosses],#btnSave,#btnLogout{display:none!important}
 .log .xp{color:#e7c86a}.log .dmg{color:#ec8a7c}.log .heal{color:#9fd48a}.log .npc{color:#9cc3ee}.log .loot{color:#d8bf94}.log .sys{color:var(--muted)}.log .lvl{color:var(--accent);font-weight:700}
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px}
@@ -262,6 +262,9 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .cls b{font-family:var(--display);font-size:15px;font-weight:500;color:var(--accent)}
 .cls small{color:var(--muted);font-size:12px;line-height:1.25}
 .zoom{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:4px}
+.lootfloat{position:absolute;left:8px;top:34px;z-index:3;width:min(236px,46%)}.lootfloat .panel{margin:0;background:rgba(28,22,16,.95);box-shadow:0 6px 18px rgba(0,0,0,.6)}.lootfloat .bag{grid-template-columns:repeat(5,1fr)}
+.lootwin{border-color:var(--accent)!important;box-shadow:0 0 0 1px var(--accent) inset}.lootwin h2 span:first-child{color:var(--accent)}
+.pfix{display:inline-block;min-width:92px;text-align:right;margin-right:8px;font-variant-numeric:tabular-nums}.it.sold{opacity:.45}
 .lootbtn{position:absolute;right:8px;bottom:8px;z-index:2;padding:6px 10px;font-weight:600;background:rgba(20,15,10,.82);border-color:var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.6)}.lootbtn kbd{font-size:10px;padding:0 4px;border:1px solid var(--line);border-radius:3px;margin-left:4px;color:var(--muted)}
 .lootbtn.has{color:#ffd54a;animation:lootpulse 1.2s ease-in-out infinite}@keyframes lootpulse{50%{box-shadow:0 0 10px var(--accent)}}
 
@@ -306,6 +309,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <div class="viewport" id="viewport">
       <canvas id="cv" width="544" height="416" aria-label="Mundo do jogo"></canvas>
       <div class="hud" id="hud" aria-hidden="true"><div class="bar hp"><i id="thpFill"></i><span id="thpTxt"></span></div><div class="bar mp"><i id="tmpFill"></i><span id="tmpTxt"></span></div></div>
+      <div class="lootfloat" id="lootWin" hidden></div>
       <button type="button" class="lootbtn" id="btnLoot" title="Pegar tudo dos corpos colados em você (tecla L)">Saquear <kbd id="lootKey">L</kbd></button>
       <div class="zoom"><button type="button" id="zOut" aria-label="Afastar a câmera" title="Afastar (tecla -)">−</button><button type="button" id="zIn" aria-label="Aproximar a câmera" title="Aproximar (tecla +)">+</button></div>
       <div id="afk" hidden role="dialog" aria-label="Painel AFK"><div class="afkw">
@@ -3452,25 +3456,26 @@ function lootAround(){ if(!running||player.dead) return; const near=corpses.filt
   let got=0, full=false;
   for(const c of near){ if(onlineLoot&&onlineLoot(c)){ got+=c.items.length; continue; }
     for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(addItem(it)){ c.items.splice(i,1); got++; log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); } else { full=true; break; } } }
-  if(full) log('A mochila está cheia: parte do saque ficou no corpo.','sys'); if(dialogRef&&dialogRef.items&&!dialogRef.items.length) closeDialog(); uiDirty=true; }
+  if(full) log('A mochila está cheia: parte do saque ficou no corpo.','sys'); uiDirty=true; }
 let onlineLoot=null; // o cliente online usa isto para pedir o saque ao servidor
 setInterval(()=>{ const b=$('btnLoot'); if(!b) return; b.hidden=!running; if(!running) return; b.classList.toggle('has', corpses.some(c=>c.map===cur.id&&c.items.length&&cheb(player,c)<=1)); const k=$('lootKey'); const t=KEYS.loot?keyLabel(KEYS.loot):''; if(k&&k.textContent!==t){ k.textContent=t; k.hidden=!t; } },300);
+// corpo aberto vira uma "bolsa" ao lado das mochilas: clique num item para pegar, ou "Pegar tudo"
+let lootWin=null, onlineLootIdx=null;
 function openCorpse(c){
-  const render=()=>{
-    if(!c.items.length){ closeDialog(); log('Não há mais nada aqui.','sys'); return; }
-    const html = `<div class="list">${c.items.map((it,i)=>itemRow(it, (it.n>1?it.n+'× · ':'')+itemSub(it), `<button data-act="take" data-i="${i}">Pegar</button>`)).join('')}</div>
-      <div class="row"><button class="primary" data-act="all">Pegar tudo</button><button data-act="close">Fechar</button></div>`;
-    openDialog(c, c.player?'Seu corpo':c.pile?'Itens no chão':'Corpo de '+MON[c.type].name, html, (act,ds)=>{
-      if(act==='close') return closeDialog();
-      const idxs = act==='all' ? c.items.map((_,i)=>i) : [Number(ds.i)];
-      if(ONLINE&&c.net){ for(const i of idxs.sort((a,b)=>b-a)) netSend({t:'loot',cid:c.cid,i}); return; }
-      for(const i of idxs.sort((a,b)=>b-a)){ const it=c.items[i]; if(addItem(it)){ c.items.splice(i,1); log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); } else { log('A mochila está cheia.','sys'); break; } }
-      render();
-    });
-  };
   if(!c.items.length){ log('O corpo está vazio.','sys'); return; }
-  render();
+  lootWin=c; uiDirty=true; renderLootWin();
 }
+function takeLoot(c, idxs){ if(!c||player.dead) return;
+  if(onlineLootIdx&&c.net){ onlineLootIdx(c, idxs); return; }
+  for(const i of [...idxs].sort((a,b)=>b-a)){ const it=c.items[i]; if(!it) continue; if(addItem(it)){ c.items.splice(i,1); log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); } else { log('A mochila está cheia.','sys'); break; } }
+  uiDirty=true; }
+function renderLootWin(){ const el=$('lootWin'), h=lootWinHTML(); el.hidden=!h; if(el.dataset.h!==h){ el.innerHTML=h; el.dataset.h=h; } }
+function lootWinHTML(){ const c=lootWin; if(!c) return '';
+  if(!corpses.includes(c)||!c.items.length||c.map!==cur.id||cheb(player,c)>1){ lootWin=null; return ''; }
+  const title=c.player?'Seu corpo':c.pile?'Itens no chão':'Corpo de '+(MON[c.type]?.name||'criatura');
+  return `<section class="panel cont lootwin"><h2><span>${esc(title)}</span><span class="price">${c.items.length} ${c.items.length===1?'item':'itens'}</span><button type="button" class="x" data-lootclose aria-label="Fechar">×</button></h2>
+    <div class="bag">${c.items.map((s,i)=>`<button type="button" class="slot r${s.r||0}" data-loot="${i}" aria-label="Pegar ${esc(itemName(s))}" title="Clique para pegar"><img alt="" src="${iconURL(s.id)}">${s.n>1?`<span class="n">${s.n}</span>`:''}</button>`).join('')}</div>
+    <div class="row" style="margin-top:6px"><button type="button" class="primary" data-lootall>Pegar tudo</button></div></section>`; }
 function talk(n){
   const nm=esc(player.name);
   if(/^priest\d?$/.test(n.id)){
@@ -3539,26 +3544,33 @@ function talk(n){
   }
 }
 const shopQty={};
-function openShop(n, tab){
-  const tabs = `<div class="tabs"><button data-act="tab" data-t="buy" aria-pressed="${tab==='buy'}">Comprar</button><button data-act="tab" data-t="sell" aria-pressed="${tab==='sell'}">Vender</button><span class="spacer"></span></div>`;
+let shopSnap=null;
+function openShop(n, tab, keepScroll){ if(!keepScroll) shopSnap=null; const card=dlg.querySelector('.card'), sc=keepScroll&&!dlg.hidden?[dlgBody.querySelector('.list')?.scrollTop||0, dlgBody.scrollTop, card?.scrollTop||0]:null;
+  const tabs = `<div class="tabs"><button data-act="tab" data-t="buy" aria-pressed="${tab==='buy'}">Comprar</button><button data-act="tab" data-t="sell" aria-pressed="${tab==='sell'}">Vender</button><span class="spacer"></span><span class="price pfix">Ouro: ${fmtN(player.gold)}</span></div>`;
   let body='';
   if(tab==='buy') body = Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id], L=d.lvl||0, pot=['hp','mp','hp2','mp2'].includes(id), tier=L>=85?4:L>=60?3:L>=35?2:L>=20?1:0; if(d.shop) return d.price && [].concat(d.shop).includes(n.id) && (!d.slot||canUse(d)); return d.price && (!d.slot || canUse(d)) && (!d.ammo || canUseAmmo(d)) && (pot ? (id==='hp'||id==='mp'||n.id!=='merchant') : tier===({merchant:0,merchant3:1,merchant2:2,merchant4:3,merchant5:4}[n.id])); })
       .sort((a,b)=>{ const A=ITEMS[a], B=ITEMS[b]; return (A.slot?1+SLOT_ORDER[A.slot]:0)-(B.slot?1+SLOT_ORDER[B.slot]:0) || A.price-B.price; })
       .map(id=>{ const it={id,n:1,r:0,a:[]}, d=ITEMS[id];
         if(d.stack) return itemRow(it, itemSub(it)+` · <span class="price">${d.price} ouro cada</span>`, `<input class="qty" type="number" min="1" max="1000" data-q="${id}" value="${shopQty[id]||100}" aria-label="Quantidade"><button data-act="buy" data-id="${id}" ${player.gold<d.price?'disabled':''}>Comprar</button>`);
         return itemRow(it, itemSub(it)+` · <span class="price">${d.price} ouro</span>`, `<button data-act="buy" data-id="${id}" ${player.gold<d.price?'disabled':''}>Comprar</button>`); }).join('');
-  const mine=allItems();
-  if(tab!=='buy') body = mine.length ? mine.map((s,i)=>{ const p=isBag(s)&&s.items.length?0:sellPrice(s); return itemRow(s, (s.n>1?s.n+'× · ':'')+itemSub(s,{sell:false})+` · <span class="price">${p} ouro${s.n>1?' cada':''}</span>`, p>0?`<button data-act="sell" data-i="${i}">Vender${s.n>1?' 1':''}</button>${s.n>1?`<button data-act="sellall" data-i="${i}">Todos</button>`:''}`:''); }).join('') : '<p>Sua mochila está vazia.</p>';
-  openDialog(n, n.name, `<p>"Ouro na mesa e a mercadoria é sua. Separei o que serve para um ${CLASSES[player.cls].name}. Também compro o que você trouxer lá de fora." <span class="price">Você tem ${player.gold} ouro.</span></p>${tabs}<div class="list">${body}</div><div class="row"><button data-act="close">Fechar</button></div>`, (act,ds)=>{
-    if(act==='close') return closeDialog();
-    if(act==='tab') return openShop(n, ds.t);
+  // a lista de venda é fotografada ao abrir a aba: vender não muda a ordem nem a posição das linhas
+  if(tab!=='buy'&&(!shopSnap||shopSnap.n!==n)){ const L=allItems().filter(s=>!(isBag(s)&&s.items.length)).sort((a,b)=>itemName(a).localeCompare(itemName(b))||(b.r||0)-(a.r||0)); shopSnap={n, list:L, many:new Map(L.map(s=>[s,s.n>1]))}; }
+  const owned=new Set(allItems()), mine=tab!=='buy'?shopSnap.list:[];
+  if(tab!=='buy') body = mine.length ? mine.map((s,i)=>{ const many=shopSnap.many.get(s), gone=!owned.has(s)||!(s.n>0), p=sellPrice(s), dis=gone?' disabled':'';
+      // a linha mantém sempre os mesmos botões (desativados quando acaba), para nada mudar de tamanho nem de lugar
+      const row=itemRow(s, (many?`${gone?0:s.n}× · `:'')+itemSub(s,{sell:false}), `<span class="price pfix">${gone?'vendido':p>0?p+' ouro'+(many?' cada':''):'não compro'}</span>`+(p>0||gone?`<button data-act="sell" data-i="${i}"${dis}>Vender${many?' 1':''}</button>${many?`<button data-act="sellall" data-i="${i}"${dis}>Todos</button>`:''}`:''));
+      return gone?row.replace('<div class="it">','<div class="it sold">'):row; }).join('') : '<p>Sua mochila está vazia.</p>';
+  openDialog(n, n.name, `<p>"Ouro na mesa e a mercadoria é sua. Separei o que serve para um ${CLASSES[player.cls].name}. Também compro o que você trouxer lá de fora."</p>${tabs}<div class="list">${body}</div><div class="row"><button data-act="close">Fechar</button></div>`, (act,ds)=>{
+    if(act==='close'){ shopSnap=null; return closeDialog(); }
+    if(act==='tab'){ shopSnap=null; return openShop(n, ds.t); }
     if(act==='buy'){ const d=ITEMS[ds.id]; let q=1;
       if(d.stack){ const inp=dlgBody.querySelector(`[data-q="${ds.id}"]`); q=Math.max(1,Math.min(1000,Math.floor(+(inp?.value)||1))); shopQty[ds.id]=q; q=Math.min(q, Math.floor(player.gold/d.price)); }
       if(q<1||player.gold<d.price) return; if(!addItem(d.stack?{id:ds.id,n:q,r:0,a:[]}:ds.id,1)){ log('A mochila está cheia.','sys'); return; }
       player.gold-=d.price*q; log('Você comprou '+(q>1?q+' ':'')+d.name+' por '+d.price*q+' ouro.','loot'); }
-    if(act==='sell'||act==='sellall'){ const s=mine[Number(ds.i)]; if(!s||(isBag(s)&&s.items.length)) return; const k=act==='sellall'?s.n:1, p=sellPrice(s)*k; player.gold+=p; log('Você vendeu '+(k>1?k+' ':'')+itemName(s)+' por '+p+' ouro.','loot'); removeOne(s,k); }
-    uiDirty=true; openShop(n, tab);
+    if(act==='sell'||act==='sellall'){ const s=mine[Number(ds.i)]; if(!s||!owned.has(s)||(isBag(s)&&s.items.length)) return; const k=act==='sellall'?s.n:1, p=sellPrice(s)*k; player.gold+=p; log('Você vendeu '+(k>1?k+' ':'')+itemName(s)+' por '+p+' ouro.','loot'); removeOne(s,k); }
+    uiDirty=true; openShop(n, tab, true);
   });
+  if(sc){ const L=dlgBody.querySelector('.list'); if(L) L.scrollTop=sc[0]; dlgBody.scrollTop=sc[1]; if(card) card.scrollTop=sc[2]; }
 }
 
 // ============================================================ entrada
@@ -4858,6 +4870,7 @@ function toggleWin(bag){ if(bag===player.eq.bag) return; const u=uidOf(bag), i=o
 function renderContainers(){
   const root=player.eq.bag, list=[]; if(root) list.push(root);
   openWins=openWins.filter(u=>contByUid(u)); for(const u of openWins){ const c=contByUid(u); if(c&&c!==root) list.push(c); }
+  renderLootWin();
   $('containers').innerHTML = list.map(c=>{ const u=uidOf(c), cap=capOf(c), n=Math.max(cap,c.items.length); let h='';
     for(let i=0;i<n;i++){ const s=c.items[i];
       h += s ? `<button class="slot r${s.r||0}${isBag(s)?' isbag':''}${isBag(s)&&openWins.includes(uidOf(s))?' open':''}" draggable="true" data-c="${u}" data-i="${i}" aria-label="${esc(itemName(s))}"><img alt="" src="${iconURL(s.id)}">${s.n>1?`<span class="n">${s.n}</span>`:''}${isBag(s)&&s.items?.length?`<span class="n">${s.items.length}</span>`:''}</button>`
@@ -4893,6 +4906,10 @@ $('battle').addEventListener('click',e=>{ const b=e.target.closest('[data-b]'); 
 let dropMode=false;
 $('btnDrop').addEventListener('click',()=>{ dropMode=!dropMode; $('btnDrop').setAttribute('aria-pressed',dropMode); $('btnDrop').textContent='Largar itens: '+(dropMode?'ligado':'desligado'); });
 const itemAt = el => { const b=el.closest('[data-c][data-i]'); if(!b) return null; return contByUid(+b.dataset.c)?.items[+b.dataset.i]||null; };
+$('lootWin').addEventListener('click',e=>{ const L=e.target.closest('[data-loot],[data-lootall],[data-lootclose]'); if(L){ e.stopPropagation(); const c=lootWin;
+    if(L.hasAttribute('data-lootclose')){ lootWin=null; renderLootWin(); return; } if(!c) return; takeLoot(c, L.hasAttribute('data-lootall')?c.items.map((_,i)=>i):[+L.dataset.loot]); renderLootWin(); cv.focus?.(); return; } });
+$('lootWin').addEventListener('mouseover',e=>{ const L=e.target.closest('[data-loot]'); if(L&&lootWin){ const it=lootWin.items[+L.dataset.loot]; if(it) showInfo(it,'Clique para pegar.'); } });
+setInterval(()=>{ if(lootWin&&(!corpses.includes(lootWin)||!lootWin.items.length||lootWin.map!==cur.id||cheb(player,lootWin)>1)) lootWin=null; renderLootWin(); },200);
 $('containers').addEventListener('click',e=>{
   const x=e.target.closest('[data-close]'); if(x){ openWins=openWins.filter(u=>u!==+x.dataset.close); uiDirty=true; return; }
   if(suppressClick){ suppressClick=false; return; } hideTip();
@@ -5161,7 +5178,7 @@ $('btnChars').addEventListener('click', async ()=>{ if(!running) return; if(ONLI
 // ============================================================ painel de ADM (testes)
 // Offline: abra o jogo com ?admin no endereço (e ?admin=0 para desligar). Na nuvem: profiles.is_admin = true.
 try{ const q=new URLSearchParams(location.search); if(q.has('admin')) localStorage.setItem('brumaval-admin', q.get('admin')==='0'?'0':'1'); }catch(e){}
-function isAdmin(){ if(Cloud.on) return !!Cloud.admin; try{ return localStorage.getItem('brumaval-admin')==='1'; }catch(e){ return false; } }
+function isAdmin(){ if(ONLINE) return !!Net.adm; if(Cloud.on) return !!Cloud.admin; try{ return localStorage.getItem('brumaval-admin')==='1'; }catch(e){ return false; } }
 const ADM={item:'', r:0, n:1, map:'', mon:'', mn:1, lvl:'', gold:1000, fcls:'', fmin:'', fmax:''};
 const ADM_SL={weapon:'Armas',shield:'Mão esquerda',helmet:'Elmos',armor:'Armaduras',legs:'Calças',boots:'Botas',ring:'Anéis',amulet:'Colares',bag:'Mochilas'};
 function admItems(){ const lo=ADM.fmin===''?null:+ADM.fmin, hi=ADM.fmax===''?null:+ADM.fmax, c=ADM.fcls;
@@ -5232,9 +5249,12 @@ function openAdm(note){
       else for(let i=0;i<ADM.n;i++){ if(addItem(makeItem(ADM.item, ADM.r, d.lvl||player.level))) given++; else break; }
       msg=given?'Recebeu '+given+'× '+d.name+(d.slot&&!d.stack?' ('+RAR[ADM.r]+')':'')+'.':'A mochila está cheia.'; }
     if(act==='tp'){ const a=admArrival(ADM.map); if(a){ if(bot.on) toggleBot(false); changeMap(ADM.map,a.x,a.y,'Teleportado para '+MAPS[ADM.map].name+'.'); msg='Você está em '+MAPS[ADM.map].name+'.'; } else msg='Não achei um ponto de chegada nesse mapa.'; }
-    if(act==='summon'){ const n0=monsters.length; summon(ADM.mon,{x:player.x,y:player.y,map:cur.id},ADM.mn); const n=monsters.length-n0; msg=n?'Invocado: '+n+'× '+MON[ADM.mon].name+'.':'Sem espaço livre perto de você.'; }
-    if(act==='bosses'){ let n=0; for(const sp of spawns) if(MON[sp.type].boss&&!sp.mon){ sp.timer=1; n++; } msg=n?n+' chefe(s) vão renascer (longe de você ou em outro andar).':'Todos os chefes já estão vivos.'; }
-    if(act==='clear'){ let n=0; for(const m of monsters) if(!m.dead&&m.map===cur.id&&!m.def.boss){ m.hp=0; killMonster(m); n++; } msg=n+' monstros mortos.'; }
+    if(act==='summon'&&ONLINE){ netSend({t:'gm',cmd:'summon',type:ADM.mon,n:ADM.mn}); msg='Pedido ao servidor: '+ADM.mn+'× '+MON[ADM.mon].name+' perto de você.'; }
+    else if(act==='summon'){ const n0=monsters.length; summon(ADM.mon,{x:player.x,y:player.y,map:cur.id},ADM.mn); const n=monsters.length-n0; msg=n?'Invocado: '+n+'× '+MON[ADM.mon].name+'.':'Sem espaço livre perto de você.'; }
+    if(act==='bosses'&&ONLINE){ netSend({t:'gm',cmd:'bosses'}); msg='O servidor vai renascer os chefes mortos (onde não houver jogador perto).'; }
+    else if(act==='bosses'){ let n=0; for(const sp of spawns) if(MON[sp.type].boss&&!sp.mon){ sp.timer=1; n++; } msg=n?n+' chefe(s) vão renascer (longe de você ou em outro andar).':'Todos os chefes já estão vivos.'; }
+    if(act==='clear'&&ONLINE){ netSend({t:'gm',cmd:'clear'}); msg='O servidor removeu os monstros deste andar.'; }
+    else if(act==='clear'){ let n=0; for(const m of monsters) if(!m.dead&&m.map===cur.id&&!m.def.boss){ m.hp=0; killMonster(m); n++; } msg=n+' monstros mortos.'; }
     uiDirty=true; save(); openAdm(msg);
   });
 }
@@ -5587,7 +5607,7 @@ function netHit(m,dmg,crit,color){ if(bestStage(m.type)===3) dmg=Math.round(dmg*
   if(crit) trauma=Math.min(1,trauma+0.1); netSend({t:'hit', id:m.nid, dmg, crit:!!crit, col:color||null}); }
 function netCorpse(c){ let k=corpses.find(x=>x.net&&x.cid===c.id);
   if(!k){ k={net:true, cid:c.id, map:c.map, x:c.x, y:c.y, type:c.type, items:c.items, t:0, life:c.life}; corpses.push(k); } else k.items=c.items;
-  if(dialogRef===k){ if(k.items.length) openCorpse(k); else closeDialog(); } }
+  if(lootWin===k) uiDirty=true; }
 function netOnMob(m){
   switch(m.t){
     case 'mobs': for(const id of [...netMobs.keys()]) dropNetMob(id,true); for(const d of m.list) addNetMob(d);
@@ -5605,7 +5625,7 @@ function netOnMob(m){
       if(m.type==='boss'&&quests.king.state===1){ quests.king.state=2; uiDirty=true; log('Missão: o Rei das Criptas caiu. Conte ao Capitão Bento.','npc'); }
       return true; }
     case 'corpse': netCorpse(m.c); return true;
-    case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(dialogRef===k) closeDialog(); } return true; }
+    case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(lootWin===k){ lootWin=null; uiDirty=true; } } return true; }
     case 'gotitem': { const it=m.item; if(addItem(it)){ if(bot.on){ sessLoot(it); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
       else { if(bot.on) bot.fullAt=now; corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
     case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def;
@@ -5630,6 +5650,7 @@ function netOnMob(m){
 
 // botão Saquear: corpos do servidor pedem o saque ao servidor
 onlineLoot=c=>{ if(!c.net) return false; for(let i=c.items.length-1;i>=0;i--) netSend({t:'loot',cid:c.cid,i}); return true; };
+onlineLootIdx=(c,idxs)=>{ for(const i of [...idxs].sort((a,b)=>b-a)) netSend({t:'loot',cid:c.cid,i}); };
 
 if(ONLINE) onlineStart(); else startScreen();
 // prévia atrás da tela inicial

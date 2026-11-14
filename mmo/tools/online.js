@@ -140,7 +140,7 @@ function netHit(m,dmg,crit,color){ if(bestStage(m.type)===3) dmg=Math.round(dmg*
   if(crit) trauma=Math.min(1,trauma+0.1); netSend({t:'hit', id:m.nid, dmg, crit:!!crit, col:color||null}); }
 function netCorpse(c){ let k=corpses.find(x=>x.net&&x.cid===c.id);
   if(!k){ k={net:true, cid:c.id, map:c.map, x:c.x, y:c.y, type:c.type, items:c.items, t:0, life:c.life}; corpses.push(k); } else k.items=c.items;
-  if(dialogRef===k){ if(k.items.length) openCorpse(k); else closeDialog(); } }
+  if(lootWin===k) uiDirty=true; }
 function netOnMob(m){
   switch(m.t){
     case 'mobs': for(const id of [...netMobs.keys()]) dropNetMob(id,true); for(const d of m.list) addNetMob(d);
@@ -158,7 +158,7 @@ function netOnMob(m){
       if(m.type==='boss'&&quests.king.state===1){ quests.king.state=2; uiDirty=true; log('Missão: o Rei das Criptas caiu. Conte ao Capitão Bento.','npc'); }
       return true; }
     case 'corpse': netCorpse(m.c); return true;
-    case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(dialogRef===k) closeDialog(); } return true; }
+    case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(lootWin===k){ lootWin=null; uiDirty=true; } } return true; }
     case 'gotitem': { const it=m.item; if(addItem(it)){ if(bot.on){ sessLoot(it); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
       else { if(bot.on) bot.fullAt=now; corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
     case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def;
@@ -183,3 +183,4 @@ function netOnMob(m){
 
 // botão Saquear: corpos do servidor pedem o saque ao servidor
 onlineLoot=c=>{ if(!c.net) return false; for(let i=c.items.length-1;i>=0;i--) netSend({t:'loot',cid:c.cid,i}); return true; };
+onlineLootIdx=(c,idxs)=>{ for(const i of [...idxs].sort((a,b)=>b-a)) netSend({t:'loot',cid:c.cid,i}); };

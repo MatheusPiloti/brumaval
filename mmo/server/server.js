@@ -137,13 +137,20 @@ function chat(p, text, ch) {
 function command(p, text) {
   const [cmd, ...a] = text.slice(1).split(/\s+/); const c = cmd.toLowerCase();
   const reply = t => send(p.ws, { t: 'sys', text: t });
+  if (c === 'versao' || c === 'versão') { let v = '?'; try { v = fs.readFileSync(path.join(DATA_DIR, 'version.txt'), 'utf8').trim().slice(0, 7); } catch (e) {} return reply('Versão do servidor: ' + v + ' · atualização automática: ' + (process.send ? 'LIGADA' : 'DESLIGADA (o servidor foi ligado com server.js; ligue com supervisor.js)') + '.'); }
+  if (c === 'ajuda' || c === 'comandos') return reply('Comandos: /quem · /versao' + (p.adm ? ' · ADM: /nivel N · /ir mapa [x y] · /ir Nome · /trazer Nome · /aviso texto · /invocar tipo [n] · /limpar · /chefes · /atualizar · botão ADM no topo (modo deus, itens, ouro...)' : ''));
   if (c === 'quem' || c === 'online') return reply('Online (' + online.size + '): ' + [...online.values()].map(o => o.name + ' (' + o.level + ')').join(', '));
-  if (!p.adm) return reply('Comando desconhecido. Comandos: /quem');
+  if (!p.adm) return reply('Comando desconhecido. Comandos: /quem · /versao · /ajuda');
   if (c === 'nivel') { const n = Math.max(1, Math.min(500, a[0] | 0)); p.level = n; p.step = stepDur(n); saveChar(p); send(p.ws, { t: 'you', level: n, step: p.step }); toMap(p.map, { t: 'lvl', id: p.id, level: n }, p); return reply('Nível ajustado para ' + n + '.'); }
+  if (c === 'atualizar') { if (!process.send) return reply('A atualização automática está desligada: ligue o servidor com supervisor.js.'); process.send({ t: 'check' }); return reply('Procurando versão nova no GitHub…'); }
+  if (c === 'invocar') { const n = mobsApi.gmSummon(p, String(a[0] || ''), Math.max(1, Math.min(20, (a[1] | 0) || 1))); return reply(n ? 'Invocado: ' + n + '.' : 'Tipo inválido ou sem espaço. Ex.: /invocar wolf 3'); }
+  if (c === 'limpar') return reply(mobsApi.gmClear(p) + ' monstros removidos deste andar.');
+  if (c === 'chefes') { const n = mobsApi.gmBosses(); return reply(n ? n + ' chefe(s) vão renascer.' : 'Todos os chefes estão vivos.'); }
+  if (c === 'ir' && a[0] && !MAPS[a[0]]) { const nm = norm(a.join(' ')); const o = [...online.values()].find(o => norm(o.name) === nm); if (!o) return reply('Não achei mapa nem jogador com esse nome.'); return warp(p, o.map, o.x, o.y, 'Você foi até ' + o.name + '.'); }
   if (c === 'ir') { const id = a[0]; const M = MAPS[id]; if (!M) return reply('Mapa não existe. Exemplos: over, ash, fae, ice, sea, cave.'); const x = a[1] != null ? a[1] | 0 : (M.spawn || M.dock || { x: M.W >> 1 }).x, y = a[2] != null ? a[2] | 0 : (M.spawn || M.dock || { y: M.H >> 1 }).y; return warp(p, id, x, y, 'Você foi para ' + (M.name || id) + '.'); }
   if (c === 'trazer') { const nm = norm(a.join(' ')); const o = [...online.values()].find(o => norm(o.name) === nm); if (!o) return reply('Ninguém com esse nome online.'); return warp(o, p.map, p.x, p.y, 'Um administrador puxou você.'); }
   if (c === 'aviso') { const t = cleanText(a.join(' '), 200); if (t) toAll({ t: 'sys', text: 'Aviso: ' + t, big: true }); return; }
-  reply('Comandos de ADM: /nivel N · /ir mapa [x y] · /trazer nome · /aviso texto · /quem');
+  reply('Comando desconhecido. Digite /ajuda.');
 }
 
 // ---------------------------------------------------------------- conexões
@@ -217,6 +224,11 @@ function onMessage(conn, m) {
     case 'knock': return mobsApi.onKnock(p, m);
     case 'loot': { const it = mobsApi.onLoot(p, m); if (it) send(ws, { t: 'gotitem', item: it, cid: m.cid }); return; }
     case 'state': if ('dead' in m) p.dead = !!m.dead; if ('bot' in m) p.bot = !!m.bot; return;
+    case 'gm': { if (!p.adm) return send(ws, { t: 'sys', text: 'Só ADM.' });
+      if (m.cmd === 'summon') { const n = mobsApi.gmSummon(p, String(m.type || ''), Math.max(1, Math.min(20, m.n | 0))); return send(ws, { t: 'sys', text: n ? 'Invocado: ' + n + '.' : 'Sem espaço ou tipo inválido.' }); }
+      if (m.cmd === 'clear') { const n = mobsApi.gmClear(p); return send(ws, { t: 'sys', text: n + ' monstros removidos deste andar.' }); }
+      if (m.cmd === 'bosses') { const n = mobsApi.gmBosses(); return send(ws, { t: 'sys', text: n ? n + ' chefe(s) vão renascer.' : 'Todos os chefes estão vivos.' }); }
+      return; }
     case 'save': { // progresso do personagem (itens, nível, magias...) guardado como veio do jogo
       const now = Date.now(); if (now - (p.savedT || 0) < 2500) return; p.savedT = now;
       if (!m.data || typeof m.data !== 'object') return; const txt = JSON.stringify(m.data); if (txt.length > 1200000) return send(ws, { t: 'sys', text: 'Save grande demais.' });

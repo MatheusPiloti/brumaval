@@ -152,6 +152,13 @@ module.exports = function createMobs(S, io, ctx) {
     const dx = Math.sign(m.x - p.x), dy = Math.sign(m.y - p.y), nx = m.x + dx, ny = m.y + dy; if (passMon(MAPS[m.map], nx, ny) && !occupied(m.map, nx, ny, m)) step(m, nx, ny, 140); }
   function onLoot(p, msg) { const c = corpses.get(msg.cid); if (!c || c.map !== p.map || cheb(c, p) > 1) return null; const i = msg.i | 0; if (i < 0 || i >= c.items.length) return null;
     const it = c.items.splice(i, 1)[0]; io.toMap(c.map, { t: 'corpse', c }); return it; }
+  // ---- comandos de game master
+  function gmSummon(p, type, n) { if (!MON[type] || MON[type].dummy) return 0; const before = mobs.size;
+    for (let tries = 0, made = 0; tries < 60 && made < n; tries++) { const x = p.x + ri(-3, 3), y = p.y + ri(-3, 3); const M = MAPS[p.map];
+      if (!passMon(M, x, y) || occupied(p.map, x, y) || (x === p.x && y === p.y)) continue; const m = spawn({ map: p.map, type, x, y, gm: true }); m.state = 'alert'; m.react = 600; made++; }
+    return mobs.size - before; }
+  function gmClear(p) { let n = 0; for (const m of [...mobs.values()]) if (m.map === p.map && !m.def.boss) { remove(m); if (!m.sp.temp && !m.sp.gm) m.sp.timer = m.def.respawn || (25000 + R() * 15000); n++; } return n; }
+  function gmBosses() { let n = 0; for (const sp of spawns) if (MON[sp.type].boss && !sp.mob) { sp.timer = 1; n++; } return n; }
   function snapshot(map) { return { t: 'mobs', map, list: [...mobs.values()].filter(m => m.map === map).map(pub), corpses: [...corpses.values()].filter(c => c.map === map) }; }
 
   // ---- relógio: só os mapas com gente andam; o renascimento conta sempre
@@ -163,5 +170,5 @@ module.exports = function createMobs(S, io, ctx) {
     for (const m of [...mobs.values()]) if (!byMap.has(m.map) && io.players(m.map).length) update(m, dt, io.players(m.map));
     for (const c of [...corpses.values()]) if (now - c.t > c.life) { corpses.delete(c.id); io.toMap(c.map, { t: 'corpserm', id: c.id }); } }
   for (const sp of spawns) spawn(sp);
-  return { tick, onHit, onEffect, onKnock, onLoot, snapshot, mobs, spawns, corpses, damage };
+  return { tick, onHit, onEffect, onKnock, onLoot, snapshot, mobs, spawns, corpses, damage, gmSummon, gmClear, gmBosses };
 };
