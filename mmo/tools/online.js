@@ -150,7 +150,7 @@ function netOnMob(m){
     case 'mh': { const o=netMobs.get(m.id); if(!o) return true; o.hp=m.hp; o.maxHp=m.maxHp; if(m.dmg&&(m.by!==Net.charId||m.dot)&&o.map===cur.id){ o.flash=110; floatAt(o,String(m.dmg),m.col||(m.crit?'#ffd54a':'#ff6a5a'),m.crit); if(!m.dot) blood(o,o.def.undead); } return true; }
     case 'md': dropNetMob(m.id); return true;
     case 'kill': { const o=netMobs.get(m.id), d=MON[m.type]; if(!d) return true; sess.kills++; bestiaryKill(m.type);
-      if(m.xp) gainXp(bot.on?Math.max(1,Math.round(m.xp*AUTO_PENALTY)):m.xp, o||player);
+      if(m.xp) gainXp(Math.max(1,Math.round(m.xp*XP_RATE*(bot.on?AUTO_PENALTY:1))), o||player);
       if(m.top) log('Você derrotou: '+d.name+'. Saque: '+(m.items?m.items.join(', '):'nada')+'.','loot'); else log('Você ajudou a derrotar: '+d.name+'.','loot');
       if(m.type==='wolf'&&quests.wolves.state===1){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
       if(m.boss){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+d.name+'!','lvl');

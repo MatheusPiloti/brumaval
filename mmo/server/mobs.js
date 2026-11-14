@@ -1,6 +1,7 @@
 // Monstros compartilhados: o servidor cria, move, faz atacar, renascer e soltar saque.
 // Segue as mesmas regras do jogo (src/game.html: updateMonster, bossTick, killMonster), mas com vários jogadores.
 'use strict';
+const BOT_LOOT = 1; // caça automática sem penalidade por enquanto (era 0.5)
 module.exports = function createMobs(S, io, ctx) {
   // io: { players(map) -> [{id,x,y,dead,cls,name}], toMap(map,msg,exceptId), toPlayer(id,msg) }
   const { MAPS, MON, cheb, los, findPath, passMon, R, ri } = S;
@@ -131,7 +132,7 @@ module.exports = function createMobs(S, io, ctx) {
     const ranked = [...m.dmg.entries()].sort((a, b) => b[1] - a[1]), top = ranked[0]?.[0] || null;
     const items = [];
     if (!temp) {
-      const players = io.players(m.map), topP = players.find(p => p.id === top), pen = topP && topP.bot ? 0.5 : 1; // caça automática: metade do saque (como no solo)
+      const players = io.players(m.map), topP = players.find(p => p.id === top), pen = topP && topP.bot ? BOT_LOOT : 1; // caça automática: fator do saque (1 = sem penalidade)
       for (const [id, ch, a, b] of d.loot) if (R() < ch * pen) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen : 1))) });
       const extra = d.boss ? (pen < 1 ? 2 : 3) : (R() < (0.04 + lv * 0.006) * pen ? 1 : 0);
       if (topP) S.player.cls = topP.cls || 'guerreiro';

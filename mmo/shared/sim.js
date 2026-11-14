@@ -1387,8 +1387,8 @@ function openBestiary(){
 }
 function bestiaryKill(t){ if(!player.bestiary) player.bestiary={}; const before=bestStage(t); player.bestiary[t]=(player.bestiary[t]||0)+1; const now2=bestStage(t);
   if(now2>before) log(now2===3?'Bestiário: '+MON[t].name+' completo! +5% de dano contra essa criatura.':'Bestiário: nova etapa de '+MON[t].name+' ('+now2+'/3).','lvl'); }
-const AUTO_PENALTY=0.5;  // caça automática: metade da experiência e do saque
-const XP_RATE=1;
+const AUTO_PENALTY=1;    // caça automática: sem penalidade por enquanto (antes era 0.5 = metade de XP e saque)
+const XP_RATE=1.3;       // +30% de experiência
 // curva de experiência: o tempo por nível cresce devagar (meta: nível 25 em ~8 h jogando manualmente e nível 50 em ~22 h; o dobro na caça automática)
 const XP_TABLE=[0,0]; for(let k=1;k<=400;k++) XP_TABLE[k+1]=XP_TABLE[k]+Math.round(2445*Math.pow(k,1.3)*Math.min(1,k/10));
 const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];

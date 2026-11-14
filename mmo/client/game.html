@@ -320,7 +320,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
           <div class="afkc"><h3>Poções na mochila <span class="lg"><i style="background:#e06058"></i>Vida</span><span class="lg"><i style="background:#5b8fe0"></i>Mana</span></h3><div class="cbox"><canvas id="afkPot"></canvas><div class="ctip" hidden></div></div></div>
         </div>
         <div class="afkc"><h3>Itens saqueados</h3><div id="afkLoot"></div></div>
-        <p class="hint" style="margin:0">Caça automática: metade da experiência e do saque. O jogo continua rodando por trás; o mapa não é desenhado enquanto este painel está aberto. Esc fecha.</p>
+        <p class="hint" style="margin:0">O jogo continua rodando por trás; o mapa não é desenhado enquanto este painel está aberto. Esc fecha.</p>
       </div></div>
       <div id="gal" hidden role="dialog" aria-label="Galeria de sprites"><div class="afkw">
         <div class="afkh"><h2>Galeria de sprites</h2><div class="spacer"></div><input type="search" id="galQ" placeholder="Buscar por nome ou código" aria-label="Buscar"><button type="button" class="primary" id="galClose">Fechar</button></div>
@@ -1774,8 +1774,8 @@ function openBestiary(){
 }
 function bestiaryKill(t){ if(!player.bestiary) player.bestiary={}; const before=bestStage(t); player.bestiary[t]=(player.bestiary[t]||0)+1; const now2=bestStage(t);
   if(now2>before) log(now2===3?'Bestiário: '+MON[t].name+' completo! +5% de dano contra essa criatura.':'Bestiário: nova etapa de '+MON[t].name+' ('+now2+'/3).','lvl'); }
-const AUTO_PENALTY=0.5;  // caça automática: metade da experiência e do saque
-const XP_RATE=1;
+const AUTO_PENALTY=1;    // caça automática: sem penalidade por enquanto (antes era 0.5 = metade de XP e saque)
+const XP_RATE=1.3;       // +30% de experiência
 // curva de experiência: o tempo por nível cresce devagar (meta: nível 25 em ~8 h jogando manualmente e nível 50 em ~22 h; o dobro na caça automática)
 const XP_TABLE=[0,0]; for(let k=1;k<=400;k++) XP_TABLE[k+1]=XP_TABLE[k]+Math.round(2445*Math.pow(k,1.3)*Math.min(1,k/10));
 const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];
@@ -3031,7 +3031,7 @@ function renderBot(){
     <div class="rowb"><button type="button" data-b="here">+ Ponto aqui</button><button type="button" data-b="mark" aria-pressed="${bot.mark}">${bot.mark?'Marcando… (clique para parar)':'Marcar no minimapa'}</button><button type="button" data-b="undo" ${R.length?'':'disabled'}>Desfazer</button><button type="button" data-b="clear" ${R.length?'':'disabled'}>Limpar</button></div>
     <p class="hint" style="margin:6px 0 0">No minimapa: <b>arraste</b> um ponto para mudá-lo de lugar e use o <b>botão direito</b> nele para apagar.</p>`
     :`<p class="hint" style="margin:8px 0 0">Ataca monstros a até ${B.range} quadrados (aba Ataque). Se você mudar de lugar, desligue e ligue de novo.</p>`}
-    <p class="hint" style="margin:8px 0 0">Na caça automática você ganha <b>metade da experiência e do saque</b>. Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
+    <p class="hint" style="margin:8px 0 0">Andar com o teclado ou clicar no mapa pausa a caça.</p>`;
   if(botTab==='ataque') body=`
     <h3>Magias de ataque</h3>
     <div class="botsp">${sp.map((s,i)=>s.kind==='cura'?'':`<label title="${esc(s.desc)}"><input type="checkbox" data-sp="${i}" ${B.spells[i]?'checked':''} ${spellReady(s)?'':'disabled'}><img alt="" src="${spellIconURL(s)}"><span>${esc(s.name)}${spellReady(s)?'':' <small>('+esc(spellLock(s))+')</small>'}</span></label>`).join('')}</div>
@@ -5617,7 +5617,7 @@ function netOnMob(m){
     case 'mh': { const o=netMobs.get(m.id); if(!o) return true; o.hp=m.hp; o.maxHp=m.maxHp; if(m.dmg&&(m.by!==Net.charId||m.dot)&&o.map===cur.id){ o.flash=110; floatAt(o,String(m.dmg),m.col||(m.crit?'#ffd54a':'#ff6a5a'),m.crit); if(!m.dot) blood(o,o.def.undead); } return true; }
     case 'md': dropNetMob(m.id); return true;
     case 'kill': { const o=netMobs.get(m.id), d=MON[m.type]; if(!d) return true; sess.kills++; bestiaryKill(m.type);
-      if(m.xp) gainXp(bot.on?Math.max(1,Math.round(m.xp*AUTO_PENALTY)):m.xp, o||player);
+      if(m.xp) gainXp(Math.max(1,Math.round(m.xp*XP_RATE*(bot.on?AUTO_PENALTY:1))), o||player);
       if(m.top) log('Você derrotou: '+d.name+'. Saque: '+(m.items?m.items.join(', '):'nada')+'.','loot'); else log('Você ajudou a derrotar: '+d.name+'.','loot');
       if(m.type==='wolf'&&quests.wolves.state===1){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
       if(m.boss){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+d.name+'!','lvl');
