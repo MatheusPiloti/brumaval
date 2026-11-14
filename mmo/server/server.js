@@ -20,9 +20,17 @@ const isAdm = acc => ADMINS.has(acc) || !!(db.accounts[acc] && db.accounts[acc].
 const TICK = 50;
 
 // ---------------------------------------------------------------- mundo (mesmos mapas do cliente)
-try { execFileSync('python3', [path.join(ROOT, 'mmo/tools/extract.py')], { stdio: 'ignore' }); } catch (e) { console.warn('Aviso: não consegui regenerar shared/world.js (python3). Usando o arquivo existente.'); }
-const W = require('../shared/world.js');
-const { MAPS, TOWN, tileAt, passPlayer, cornerBlocked, cheb } = W;
+try { execFileSync('python3', [path.join(ROOT, 'mmo/tools/extract.py')], { stdio: 'ignore' }); } catch (e) { console.warn('Aviso: não consegui regenerar shared/sim.js (python3). Usando o arquivo existente.'); }
+// o mundo (mapas, monstros, itens e pontos de nascimento) vem do próprio jogo, executado sem tela
+const vm = require('vm');
+const fake = new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? (() => '') : k === 'length' ? 0 : fake, apply: () => fake, construct: () => fake, set: () => true });
+const noop = () => {};
+const simCtx = { console, document: fake, window: fake, $: () => fake, localStorage: { getItem: () => null, setItem: noop, removeItem: noop }, placeDummies: noop, log: noop, floatAt: noop, burst: noop, blood: noop,
+  performance: { now: () => Date.now() }, addEventListener: noop, requestAnimationFrame: noop, setTimeout, clearTimeout };
+vm.createContext(simCtx);
+const S = vm.runInContext(fs.readFileSync(path.join(ROOT, 'mmo/shared/sim.js'), 'utf8'), simCtx, { filename: 'sim.js' });
+S.setupWorld();
+const { MAPS, TOWN, tileAt, passPlayer, cornerBlocked, cheb } = S;
 const TOWNS = ['over', 'ash', 'fae', 'ice', 'sea'];
 const BOAT_LVL = { over: 0, fae: 25, ash: 50, ice: 70, sea: 90 };
 const CLASSES = ['guerreiro', 'cacador', 'feiticeiro', 'xama', 'monge'];
@@ -80,9 +88,16 @@ function warp(p, map, x, y, text) {
   const from = p.map; const spot = freeNear(map, x, y, p);
   toMap(from, { t: 'leave', id: p.id }, p);
   p.map = map; p.x = spot.x; p.y = spot.y; p.queue.length = 0; p.next = Date.now() + 300;
-  send(p.ws, { t: 'warp', map, x: p.x, y: p.y, text: text || null, others: [...online.values()].filter(o => o !== p && o.map === map).map(pub) });
+  send(p.ws, { t: 'warp', map, x: p.x, y: p.y, text: text || null, others: [...online.values()].filter(o => o !== p && o.map === map).map(pub) }); sendMobs(p);
   toMap(map, { t: 'join', p: pub(p) }, p); saveChar(p);
 }
+
+// ---------------------------------------------------------------- monstros compartilhados
+const playersOn = map => { const out = []; for (const p of online.values()) if (p.map === map) out.push(p); return out; };
+const mobsApi = require('./mobs.js')(S, { players: playersOn, toMap: (map, msg, except) => { const s2 = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p.id !== except && p.ws.readyState === 1) p.ws.send(s2); },
+  toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); } }, simCtx);
+const sendMobs = p => send(p.ws, mobsApi.snapshot(p.map));
+let lastTick = Date.now(); setInterval(() => { const n = Date.now(), dt = Math.min(200, n - lastTick); lastTick = n; try { mobsApi.tick(dt); } catch (e) { console.error('erro nos monstros', e); } }, 50);
 
 // ---------------------------------------------------------------- movimento (com fila curta para esconder a latência)
 function tryStep(p, dx, dy, seq) {
@@ -140,7 +155,7 @@ function enterWorld(conn, id) {
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
   send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
-  toMap(p.map, { t: 'join', p: pub(p) }, p);
+  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p);
   toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'entrou', p.name, '(' + conn.acc + ')', 'online:', online.size);
 }
@@ -197,6 +212,11 @@ function onMessage(conn, m) {
       const D = MAPS[to]; return warp(p, to, D.dock.x, D.dock.y, D.enter || ('Você chega a ' + D.name + '.'));
     }
     case 'ping': return send(ws, { t: 'pong', at: m.at });
+    case 'hit': return mobsApi.onHit(p, m);
+    case 'meff': return mobsApi.onEffect(p, m);
+    case 'knock': return mobsApi.onKnock(p, m);
+    case 'loot': { const it = mobsApi.onLoot(p, m); if (it) send(ws, { t: 'gotitem', item: it, cid: m.cid }); return; }
+    case 'state': p.dead = !!m.dead; return;
     case 'save': { // progresso do personagem (itens, nível, magias...) guardado como veio do jogo
       const now = Date.now(); if (now - (p.savedT || 0) < 2500) return; p.savedT = now;
       if (!m.data || typeof m.data !== 'object') return; const txt = JSON.stringify(m.data); if (txt.length > 1200000) return send(ws, { t: 'sys', text: 'Save grande demais.' });
@@ -209,7 +229,7 @@ function onMessage(conn, m) {
       const M = MAPS[m.map]; if (!M || !passPlayer(M, m.x | 0, m.y | 0)) return send(ws, { t: 'fix', x: p.x, y: p.y, map: p.map });
       const from = p.map; if (from !== m.map) toMap(from, { t: 'leave', id: p.id }, p);
       p.map = m.map; p.x = m.x | 0; p.y = m.y | 0; p.queue.length = 0; p.next = 0;
-      if (from !== m.map) { send(ws, { t: 'roster', map: p.map, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub) }); toMap(p.map, { t: 'join', p: pub(p) }, p); }
+      if (from !== m.map) { send(ws, { t: 'roster', map: p.map, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub) }); toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); }
       else toMap(p.map, { t: 'mv', id: p.id, x: p.x, y: p.y, dir: p.dir, dur: 1 }, p);
       saveChar(p); return; }
   }

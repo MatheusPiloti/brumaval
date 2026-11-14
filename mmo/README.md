@@ -10,21 +10,27 @@ A versão com todos no mesmo mundo. O jogo solo (`src/`) continua separado e nã
 | `deploy/install.sh` | Instala ou atualiza tudo numa VPS Ubuntu/Debian, com HTTPS automático. |
 | `tools/` | Scripts de apoio (extração dos mapas e a conversão inicial do cliente). |
 
-## Etapa atual: 2a (jogo completo, monstros de cada um)
+## Etapa atual: 2 (mundo compartilhado com monstros)
 
-O cliente online é o jogo solo inteiro: monstros, combate, itens, magias, torre, roupas e montarias.
+O cliente online é o jogo solo inteiro: combate, itens, magias, torre, roupas e montarias.
 
 O servidor cuida de:
-- contas;
-- progresso de cada personagem (nível, itens, ouro, magias e visual são salvos no servidor);
-- posição de todos, escadas, barcos e chat;
-- visual de cada um: você vê a roupa, o equipamento e a montaria dos outros.
+- **Monstros compartilhados:** todos veem e caçam os mesmos bichos. O servidor cria os monstros nos mesmos lugares do jogo e controla:
+  - andar, perseguir e atacar de perto ou de longe;
+  - renascer e voltar para casa;
+  - os poderes dos chefes: sopro, chuva de fogo, invocações e os tentáculos e a tinta do Kraken.
+- **Dano e efeitos:** o seu ataque ou magia manda o dano e os efeitos (lento, preso, veneno, atordoado, empurrão) para o servidor, que mostra para todos.
+- **XP e saque:**
+  - o XP é dividido entre quem bateu, pela proporção do dano;
+  - o corpo aparece para todos e quem pegar primeiro leva o item;
+  - o equipamento extra é sorteado pensando na classe de quem mais bateu.
+- **O resto:** contas, progresso de cada personagem, posição de todos, escadas, barcos, chat e o visual de cada um.
 
-Limitação desta etapa: os monstros rodam no navegador de cada jogador, então cada um vê e mata os seus. Na Torre das Brumas, o andar também é só seu.
+Continua só seu: a Torre das Brumas (cada um sobe a sua) e os bonecos de treino.
 
-Próximas etapas:
-- **2b.** Monstros compartilhados, rodando no servidor: todos batem no mesmo bicho e dividem o saque.
-- **3.** Grupo, troca de itens, PvP aberto com caveiras e guildas.
+Próxima etapa: **3.** Grupo, troca de itens, PvP aberto com caveiras e guildas.
+
+Os arquivos `mmo/shared/sim.js` (mapas, monstros, itens e pontos de nascimento) e `mmo/server/mobs.js` (inteligência dos monstros) são o que o servidor usa para o mundo. O `sim.js` é gerado de `mmo/client/game.html` por `mmo/tools/extract.py`. O servidor regera esse arquivo sozinho ao iniciar, se tiver Python.
 
 Para atualizar o cliente a partir do jogo solo:
 

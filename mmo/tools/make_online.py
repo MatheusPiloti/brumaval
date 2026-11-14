@@ -13,7 +13,7 @@ NET=open(os.path.join(ROOT,'mmo/tools/online.js'),encoding='utf-8').read()
 rep("const SAVE_KEY = 'brumaval-save-v1';","const SAVE_KEY = 'brumaval-save-v1';\nconst ONLINE = true; // cliente do Brumaval Online")
 # chat embaixo do registro + estilos
 rep('    <div class="log" id="log" aria-live="polite"></div>','    <div class="log" id="log" aria-live="polite"></div>\n    <form class="chatbar" id="chatBar" hidden autocomplete="off"><select id="chatCh" aria-label="Canal"><option value="local">Local</option><option value="mundo">Mundo</option></select><input id="chatIn" maxlength="200" placeholder="Enter para falar · /quem" aria-label="Mensagem"><button type="submit">Falar</button></form>')
-rep(".log div{padding:1px 0}",".log div{padding:1px 0}\n.log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}\n.chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}\n.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}\n[data-p=bot],#btnAfk,#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}")
+rep(".log div{padding:1px 0}",".log div{padding:1px 0}\n.log .chat{color:#ffe14a}.log .chatw{color:#ffb86a}\n.chatbar{display:flex;gap:6px;flex:none}.chatbar input{flex:1;min-width:0}.chatbar select{width:auto}\n.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}\n[data-p=bot],[data-p=bosses],#btnAfk,#btnSave,#btnAdm,#btnGal,#btnLogout{display:none!important}")
 # progresso salvo no servidor
 rep("function save(){ if(!running) return;","function save(){ if(!running) return; if(ONLINE){ netSave(); return; }")
 # passo: avisa o servidor (na torre o andar é só seu)
@@ -42,7 +42,15 @@ rep("$('btnChars').addEventListener('click', async ()=>{ if(!running) return;","
 # visual do jogador vai para o servidor (os outros veem roupa, montaria e equipamento)
 rep("  if(cosOn('mount')) drawRiderHero(c,x,y,o,player.phase,player.face||1); else drawHero(c,x,y,o,player.phase,player.moving);",
     "  if(ONLINE&&c===ctx) netLook(o);\n  if(cosOn('mount')) drawRiderHero(c,x,y,o,player.phase,player.face||1); else drawHero(c,x,y,o,player.phase,player.moving);")
-rep("fixLinkChokes();\nsetupWorld();\nstartScreen();","fixLinkChokes();\nsetupWorld();\n"+NET+"\nif(ONLINE) onlineStart(); else startScreen();")
+rep("fixLinkChokes();\nsetupWorld();\nstartScreen();","fixLinkChokes();\nsetupWorld();\nif(ONLINE){ for(const sp of spawns) if(!MON[sp.type].dummy){ if(sp.mon){ const i=monsters.indexOf(sp.mon); if(i>=0) monsters.splice(i,1); } sp.mon=null; sp.net=true; } }\n"+NET+"\nif(ONLINE) onlineStart(); else startScreen();")
+# monstros: os do servidor não rodam a inteligência aqui; os pontos de nascimento ficam (bestiário), mas quem cria é o servidor
+rep("  for(const m of [...monsters]) if(m.map===cur.id && !m.dead) updateMonster(m,dt);","  for(const m of [...monsters]) if(m.map===cur.id && !m.dead && !m.net) updateMonster(m,dt);")
+rep("for(const sp of spawns) if(!sp.mon){ sp.timer-=dt;","for(const sp of spawns) if(!sp.mon&&!sp.net){ sp.timer-=dt;")
+rep("function hitMonster(m, dmg, crit, color){\n  if(m.dead) return;","function hitMonster(m, dmg, crit, color){\n  if(m.dead) return;\n  if(ONLINE&&m.net){ netHit(m,dmg,crit,color); return; }")
+rep("function knock(tg){ if(tg.dead||","function knock(tg){ if(ONLINE&&tg.net){ if(!tg.dead) netSend({t:'knock',id:tg.nid}); return; } if(tg.dead||")
+rep("      const idxs = act==='all' ? c.items.map((_,i)=>i) : [Number(ds.i)];","      const idxs = act==='all' ? c.items.map((_,i)=>i) : [Number(ds.i)];\n      if(ONLINE&&c.net){ for(const i of idxs.sort((a,b)=>b-a)) netSend({t:'loot',cid:c.cid,i}); return; }")
+rep("function die(src){\n","function die(src){\n  if(ONLINE&&!inTower()) netSend({t:'state',dead:true});\n")
+rep("function respawn(){","function respawn(){ if(ONLINE) netSend({t:'state',dead:false});")
 rep("const boot = data => { if(data && data.save){ begin(data.save); } };","const boot = data => { if(!ONLINE && data && data.save){ begin(data.save); } };")
 rep("window.__game = {","window.__game = {Net, netSend, get speech(){return speech}, ")
 open(f,'w',encoding='utf-8').write(s); print('cliente online pronto')
