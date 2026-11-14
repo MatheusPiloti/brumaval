@@ -43,6 +43,9 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 function loadJson(name, def) { try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, name), 'utf8')); } catch (e) { return def; } }
 const db = { accounts: loadJson('accounts.json', {}), chars: loadJson('characters.json', {}) };
 let dirty = false;
+// sem nenhum ADM (servidor criado antes desta regra)? a conta mais antiga vira ADM
+if (!ADMINS.size && !Object.values(db.accounts).some(a => a.adm)) { const first = Object.entries(db.accounts).sort((a, b) => (a[1].created || 0) - (b[1].created || 0))[0];
+  if (first) { first[1].adm = true; console.log('Nenhum ADM no servidor: a conta mais antiga virou ADM:', first[0]); } }
 function flush() {
   if (!dirty) return; dirty = false;
   for (const [name, obj] of [['accounts.json', db.accounts], ['characters.json', db.chars]]) {
@@ -52,6 +55,7 @@ function flush() {
 }
 setInterval(flush, 3000);
 const markDirty = () => { dirty = true; };
+if (Object.values(db.accounts).some(a => a.adm)) markDirty();
 
 function hashPass(pass, salt) { return crypto.scryptSync(pass, salt, 64).toString('hex'); }
 const norm = s => String(s || '').trim().toLowerCase();
