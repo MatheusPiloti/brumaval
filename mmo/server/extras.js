@@ -247,10 +247,12 @@ module.exports = function extras(X) {
     if (m.a === 'leave') { if (p.inst) exitInst(p, 'Você sai da arena.'); return; }
     if (m.a === 'enter') {
       if (p.inst) return sys(p, 'Você já está numa arena.');
-      if (!TOWNS.includes(p.map)) return sys(p, 'Use o Portal dos Chefes, na cidade.');
       if (p.dead) return;
       const type = String(m.type || '');
-      return type === GROUP_BOSS ? enterGroup(p) : enterSolo(p, type);
+      if (type === GROUP_BOSS) { if (!TOWNS.includes(p.map)) return sys(p, 'Use o Portal das Brumas, na cidade.'); return enterGroup(p); }
+      // cada chefe tem o seu portal no lugar onde ele ficava: é preciso estar ao lado dele
+      if (!S.spawns.some(sp => sp.type === type && sp.map === p.map && cheb(sp, p) <= 3)) return sys(p, 'Vá até o portal de ' + (MON[type] ? MON[type].name : 'esse chefe') + ', no lugar onde ele ficava.');
+      return enterSolo(p, type);
     }
   }
   function exclusiveFor(p) {

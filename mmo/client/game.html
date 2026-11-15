@@ -4969,9 +4969,9 @@ function renderContainers(){
 const fmtT = ms => { const s=Math.max(0,Math.ceil(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function renderBosses(){
   if(ONLINE){ // online: cada um enfrenta o seu chefe numa arena, pelo Portal dos Chefes; a espera é individual
-    const now2=Date.now(), cd=t=>Math.max(0,(Net.bcd?.[t]||0)-now2), list=[...BOSSES.map(b=>({type:b.type,lvl:b.lvl})),{type:'colosso',lvl:30,group:true}];
-    $('bosses').innerHTML='<p class="hint" style="margin:0 0 4px">Entre pelo <b>Portal dos Chefes</b> em qualquer cidade.</p>'+list.map(b=>{ const d=MON[b.type]; if(!d) return ''; const n=player.bossKills[b.type]||0, w=cd(b.type);
-      return `<div>${esc(d.name)}${b.group?' <span class="rn r3">grupo</span>':''} <small>· nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(w):'<span class="rn r1">disponível</span>'}${n?` · derrotado ${n}×`:''}</small></div>`; }).join(''); return; }
+    const now2=Date.now(), cd=t=>Math.max(0,(Net.bcd?.[t]||0)-now2), list=[...BOSSES,{type:'colosso',lvl:30,group:true,where:'Portal das Brumas, em qualquer cidade'}];
+    $('bosses').innerHTML='<p class="hint" style="margin:0 0 4px">Cada chefe virou um <b>portal</b> no lugar onde ele ficava.</p>'+list.map(b=>{ const d=MON[b.type]; if(!d) return ''; const n=player.bossKills[b.type]||0, w=cd(b.type);
+      return `<div>${esc(d.name)}${b.group?' <span class="rn r3">grupo</span>':''} <small>· nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(w):'<span class="rn r1">disponível</span>'}${n?` · derrotado ${n}×`:''}${b.where?'<br>'+b.where:''}</small></div>`; }).join(''); return; }
   $('bosses').innerHTML=BOSSES.map(b=>{ const n=player.bossKills[b.type]||0, sp=spawns.find(s=>s.type===b.type), d=MON[b.type];
     const st = !sp||sp.mon||sp.netAlive ? '<span class="rn r1">vivo</span>' : `renasce em ${fmtT(sp.timer)}`;
     return `<div>${d.name} <small>· nível ${b.lvl}+ · ${st} · respawn ${d.respawn/60000} min${n?` · derrotado ${n}×`:''}<br>${b.where}</small></div>`; }).join('');
@@ -5816,20 +5816,26 @@ function chestIconURL(id){ if(chestIcons[id]) return chestIcons[id]; const d=ITE
   if(d.chest===3){ g.fillStyle='rgba(200,170,255,.9)'; for(const [x,y] of [[6,7],[25,6],[16,4]]){ g.fillRect(x,y-1,1,3); g.fillRect(x-1,y,3,1); } }
   return chestIcons[id]=c.toDataURL(); }
 
-// ---- Portal dos Chefes (uma arena só sua; a espera para repetir é individual)
+// ---- portais de chefe: cada chefe virou um portal no lugar onde ele ficava (na sua caverna/andar);
+// o portal leva a uma arena só sua. O Colosso das Brumas (grupo) tem um portal em cada cidade.
 const PORTAL_TOWNS=['over','ash','fae','ice','sea'];
-for(const t of PORTAL_TOWNS){ const M=MAPS[t]; if(!M||!M.spawn) continue; const q=freeSpot(t,M.spawn.x+3,M.spawn.y+1);
-  npcs.push({kind:'npc', id:'bossportal_'+t, name:'Portal dos Chefes', map:t, x:q.x, y:q.y, look:'portal', px:q.x, py:q.y, moving:false, mt:0, mdur:1, phase:0, dir:'down'}); }
+const mkPortal=(id,name,map,x,y,boss)=>npcs.push({kind:'npc', id, name, map, x, y, look:'portal', px:x, py:y, moving:false, mt:0, mdur:1, phase:0, dir:'down', boss});
+for(const t of PORTAL_TOWNS){ const M=MAPS[t]; if(!M||!M.spawn) continue; const q=freeSpot(t,M.spawn.x+3,M.spawn.y+1); mkPortal('bossportal_'+t,'Portal das Brumas',t,q.x,q.y,'colosso'); }
+for(const sp of spawns) if(MON[sp.type]?.boss&&!MON[sp.type].group&&!npcs.some(n=>n.boss===sp.type)) mkPortal('bossportal_'+sp.type,'Portal: '+MON[sp.type].name,sp.map,sp.x,sp.y,sp.type);
 let portalRef=null;
 function openBossPortal(n){ portalRef=n; if(!Net.inWorld){ log('O portal só funciona no Brumaval Online.','sys'); return; } netSend({t:'boss',a:'list'});
-  openDialog(n,'Portal dos Chefes','<p class="hint">Consultando as brumas…</p>',()=>closeDialog()); }
+  openDialog(n,n.name,'<p class="hint">Consultando as brumas…</p>',()=>closeDialog()); }
 function bossPortalDialog(m){ if(!portalRef||dlg.hidden||dialogRef!==portalRef) return; const G=m.group, gd=MON[G.type];
+  if(portalRef.boss!=='colosso'){ const b=m.list.find(x=>x.type===portalRef.boss), d=MON[portalRef.boss]; if(!b||!d) return closeDialog(); const low=player.level<b.lvl, w=b.cd>0;
+    openDialog(portalRef,d.name,`<p>${esc(d.name)} não anda mais por aqui: ele espera do outro lado do portal, numa arena só sua. Vença em até ${Math.round(G.soloTime/60000)} minutos e ganhe um <span class="rn r2">Baú de Ferro</span>. Depois de vencer, espere para enfrentar este chefe de novo (a espera é só sua). Na arena nada cai do corpo.</p>
+      <div class="list blist"><div class="it"><div class="meta"><b>${esc(d.name)}</b><small>nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(b.cd):low?'<span class="bad">exige nível '+b.lvl+'</span>':'<span class="good">disponível</span>'}${player.bossKills[b.type]?' · derrotado '+player.bossKills[b.type]+'×':''}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${b.type}" ${w||low?'disabled':''}>Entrar</button></div></div></div>
+      <div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{ if(act==='go'){ closeDialog(); if(bot.on) toggleBot(false); netSend({t:'boss',a:'enter',type:ds.t}); return; } closeDialog(); }); return; }
   const row=b=>{ const d=MON[b.type]; if(!d) return ''; const low=player.level<b.lvl, w=b.cd>0;
     return `<div class="it"><div class="meta"><b>${esc(d.name)}</b><small>nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(b.cd):low?'<span class="bad">nível baixo</span>':'<span class="good">disponível</span>'}${player.bossKills[b.type]?' · derrotado '+player.bossKills[b.type]+'×':''}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${b.type}" ${w||low?'disabled':''}>Entrar</button></div></div>`; };
   const gw=G.cd>0, glow=player.level<G.lvl;
-  openDialog(portalRef,'Portal dos Chefes',`<p>Cada chefe é só seu: entre numa arena, vença em até ${Math.round(G.soloTime/60000)} minutos e ganhe um <b>Baú de Ferro</b>. Depois de vencer, espere para enfrentar o mesmo chefe de novo (a espera é só sua).</p>
+  openDialog(portalRef,'Portal das Brumas',`<p>Os outros chefes ficam nos portais dentro de cada caverna, no lugar onde eles moravam.</p>
     <h4>Chefe de grupo</h4><div class="list blist"><div class="it"><div class="meta"><b>${esc(gd.name)}</b><small>até ${G.max} pessoas · nível ${G.lvl}+ · ${Math.round(G.time/60000)} minutos · fica mais forte com o nível e o tamanho do grupo. Prêmio: <span class="rn r3">Baú das Brumas</span> e chance de um <span class="rn r4">amuleto exclusivo da sua classe, com o seu nome</span>.<br>${gw?'de novo em '+fmtCd(G.cd):glow?'<span class="bad">exige nível '+G.lvl+'</span>':G.leader?'<span class="good">disponível</span> · seu grupo: '+G.size+(G.size>1?' pessoas (todos perto do portal entram juntos)':' pessoa (dá para ir sozinho, mas é muito difícil)'):'só o líder do grupo abre o portal'}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${G.type}" ${gw||glow||!G.leader?'disabled':''}>Entrar</button></div></div></div>
-    <h4>Chefes solo</h4><div class="list blist">${m.list.map(row).join('')}</div><div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
+    <div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
       if(act==='go'){ closeDialog(); if(bot.on) toggleBot(false); netSend({t:'boss',a:'enter',type:ds.t}); return; } closeDialog(); }); }
 
 // ---- arena: o mapa é criado aqui quando o servidor avisa; contador de tempo e botão de sair
