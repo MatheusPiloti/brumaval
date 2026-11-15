@@ -9,7 +9,8 @@ module.exports = function createMobs(S, io, ctx) {
   const mobs = new Map();          // id -> monstro
   const corpses = new Map();       // id -> corpo
   let nextId = 1, nextCorpse = 1, now = Date.now();
-  const spawns = S.spawns.filter(sp => MON[sp.type] && !MON[sp.type].dummy).map(sp => ({ map: sp.map, type: sp.type, x: sp.x, y: sp.y, mob: null, timer: 0 }));
+  // chefes não nascem mais no mundo: cada jogador (ou grupo) enfrenta o seu numa arena (extras.js)
+  const spawns = S.spawns.filter(sp => MON[sp.type] && !MON[sp.type].dummy && !MON[sp.type].boss).map(sp => ({ map: sp.map, type: sp.type, x: sp.x, y: sp.y, mob: null, timer: 0 }));
   const byMap = new Map(); for (const sp of spawns) { if (!byMap.has(sp.map)) byMap.set(sp.map, []); byMap.get(sp.map).push(sp); }
 
   // ---- ocupação: monstros e jogadores não se sobrepõem
@@ -30,8 +31,10 @@ module.exports = function createMobs(S, io, ctx) {
     io.toMap(m.map, { t: 'msp', m: pub(m) }); return m;
   }
   function summon(type, near, n) { let made = 0;
+    const k = near.summonMul, d = MON[type]; // chefe de grupo: os lacaios acompanham a força do chefe
+    const o = k && d ? { hp: Math.round(d.hp * k), maxHp: Math.round(d.hp * k), atk: Math.round(d.atk * k), dfn: Math.round(d.def * Math.sqrt(k)) } : {};
     for (let tries = 0; tries < 40 && made < n; tries++) { const x = near.x + ri(-2, 2), y = near.y + ri(-2, 2); const M = MAPS[near.map];
-      if (!passMon(M, x, y) || occupied(near.map, x, y)) continue; const m = spawn({ map: near.map, type, x, y, temp: true, owner: near }); m.state = 'chase'; made++; } }
+      if (!passMon(M, x, y) || occupied(near.map, x, y)) continue; const m = spawn({ map: near.map, type, x, y, temp: true, owner: near }, o); m.state = 'chase'; made++; } }
   function step(m, nx, ny, dur) { if (occMap === m.map) { const W = MAPS[m.map].W; if (occ.get(m.y * W + m.x) === m) occ.delete(m.y * W + m.x); occ.set(ny * W + nx, m); }
     if (nx !== m.x) m.face = nx > m.x ? 1 : -1; m.x = nx; m.y = ny; m.stepEnd = now + dur; io.toMap(m.map, { t: 'mm', id: m.id, x: nx, y: ny, dur }); }
   const moving = m => now < m.stepEnd;
@@ -47,7 +50,8 @@ module.exports = function createMobs(S, io, ctx) {
   function hitPlayer(m, p, msg) { io.toPlayer(p.id, { ...msg, id: m.id, src: m.name || m.def.name }); }
   function fields(map, list) { io.toMap(map, { t: 'fields', map, list }); }
   function fireRain(m, rn, tg) { io.toMap(m.map, { t: 'mtalk', id: m.id, kind: rn.kind || 'fire' });
-    const L = []; for (let i = 0; i < rn.n; i++) { const x = i === 0 ? tg.x : tg.x + ri(-2, 2), y = i === 0 ? tg.y : tg.y + ri(-2, 2); L.push([x, y, rn.dmg, 2400, 1000, rn.kind || 'fire']); } fields(m.map, L); }
+    const dmg = Math.round(rn.dmg * (rn.scale ? m.mult : 1));
+    const L = []; for (let i = 0; i < rn.n; i++) { const x = i === 0 ? tg.x : tg.x + ri(-2, 2), y = i === 0 ? tg.y : tg.y + ri(-2, 2); L.push([x, y, dmg, 2400, 1000, rn.kind || 'fire']); } fields(m.map, L); }
   function breath(m, br, tg) { const d = cheb(m, tg), dmg = Math.round(ri(br.min, br.max) * m.mult);
     io.toMap(m.map, { t: 'mbreath', id: m.id, tx: tg.x, ty: tg.y });
     const L = []; for (let k = 1; k <= d; k++) L.push([Math.round(m.x + (tg.x - m.x) * k / d), Math.round(m.y + (tg.y - m.y) * k / d), Math.round(br.min * m.mult * 0.35), 2600, 0, 'fire']); fields(m.map, L);
@@ -134,12 +138,24 @@ module.exports = function createMobs(S, io, ctx) {
     const items = [];
     if (!temp) {
       const players = io.players(m.map), topP = players.find(p => p.id === top), pen = topP && topP.bot ? BOT_LOOT : 1; // caça automática: fator do saque (1 = sem penalidade)
-      for (const [id, ch, a, b] of d.loot) if (R() < ch * pen) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen : 1))) });
-      const extra = d.boss ? (pen < 1 ? 2 : 3) : (R() < (0.04 + lv * 0.006) * pen ? 1 : 0);
+      const luck = 1 + Math.min(60, Math.max(0, (topP && topP.luck) || 0)) / 100; // atributo "sorte" (amuleto exclusivo do Caçador)
+      for (const [id, ch, a, b] of d.loot) if (R() < ch * pen * luck) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen : 1))) });
+      const extra = d.boss ? (pen < 1 ? 2 : 3) : (R() < (0.04 + lv * 0.006) * pen * luck ? 1 : 0);
       if (topP) S.player.cls = topP.cls || 'guerreiro';
       for (let i = 0; i < extra; i++) { const id = S.randomGearId(lv, S.monRegion(m.type)); if (id) items.push(S.makeItem(id, S.rollRarity(lv, d.boss), lv)); }
+      if (!d.boss && S.ITEMS.chest1 && R() < (0.008 + lv * 0.00008) * pen * luck) items.push({ id: 'chest1', n: 1, r: 0, a: [] }); // baú: raro em qualquer monstro
     }
-    for (const [pid, dm] of ranked) { const share = dm / total; io.toPlayer(pid, { t: 'kill', id: m.id, type: m.type, boss: !!d.boss, temp, xp: Math.max(1, Math.round(xp * share)), top: pid === top, items: items.length ? items.map(i => (i.n > 1 ? i.n + ' ' : '') + (S.ITEMS[i.id]?.name || i.id)) : null }); }
+    // experiência: cada um pelo dano que deu; quem está em grupo divide a parte do grupo com os membros por perto (+10% por membro extra)
+    const shares = new Map(), groups = new Map();
+    for (const [pid, dm] of ranked) { const pt = io.partyOf ? io.partyOf(pid) : null;
+      if (!pt) { shares.set(pid, (shares.get(pid) || 0) + xp * dm / total); continue; }
+      const g = groups.get(pt.id) || { dmg: 0, pt }; g.dmg += dm; groups.set(pt.id, g); }
+    for (const g of groups.values()) { const ids = new Set(ranked.filter(([pid]) => g.pt.members.has(pid)).map(([pid]) => pid));
+      for (const p of io.players(m.map)) if (g.pt.members.has(p.id) && cheb(p, m) <= 15) ids.add(p.id);
+      const n = ids.size, pool = xp * g.dmg / total * (1 + 0.1 * (n - 1)); for (const id of ids) shares.set(id, (shares.get(id) || 0) + pool / n); }
+    const names = items.length ? items.map(i => (i.n > 1 ? i.n + ' ' : '') + (S.ITEMS[i.id]?.name || i.id)) : null;
+    for (const [pid, v] of shares) io.toPlayer(pid, { t: 'kill', id: m.id, type: m.type, boss: !!d.boss, temp, xp: Math.max(1, Math.round(v)), top: pid === top, items: names });
+    if (io.onKill) try { io.onKill(m, ranked); } catch (e) { console.error('erro ao vencer chefe', e); }
     const c = { id: nextCorpse++, map: m.map, x: m.x, y: m.y, type: m.type, items, t: now, life: items.length ? 120000 : 15000 };
     corpses.set(c.id, c); io.toMap(m.map, { t: 'corpse', c });
   }
@@ -161,6 +177,10 @@ module.exports = function createMobs(S, io, ctx) {
     return mobs.size - before; }
   function gmClear(p) { let n = 0; for (const m of [...mobs.values()]) if (m.map === p.map && !m.def.boss) { remove(m); if (!m.sp.temp && !m.sp.gm) m.sp.timer = m.def.respawn || (25000 + R() * 15000); n++; } return n; }
   function gmBosses() { let n = 0; for (const sp of spawns) if (MON[sp.type].boss && !sp.mob) { sp.timer = 1; n++; } return n; }
+  // ---- arenas: nascer um chefe num mapa de instância e limpar tudo quando a arena acaba
+  function spawnAt(map, type, x, y, o, spx) { const m = spawn({ map, type, x, y, ...(spx || {}) }, o || {}); m.state = 'alert'; m.react = 1500; return m; }
+  function clearMobs(map) { let n = 0; for (const m of [...mobs.values()]) if (m.map === map) { remove(m); n++; } return n; }
+  function clearMap(map) { clearMobs(map); for (const c of [...corpses.values()]) if (c.map === map) corpses.delete(c.id); }
   function snapshot(map) { return { t: 'mobs', map, list: [...mobs.values()].filter(m => m.map === map).map(pub), corpses: [...corpses.values()].filter(c => c.map === map) }; }
 
   // ---- relógio: só os mapas com gente andam; o renascimento conta sempre
@@ -172,5 +192,5 @@ module.exports = function createMobs(S, io, ctx) {
     for (const m of [...mobs.values()]) if (!byMap.has(m.map) && io.players(m.map).length) update(m, dt, io.players(m.map));
     for (const c of [...corpses.values()]) if (now - c.t > c.life) { corpses.delete(c.id); io.toMap(c.map, { t: 'corpserm', id: c.id }); } }
   for (const sp of spawns) spawn(sp);
-  return { tick, onHit, onEffect, onKnock, onLoot, snapshot, mobs, spawns, corpses, damage, gmSummon, gmClear, gmBosses };
+  return { tick, onHit, onEffect, onKnock, onLoot, snapshot, mobs, spawns, corpses, damage, gmSummon, gmClear, gmBosses, spawnAt, clearMap, clearMobs };
 };

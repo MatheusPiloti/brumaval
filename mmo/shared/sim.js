@@ -694,8 +694,8 @@ function restrictText(d){
   if(d.slot==='shield') return d.ok==='quiver' ? 'só Caçador' : 'Caçador e Monge não usam escudo';
   return '';
 }
-const itemName = it => ITEMS[it.id].name + (it.s?' '+it.s:'');
-const sellPrice = it => { const d=ITEMS[it.id]; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
+const itemName = it => ITEMS[it.id].name + (it.own?' de '+it.own:'') + (it.s?' '+it.s:'');
+const sellPrice = it => { const d=ITEMS[it.id]; if(it.own) return 0; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
 function statLines(it){
   const d=ITEMS[it.id], s=[];
   if(d.atk) s.push('Ataque +'+d.atk); if(d.mag) s.push('Magia +'+d.mag); if(d.def) s.push('Defesa +'+d.def);
@@ -712,7 +712,9 @@ function itemSub(it, opts={}){
   const d=ITEMS[it.id], parts=[];
   if(it.r) parts.push(`<span class="rn r${it.r}">${RAR[it.r]}</span>`);
   const sl=statLines(it); if(sl.length) parts.push(sl.join(', '));
-  for(const a of it.a||[]) parts.push(`<span class="aff">${affLine(a)}</span>`);
+  for(const a of it.a||[]) parts.push(`<span class="aff${typeof UNIQ_AFF!=='undefined'&&UNIQ_AFF.has(a.k)?' uniq':''}">${affLine(a)}</span>`);
+  if(it.own) parts.push(`<span class="aff uniq">Exclusivo de ${esc(it.own)} · não pode ser vendido</span>`);
+  if(d.chest) parts.push('Use para abrir · pode ter um item raro');
   if(d.slot){ if(!canUse(d)) parts.push(`<span class="bad">${restrictText(d)}</span>`); if((d.lvl||1)>player.level) parts.push(`<span class="bad">requer nível ${d.lvl}</span>`); }
   if(!d.slot && !d.heal && !d.mana && opts.sell!==false) parts.push('vende por '+sellPrice(it)+' ouro');
   return parts.join(' · ');
@@ -987,7 +989,7 @@ function iconURL2(id){
   iconPost(g,K,spark);
   return iconCache2[id]=c.toDataURL();
 }
-function iconURL(id){ return ITEMS[id]?.tome ? tomeIconURL(id) : iconURL2(id); }
+function iconURL(id){ return ITEMS[id]?.tome ? tomeIconURL(id) : ITEMS[id]?.chest ? chestIconURL(id) : iconURL2(id); }
 
 
 // ============================================================ monstros
@@ -1195,6 +1197,35 @@ for(const [type,ids] of [['icegiant',['glacialmaul','glacialaxe']],['auroraspiri
 Object.assign(ITEMS.ignivareye,{icon:'dragoneye'}); Object.assign(ITEMS.queenwing,{icon:'fairywing'}); Object.assign(ITEMS.auroraglass,{icon:'prism'}); Object.assign(ITEMS.frostcrown,{icon:'icecrown'}); Object.assign(ITEMS.walrustusk,{icon:'tusk'}); Object.assign(ITEMS.pearl,{icon:'pearl',look:'#3a3a5a'});
 
 
+// ---- online: baús, amuletos exclusivos do Colosso das Brumas, o Colosso e as arenas de chefe
+Object.assign(ITEMS, {
+  chest1: {name:'Baú de Madeira', stack:true, chest:1, sell:20, icon:'chest', look:'#9a6a3a'},
+  chest2: {name:'Baú de Ferro', stack:true, chest:2, sell:80, icon:'chest', look:'#a4aab3'},
+  chest3: {name:'Baú das Brumas', stack:true, chest:3, sell:300, icon:'chest', look:'#b49aff'},
+  xamulet_guerreiro: {name:'Amuleto do Bastião', slot:'amulet', cls:['guerreiro'], def:25, hp:400, lvl:30, sell:5000, icon:'amulet', look:'#e0b040', excl:'absorb'},
+  xamulet_cacador:   {name:'Amuleto da Fortuna', slot:'amulet', cls:['cacador'], atk:20, crit:4, lvl:30, sell:5000, icon:'amulet', look:'#5fd068', excl:'luck'},
+  xamulet_feiticeiro:{name:'Amuleto da Sabedoria', slot:'amulet', cls:['feiticeiro'], mag:28, mp:300, lvl:30, sell:5000, icon:'amulet', look:'#c06aff', excl:'xpb'},
+  xamulet_xama:      {name:'Amuleto do Vento', slot:'amulet', cls:['xama'], mag:22, hp:250, lvl:30, sell:5000, icon:'amulet', look:'#7ad0ff', excl:'dodge'},
+  xamulet_monge:     {name:'Amuleto do Espinho', slot:'amulet', cls:['monge'], atk:22, hp:300, lvl:30, sell:5000, icon:'amulet', look:'#ff7a5a', excl:'reflect'},
+});
+// atributos únicos (só nos amuletos exclusivos; nunca saem em itens comuns)
+Object.assign(AFF, { absorb:{l:'absorção de dano',min:10,max:14,pct:1}, luck:{l:'sorte no saque',min:25,max:35,pct:1}, xpb:{l:'experiência ganha',min:15,max:20,pct:1},
+  dodge:{l:'esquiva',min:8,max:12,pct:1}, reflect:{l:'dano corpo a corpo refletido',min:20,max:30,pct:1} });
+const UNIQ_AFF = new Set(['absorb','luck','xpb','dodge','reflect']);
+// chefe de grupo (até 5 pessoas). No servidor a força acompanha o nível médio e o tamanho do grupo.
+MON.colosso = {name:'Colosso das Brumas', lvl:60, hp:26000, atk:600, def:58, xp:60000, step:400, as:1500, sight:12, col:'#8a7aa8', boss:true, group:true, respawn:0, charge:true,
+  breath:{cd:9000, range:6, min:320, max:520},
+  ab:{rain:{cd:5200, n:7, dmg:380, kind:'fire', scale:true}, phases:[{at:.75, say:'As brumas obedecem!', summon:'emberwraith', n:4}, {at:.5, say:'Ninguém sai do meu salão!', enrage:true}, {at:.25, say:'BRUMAS, ENGULAM TODOS!', summon:'icewraith', n:5}]},
+  loot:[['gold',1,3000,6000],['hp3',1,3,6],['mp3',1,3,6]]};
+// arena de chefe: uma sala fechada, uma por luta (o servidor cria e apaga)
+function makeArena(id, big){ const W=big?27:21, H=big?19:15, t=new Uint8Array(W*H).fill(CFL);
+  for(let x=0;x<W;x++){ t[x]=CWL; t[(H-1)*W+x]=CWL; } for(let y=0;y<H;y++){ t[y*W]=CWL; t[y*W+W-1]=CWL; }
+  for(const [px,py] of [[5,4],[W-6,4],[5,H-5],[W-6,H-5]]) t[py*W+px]=CWL;
+  for(let x=(W>>1)-2;x<=(W>>1)+2;x++) t[(H-2)*W+x]=CARPET;
+  return {id, name:big?'Salão das Brumas':'Arena do Chefe', W, H, t, links:{}, explored:new Uint8Array(W*H).fill(1), dark:false, darkA:.8,
+    lights:[{x:W>>1,y:H-3,r:90},{x:W>>1,y:4,r:110}], oob:CWALL, spawn:{x:W>>1,y:H-3}, bossAt:{x:W>>1,y:4}, mult:1, torch:new Set([W+4,W+(W>>1),2*W-5]), arena:true}; }
+
+
 
 // ============================================================ estado
 let cur = MAPS.over;
@@ -1395,7 +1426,7 @@ const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];
 const oldTotalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
 function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
-  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0};
+  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0, absorb:0, luck:0, xpb:0, dodge:0, reflect:0};
   for(const k in player.eq){ const it=player.eq[k]; if(!it) continue; const d=ITEMS[it.id];
     for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal','atkspd']) if(d[f]) s[f]+=d[f];
     for(const a of it.a||[]) s[a.k]+=a.v; }
@@ -1597,7 +1628,7 @@ function los(m,a,b){ let x0=a.x,y0=a.y; const x1=b.x,y1=b.y, dx=Math.abs(x1-x0),
 const REG_ITEMS={over:['stone','crypt'],fae:['fae'],ash:['fire'],ice:['ice'],sea:['sea']};
 
 function randomGearId(lv, reg){
-  let pool=Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id]; return d.slot && d.slot!=='bag' && (d.lvl||1)<=lv+2 && (d.lvl||1)>=lv-20; });
+  let pool=Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id]; return d.slot && d.slot!=='bag' && !d.excl && (d.lvl||1)<=lv+2 && (d.lvl||1)>=lv-20; });
   const ok=REG_ITEMS[reg]; if(ok){ const local=pool.filter(id=>ok.includes(itemRegion(id))); if(local.length) pool=local; }
   const mine=pool.filter(id=>canUse(ITEMS[id]));
   const src=(mine.length && R()<0.65) ? mine : pool;

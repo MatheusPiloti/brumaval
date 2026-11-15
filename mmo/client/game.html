@@ -276,6 +276,19 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .side.droptarget{outline:2px dashed var(--line);outline-offset:-2px}
 .zoom button{width:30px;height:30px;padding:0;font-size:18px;line-height:1;background:rgba(20,16,12,.7);border-color:rgba(255,255,255,.15)}
 @media (max-width:880px){.app{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"top" "game" "right";height:auto}.side-r{overflow:visible}.viewport{flex:none;height:min(68vh,640px);height:min(68dvh,640px)}.side{overflow:visible;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+/* Online: grupo, arena de chefe, baús, denúncia. */
+.partyui{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.pm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 6px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel-2)}
+.pm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pm small{color:var(--muted);grid-column:1/-1}
+.pm .bar{grid-column:1/-1;height:8px;margin:0}.pm .bar span{display:none}.pm .pmb{display:flex;gap:4px}.pm .pmb button{padding:1px 6px;font-size:12px}
+.pm.dead{opacity:.55}.pinv{border-color:var(--accent);background:#3a2c18}
+.prow{display:flex;gap:6px}.prow input{flex:1;min-width:0}
+.insthud{position:absolute;top:34px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:10px;padding:5px 10px;background:rgba(20,15,10,.85);border:1px solid var(--accent);border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.6);white-space:nowrap}
+.insthud span{font-variant-numeric:tabular-nums;color:#ffd54a;font-weight:600}.insthud.won span{color:#8fe36a}.insthud button{padding:3px 8px}
+.aff.uniq{color:#ffd54a;font-weight:600}
+.log .chatg{color:#8fe36a}
+.chestres{display:flex;flex-direction:column;gap:4px}.chestres .it.jack{border-color:#ff9a2a;box-shadow:0 0 12px rgba(255,154,42,.5)}
+.blist .it{grid-template-columns:minmax(0,1fr) auto}
 /* Celular: menu da barra de cima que recolhe, botão de caça automática e joystick. */
 .topmenu{display:contents}
 .menubtn{display:none}
@@ -284,7 +297,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .joy{position:absolute;left:14px;bottom:14px;z-index:3;width:124px;height:124px;border-radius:50%;background:rgba(20,15,10,.35);border:2px solid rgba(255,255,255,.18);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .joyknob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(217,164,65,.5);border:2px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none}
 .joy.act .joyknob{background:rgba(217,164,65,.85)}
-@media (max-width:1100px){
+@media (max-width:1400px){
   .top{position:relative;gap:8px;flex-wrap:nowrap}
   .top h1{font-size:22px}
   .top .where{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -323,6 +336,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     <button id="btnBook" type="button" title="Todas as magias da sua classe e onde aprender">Magias</button>
     <button id="btnBest" type="button">Bestiário</button>
     <button id="btnAfk" type="button" title="Tela de acompanhamento da caçada">AFK</button>
+    <button id="btnReport" type="button" title="Denunciar um jogador ou avisar sobre um problema">Denunciar</button>
     <button id="btnKeys" type="button">Atalhos</button>
     <button id="btnHelp" type="button">Controles</button>
     <button id="btnSave" type="button">Salvar</button>
@@ -331,6 +345,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 
   <aside class="side side-l" id="sideL">
     <section class="panel" data-p="battle"><h2>Batalha <span class="price" id="battleCount"></span></h2><div class="pbody"><div class="battle" id="battle"></div></div></section>
+    <section class="panel" data-p="party"><h2>Grupo <span class="price" id="partyCount"></span></h2><div class="pbody"><div class="partyui" id="partyui"></div></div></section>
     <section class="panel" data-p="bot"><h2>Caça automática</h2><div class="pbody"><div class="botui" id="botui"></div><div class="auto" id="autoheal" hidden></div></div></section>
     <section class="panel" data-p="quests"><h2>Missões</h2><div class="pbody"><div class="quests" id="quests"></div></div></section>
     <section class="panel" data-p="bosses"><h2>Chefes</h2><div class="pbody"><div class="quests" id="bosses"></div></div></section>
@@ -344,6 +359,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
       <button type="button" class="lootbtn" id="btnLoot" title="Pegar tudo dos corpos colados em você (tecla L)">Saquear <kbd id="lootKey">L</kbd></button>
       <button type="button" class="lootbtn huntbtn" id="btnHunt" title="Ligar ou desligar a caça automática" hidden>Caçar <kbd id="huntKey"></kbd></button>
       <div class="joy" id="joy" hidden aria-hidden="true"><div class="joyknob" id="joyKnob"></div></div>
+      <div class="insthud" id="instHud" hidden><b id="instName"></b><span id="instTime"></span><button type="button" id="instLeave">Sair da arena</button></div>
       <div class="zoom"><button type="button" id="zOut" aria-label="Afastar a câmera" title="Afastar (tecla -)">−</button><button type="button" id="zIn" aria-label="Aproximar a câmera" title="Aproximar (tecla +)">+</button></div>
       <div id="afk" hidden role="dialog" aria-label="Painel AFK"><div class="afkw">
         <div class="afkh"><h2>Painel da caçada</h2><span class="afkst" id="afkState"></span><div class="spacer"></div><button type="button" id="afkBot">Caça automática</button><button type="button" id="afkReset">Zerar contadores</button><button type="button" class="primary" id="afkClose">Voltar ao jogo</button></div>
@@ -391,7 +407,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
     </div>
     <div class="actionbar" id="actionbar"></div>
     <div class="log" id="log" aria-live="polite"></div>
-    <form class="chatbar" id="chatBar" hidden autocomplete="off"><select id="chatCh" aria-label="Canal"><option value="local">Local</option><option value="mundo">Mundo</option></select><input id="chatIn" maxlength="200" placeholder="Enter para falar · /quem" aria-label="Mensagem"><button type="submit">Falar</button></form>
+    <form class="chatbar" id="chatBar" hidden autocomplete="off"><select id="chatCh" aria-label="Canal"><option value="local">Local</option><option value="mundo">Mundo</option><option value="grupo">Grupo</option></select><input id="chatIn" maxlength="200" placeholder="Enter para falar · /quem" aria-label="Mensagem"><button type="submit">Falar</button></form>
   </main>
 
   <aside class="side side-r" id="sideR">
@@ -1117,8 +1133,8 @@ function restrictText(d){
   if(d.slot==='shield') return d.ok==='quiver' ? 'só Caçador' : 'Caçador e Monge não usam escudo';
   return '';
 }
-const itemName = it => ITEMS[it.id].name + (it.s?' '+it.s:'');
-const sellPrice = it => { const d=ITEMS[it.id]; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
+const itemName = it => ITEMS[it.id].name + (it.own?' de '+it.own:'') + (it.s?' '+it.s:'');
+const sellPrice = it => { const d=ITEMS[it.id]; if(it.own) return 0; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
 function statLines(it){
   const d=ITEMS[it.id], s=[];
   if(d.atk) s.push('Ataque +'+d.atk); if(d.mag) s.push('Magia +'+d.mag); if(d.def) s.push('Defesa +'+d.def);
@@ -1135,7 +1151,9 @@ function itemSub(it, opts={}){
   const d=ITEMS[it.id], parts=[];
   if(it.r) parts.push(`<span class="rn r${it.r}">${RAR[it.r]}</span>`);
   const sl=statLines(it); if(sl.length) parts.push(sl.join(', '));
-  for(const a of it.a||[]) parts.push(`<span class="aff">${affLine(a)}</span>`);
+  for(const a of it.a||[]) parts.push(`<span class="aff${typeof UNIQ_AFF!=='undefined'&&UNIQ_AFF.has(a.k)?' uniq':''}">${affLine(a)}</span>`);
+  if(it.own) parts.push(`<span class="aff uniq">Exclusivo de ${esc(it.own)} · não pode ser vendido</span>`);
+  if(d.chest) parts.push('Use para abrir · pode ter um item raro');
   if(d.slot){ if(!canUse(d)) parts.push(`<span class="bad">${restrictText(d)}</span>`); if((d.lvl||1)>player.level) parts.push(`<span class="bad">requer nível ${d.lvl}</span>`); }
   if(!d.slot && !d.heal && !d.mana && opts.sell!==false) parts.push('vende por '+sellPrice(it)+' ouro');
   return parts.join(' · ');
@@ -1409,7 +1427,7 @@ function iconURL2(id){
   iconPost(g,K,spark);
   return iconCache2[id]=c.toDataURL();
 }
-function iconURL(id){ return ITEMS[id]?.tome ? tomeIconURL(id) : iconURL2(id); }
+function iconURL(id){ return ITEMS[id]?.tome ? tomeIconURL(id) : ITEMS[id]?.chest ? chestIconURL(id) : iconURL2(id); }
 
 // ============================================================ monstros
 const MON = {
@@ -1616,6 +1634,35 @@ for(const [type,ids] of [['icegiant',['glacialmaul','glacialaxe']],['auroraspiri
 Object.assign(ITEMS.ignivareye,{icon:'dragoneye'}); Object.assign(ITEMS.queenwing,{icon:'fairywing'}); Object.assign(ITEMS.auroraglass,{icon:'prism'}); Object.assign(ITEMS.frostcrown,{icon:'icecrown'}); Object.assign(ITEMS.walrustusk,{icon:'tusk'}); Object.assign(ITEMS.pearl,{icon:'pearl',look:'#3a3a5a'});
 
 
+// ---- online: baús, amuletos exclusivos do Colosso das Brumas, o Colosso e as arenas de chefe
+Object.assign(ITEMS, {
+  chest1: {name:'Baú de Madeira', stack:true, chest:1, sell:20, icon:'chest', look:'#9a6a3a'},
+  chest2: {name:'Baú de Ferro', stack:true, chest:2, sell:80, icon:'chest', look:'#a4aab3'},
+  chest3: {name:'Baú das Brumas', stack:true, chest:3, sell:300, icon:'chest', look:'#b49aff'},
+  xamulet_guerreiro: {name:'Amuleto do Bastião', slot:'amulet', cls:['guerreiro'], def:25, hp:400, lvl:30, sell:5000, icon:'amulet', look:'#e0b040', excl:'absorb'},
+  xamulet_cacador:   {name:'Amuleto da Fortuna', slot:'amulet', cls:['cacador'], atk:20, crit:4, lvl:30, sell:5000, icon:'amulet', look:'#5fd068', excl:'luck'},
+  xamulet_feiticeiro:{name:'Amuleto da Sabedoria', slot:'amulet', cls:['feiticeiro'], mag:28, mp:300, lvl:30, sell:5000, icon:'amulet', look:'#c06aff', excl:'xpb'},
+  xamulet_xama:      {name:'Amuleto do Vento', slot:'amulet', cls:['xama'], mag:22, hp:250, lvl:30, sell:5000, icon:'amulet', look:'#7ad0ff', excl:'dodge'},
+  xamulet_monge:     {name:'Amuleto do Espinho', slot:'amulet', cls:['monge'], atk:22, hp:300, lvl:30, sell:5000, icon:'amulet', look:'#ff7a5a', excl:'reflect'},
+});
+// atributos únicos (só nos amuletos exclusivos; nunca saem em itens comuns)
+Object.assign(AFF, { absorb:{l:'absorção de dano',min:10,max:14,pct:1}, luck:{l:'sorte no saque',min:25,max:35,pct:1}, xpb:{l:'experiência ganha',min:15,max:20,pct:1},
+  dodge:{l:'esquiva',min:8,max:12,pct:1}, reflect:{l:'dano corpo a corpo refletido',min:20,max:30,pct:1} });
+const UNIQ_AFF = new Set(['absorb','luck','xpb','dodge','reflect']);
+// chefe de grupo (até 5 pessoas). No servidor a força acompanha o nível médio e o tamanho do grupo.
+MON.colosso = {name:'Colosso das Brumas', lvl:60, hp:26000, atk:600, def:58, xp:60000, step:400, as:1500, sight:12, col:'#8a7aa8', boss:true, group:true, respawn:0, charge:true,
+  breath:{cd:9000, range:6, min:320, max:520},
+  ab:{rain:{cd:5200, n:7, dmg:380, kind:'fire', scale:true}, phases:[{at:.75, say:'As brumas obedecem!', summon:'emberwraith', n:4}, {at:.5, say:'Ninguém sai do meu salão!', enrage:true}, {at:.25, say:'BRUMAS, ENGULAM TODOS!', summon:'icewraith', n:5}]},
+  loot:[['gold',1,3000,6000],['hp3',1,3,6],['mp3',1,3,6]]};
+// arena de chefe: uma sala fechada, uma por luta (o servidor cria e apaga)
+function makeArena(id, big){ const W=big?27:21, H=big?19:15, t=new Uint8Array(W*H).fill(CFL);
+  for(let x=0;x<W;x++){ t[x]=CWL; t[(H-1)*W+x]=CWL; } for(let y=0;y<H;y++){ t[y*W]=CWL; t[y*W+W-1]=CWL; }
+  for(const [px,py] of [[5,4],[W-6,4],[5,H-5],[W-6,H-5]]) t[py*W+px]=CWL;
+  for(let x=(W>>1)-2;x<=(W>>1)+2;x++) t[(H-2)*W+x]=CARPET;
+  return {id, name:big?'Salão das Brumas':'Arena do Chefe', W, H, t, links:{}, explored:new Uint8Array(W*H).fill(1), dark:false, darkA:.8,
+    lights:[{x:W>>1,y:H-3,r:90},{x:W>>1,y:4,r:110}], oob:CWALL, spawn:{x:W>>1,y:H-3}, bossAt:{x:W>>1,y:4}, mult:1, torch:new Set([W+4,W+(W>>1),2*W-5]), arena:true}; }
+
+
 // ============================================================ estado
 let cur = MAPS.over;
 const player = {kind:'player', x:0,y:0, px:0,py:0, moving:false, mt:0, mdur:1, dir:'down', face:1, phase:0,
@@ -1815,7 +1862,7 @@ const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];
 const oldTotalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
 function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
-  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0};
+  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0, absorb:0, luck:0, xpb:0, dodge:0, reflect:0};
   for(const k in player.eq){ const it=player.eq[k]; if(!it) continue; const d=ITEMS[it.id];
     for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal','atkspd']) if(d[f]) s[f]+=d[f];
     for(const a of it.a||[]) s[a.k]+=a.v; }
@@ -1894,6 +1941,7 @@ function useItem(it){
   if(isBag(it)){ toggleWin(it); return; }
   if(d.slot){ equipItem(it); return; }
   if(d.tome){ useTome(it); return; }
+  if(d.chest){ openChest(it); return; }
   if(d.warm>1){ player.buffs.warm=d.warm; removeOne(it); log('Você bebe a '+d.name+'. O frio não te alcança por 10 minutos.','sys'); burst(player,'#ff9a3a',10,60); uiDirty=true; return; }
   if(d.air){ player.air=100; removeOne(it); floatAt(player,'+fôlego','#9ae0ff'); burst(player,'#9ae0ff',10,60); uiDirty=true; return; }
   if(d.ammo){ if(!canUseAmmo(d)) { log('Só o Caçador usa flechas especiais.','sys'); return; } setAmmo(player.ammo===it.id?null:it.id); return; }
@@ -2140,12 +2188,13 @@ function reveal(){ const m=cur; for(let y=player.y-8;y<=player.y+8;y++) for(let 
 function onArrive(){
   reveal();
   const link=cur.links[player.y*cur.W+player.x];
-  if(link){ if(!ONLINE) changeMap(link.map, link.x, link.y); return; }
+  // online: o servidor troca o andar; até a resposta chegar o personagem fica parado na escada (sem sair dela sem querer)
+  if(link){ if(!ONLINE) changeMap(link.map, link.x, link.y); else player.lock=1500; return; }
   if(dialogRef && cheb(player,dialogRef)>2) closeDialog();
 }
 function changeMap(id,x,y,msg){
   const prev=cur.id; cur=MAPS[id]; mpan=null; battleKey=null; if(bot.on&&bot.mode==='hunt'){ bot.on=false; log('Caça automática parou: você mudou de andar.','sys'); } bot.mark=false; player.x=player.px=x; player.y=player.py=y; player.moving=false; player.path=null; player.pending=null; target=null; player.follow=false;
-  projectiles=[]; particles=[]; vfx=[]; floats=[]; keys.clear(); player.lock=450;
+  projectiles=[]; particles=[]; vfx=[]; floats=[]; keys.clear(); player.lock=ONLINE?120:450;
   reveal(); miniDirty=true; uiDirty=true;
   log(msg || (['over','ash','fae','ice','sea'].includes(id) ? 'Você volta à superfície.' : ((['over','ash','fae','ice','sea'].includes(prev))&&MAPS[id].enter ? MAPS[id].enter : 'Você chega a: '+MAPS[id].name+'.')),'sys'); fields=[];
   save();
@@ -2193,7 +2242,7 @@ function rollP(base, def, st, extraCrit=0, canMiss=true){
 function leech(dmg, st){ if(!st.lifesteal) return; const v=Math.round(dmg*st.lifesteal/100); if(v>=1) player.hp=Math.min(st.maxHp, player.hp+v); }
 const REG_ITEMS={over:['stone','crypt'],fae:['fae'],ash:['fire'],ice:['ice'],sea:['sea']};
 function randomGearId(lv, reg){
-  let pool=Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id]; return d.slot && d.slot!=='bag' && (d.lvl||1)<=lv+2 && (d.lvl||1)>=lv-20; });
+  let pool=Object.keys(ITEMS).filter(id=>{ const d=ITEMS[id]; return d.slot && d.slot!=='bag' && !d.excl && (d.lvl||1)<=lv+2 && (d.lvl||1)>=lv-20; });
   const ok=REG_ITEMS[reg]; if(ok){ const local=pool.filter(id=>ok.includes(itemRegion(id))); if(local.length) pool=local; }
   const mine=pool.filter(id=>canUse(ITEMS[id]));
   const src=(mine.length && R()<0.65) ? mine : pool;
@@ -2232,6 +2281,7 @@ function killMonster(m){
   if(m.type==='boss' && quests.king.state===1 && !m.sp.tower){ quests.king.state=2; uiDirty=true; log('Missão: o Rei das Criptas caiu. Conte ao Capitão Bento.','npc'); }
 }
 function gainXp(n, src){
+  { const b=stats().xpb; if(b>0) n=Math.round(n*(1+Math.min(50,b)/100)); } // atributo único: experiência ganha
   player.xp+=n; if(sess) sess.xp+=n; if(src) floatAt(src, '+'+n+' xp', '#e7c86a');
   log('Você ganhou '+n+' de experiência.','xp');
   let up=false; while(player.xp>=totalXp(player.level+1)){ player.level++; up=true; }
@@ -2241,6 +2291,8 @@ function gainXp(n, src){
 }
 function hurtPlayer(dmg, src){
   if(player.dead||player.god) return;
+  { const st=stats(); if(st.dodge>0&&R()<Math.min(30,st.dodge)/100){ floatAt(player,'esquivou','#9ae0ff'); return; } // atributos únicos: esquiva e absorção
+    if(st.absorb>0) dmg=dmg*(1-Math.min(40,st.absorb)/100); }
   { const B=player.buffs||{}; dmg=Math.max(1,Math.round(dmg*(B.arcshield>0?0.7:1)*(B.bark>0?0.85:1)*(B.wall>0?0.6:1)*(B.jade>0?0.65:1))); }
   player.hp-=dmg; player.flash=120; player.lastHit=now; floatAt(player, String(dmg), '#ff4a3a'); blood(player,false);
   const mxh=stats().maxHp; if(dmg>=mxh*0.08) trauma=Math.min(1,trauma+Math.min(0.35,dmg/mxh*1.2));
@@ -2250,7 +2302,8 @@ function heal(n){ const st=stats(); const v=Math.min(n, st.maxHp-player.hp); pla
 function die(src){
   if(ONLINE&&!inTower()) netSend({t:'state',dead:true});
   if(inTower()) return towerDie(src);
-  const blessed=!!player.blessed; player.blessed=false;
+  // na arena de chefe (online) nada cai do corpo: a arena some depois da luta
+  const arena=!!cur.arena, blessed=!!player.blessed||arena; if(!arena) player.blessed=false;
   player.dead=true; target=null; player.path=null; player.follow=false; player.poison=null; closeDialog();
   const floor=totalXp(player.level); const lost=Math.max(0,Math.min(player.xp-floor, Math.floor(player.xp*(blessed?0.02:0.08)))); const goldLost=blessed?0:Math.floor(player.gold*0.1);
   player.xp-=lost; player.gold-=goldLost; player.deathInfo={src, lost, goldLost};
@@ -2260,7 +2313,8 @@ function die(src){
   corpses.push({map:cur.id, x:player.x, y:player.y, player:true, name:player.name, items:drop, t:0, life:600000});
   const where=zoneName(cur,player.x,player.y), nItems=drop.filter(d=>d.id!=='gold').length;
   $('deathText').textContent = 'Derrotado por: '+src+'. Você perdeu '+lost+' de experiência. '+(drop.length?'Seu corpo ficou em '+where+' com '+(goldLost?goldLost+' moedas':'')+(goldLost&&nItems?' e ':'')+(nItems?nItems+' item(ns)':'')+' que caíram. Volte em até 10 minutos para pegar.':'Nada caiu do seu corpo.');
-  if(blessed){ $('deathText').textContent+=' A bênção protegeu você: nenhum item nem ouro caiu, e a perda de experiência foi menor.'; log('A bênção do templo protegeu seus itens e seu ouro.','lvl'); }
+  if(arena){ $('deathText').textContent+=' Na arena nada cai do corpo e a perda de experiência é menor.'; }
+  else if(blessed){ $('deathText').textContent+=' A bênção protegeu você: nenhum item nem ouro caiu, e a perda de experiência foi menor.'; log('A bênção do templo protegeu seus itens e seu ouro.','lvl'); }
   $('deathScreen').hidden=false; log('Você morreu para '+src+'.','dmg'); uiDirty=true;
 }
 function respawn(){ if(ONLINE) netSend({t:'state',dead:false});
@@ -3534,6 +3588,7 @@ function talk(n){
   }
   if(n.id.startsWith('spellmaster')){ openTrainer(n); return; }
   if(n.id==='towerportal'){ openTower(); return; }
+  if(n.id.startsWith('bossportal')){ openBossPortal(n); return; }
   if(n.id==='towerexit'){ openDialog(n,'Portal de saída',`<p>Sair da torre agora? Você fica com os ${TW.frags||0} Fragmentos desta subida.</p><div class="row"><button class="primary" data-act="out">Sair</button><button data-act="close">Ficar</button></div>`,act=>{ closeDialog(); if(act==='out') exitTower(); }); return; }
   if(/^tailor\d?$/.test(n.id)){ openTailor(n); return; }
   if(/^forger\d?$/.test(n.id)){ openForge(n); return; }
@@ -4913,6 +4968,10 @@ function renderContainers(){
 }
 const fmtT = ms => { const s=Math.max(0,Math.ceil(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function renderBosses(){
+  if(ONLINE){ // online: cada um enfrenta o seu chefe numa arena, pelo Portal dos Chefes; a espera é individual
+    const now2=Date.now(), cd=t=>Math.max(0,(Net.bcd?.[t]||0)-now2), list=[...BOSSES.map(b=>({type:b.type,lvl:b.lvl})),{type:'colosso',lvl:30,group:true}];
+    $('bosses').innerHTML='<p class="hint" style="margin:0 0 4px">Entre pelo <b>Portal dos Chefes</b> em qualquer cidade.</p>'+list.map(b=>{ const d=MON[b.type]; if(!d) return ''; const n=player.bossKills[b.type]||0, w=cd(b.type);
+      return `<div>${esc(d.name)}${b.group?' <span class="rn r3">grupo</span>':''} <small>· nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(w):'<span class="rn r1">disponível</span>'}${n?` · derrotado ${n}×`:''}</small></div>`; }).join(''); return; }
   $('bosses').innerHTML=BOSSES.map(b=>{ const n=player.bossKills[b.type]||0, sp=spawns.find(s=>s.type===b.type), d=MON[b.type];
     const st = !sp||sp.mon||sp.netAlive ? '<span class="rn r1">vivo</span>' : `renasce em ${fmtT(sp.timer)}`;
     return `<div>${d.name} <small>· nível ${b.lvl}+ · ${st} · respawn ${d.respawn/60000} min${n?` · derrotado ${n}×`:''}<br>${b.where}</small></div>`; }).join('');
@@ -4977,7 +5036,7 @@ const tip=document.createElement('div'); tip.className='tip'; tip.hidden=true; d
 const SLOT_NAME={weapon:'Arma',armor:'Armadura',shield:'Mão esquerda',helmet:'Elmo',boots:'Botas',amulet:'Colar',bag:'Mochila',legs:'Calça',ring:'Anel'};
 const OK_NAME={shield:'escudo',book:'livro de magias',quiver:'aljava'};
 const WK_NAME={blade:'lâmina',bow:'arco',wand:'varinha',staff:'cajado',fist:'punhos'};
-const STAT_L={atk:'ataque',mag:'magia',def:'defesa',hp:'vida',mp:'mana',crit:'% de crítico',critdmg:'% de dano crítico',atkspd:'% de vel. de ataque',lifesteal:'% de roubo de vida',regen:'de regeneração',speed:'de velocidade'};
+const STAT_L={absorb:'% de absorção de dano',luck:'% de sorte no saque',xpb:'% de experiência',dodge:'% de esquiva',reflect:'% de dano refletido',atk:'ataque',mag:'magia',def:'defesa',hp:'vida',mp:'mana',crit:'% de crítico',critdmg:'% de dano crítico',atkspd:'% de vel. de ataque',lifesteal:'% de roubo de vida',regen:'de regeneração',speed:'de velocidade'};
 function itemTotals(it){ const d=ITEMS[it.id], t={}; for(const k in STAT_L) if(d[k]) t[k]=d[k]; for(const a of it.a||[]) t[a.k]=(t[a.k]||0)+a.v; return t; }
 const fmtStat=(k,v)=>(v>0?'+':'')+v+(STAT_L[k].startsWith('%')?'':' ')+STAT_L[k];
 function tipHtml(it, equipped){
@@ -5520,7 +5579,7 @@ function netSave(now2){ if(!Net.inWorld||!running) return; const go=()=>{ saveTi
 // ---- visual: o que os outros veem (roupa, equipamento, montaria) e a velocidade do passo
 let lookKey='', lookT=0;
 function netLook(o){ if(!Net.inWorld||now-lookT<400) return; lookT=now; const {dir,...lk}=o, mount=cosOn('mount')?.type||null, st=stats();
-  const msg={t:'look', look:lk, mount, name:player.cos?.name||null, level:player.level, spd:st.stepDur}; const k=JSON.stringify(msg); if(k===lookKey) return; lookKey=k; netSend(msg); }
+  const msg={t:'look', look:lk, mount, name:player.cos?.name||null, level:player.level, spd:st.stepDur, luck:st.luck||0}; const k=JSON.stringify(msg); if(k===lookKey) return; lookKey=k; netSend(msg); }
 // trocas de mapa feitas aqui (renascer, sair da torre) avisam o servidor; as que vêm do servidor não
 let netWarping=false; { const _cm=changeMap; changeMap=function(id,x,y,msg){ _cm(id,x,y,msg); if(Net.inWorld&&!netWarping&&id!=='tower'&&MAPS[id]) netSend({t:'sync', map:id, x:player.x, y:player.y}); }; }
 
@@ -5535,6 +5594,7 @@ function drawOther(c,o,x,y){ if(o.mount){ drawCreatureArt(c,{type:o.mount, phase
 
 // ---- mensagens do servidor
 function netOn(m){
+  if(netOnExtra(m)) return;
   if(netOnMob(m)) return;
   switch(m.t){
     case 'auth': Net.token=m.token; Net.user=m.user; Net.chars=m.chars; Net.adm=!!m.adm; sset(TOKEN_KEY,m.token); if(!Net.inWorld) onlineChars(); break;
@@ -5549,11 +5609,11 @@ function netOn(m){
     case 'look': { const o=Net.others.get(m.id); if(o){ o.lk=m.look||o.lk; o.mount=m.mount||null; o.nameCol=m.name||null; o.level=m.level||o.level; } break; }
     case 'lvl': { const o=Net.others.get(m.id); if(o) o.level=m.level; break; }
     case 'ack': break;
-    case 'fix': if(m.map===cur.id){ player.x=player.px=m.x; player.y=player.py=m.y; player.moving=false; player.path=null; player.follow=false; } break;
+    case 'fix': if(m.map===cur.id){ player.x=player.px=m.x; player.y=player.py=m.y; player.moving=false; player.path=null; player.follow=false; player.lock=0; } break;
     case 'roster': { if(m.map!==cur.id) break; Net.others.clear(); for(const p of m.others) addOther(p); battleKey=null; break; }
     case 'warp': { Net.others.clear(); netWarping=true; try{ changeMap(m.map,m.x,m.y,m.text||undefined); } finally { netWarping=false; } for(const p of m.others) addOther(p); battleKey=null; break; }
-    case 'chat': { const who=(m.ch==='mundo'?'[Mundo] ':'')+m.from+' ['+m.level+']'; log(who+': '+m.text, m.ch==='mundo'?'chatw':'chat');
-      const sp=m.id===Net.charId?player:Net.others.get(m.id); if(sp&&(sp===player||sp.map===cur.id)&&m.ch!=='mundo') say(sp,m.from,m.text); break; }
+    case 'chat': { const who=(m.ch==='mundo'?'[Mundo] ':m.ch==='grupo'?'[Grupo] ':'')+m.from+' ['+m.level+']'; log(who+': '+m.text, m.ch==='mundo'?'chatw':m.ch==='grupo'?'chatg':'chat');
+      const sp=m.id===Net.charId?player:Net.others.get(m.id); if(sp&&(sp===player||sp.map===cur.id)&&m.ch==='local') say(sp,m.from,m.text); break; }
     case 'sys': log(m.text, m.big?'lvl':'sys'); break;
     case 'you': if(m.level&&m.level!==player.level){ player.level=m.level; player.xp=Math.max(player.xp,totalXp(m.level)); const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; buildActions(); netSave(); } uiDirty=true; skillsDirty=true; break;
     case 'count': Net.online=m.online; onlineBadge(); break;
@@ -5662,7 +5722,8 @@ function netOnMob(m){
     case 'gotitem': { const it=m.item; if(addItem(it)){ if(bot.on){ sessLoot(it); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
       else { if(bot.on) bot.fullAt=now; corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
     case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def;
-      if(m.kind==='melee'){ const r=roll(m.atk, def()); if(r.miss){ floatAt(player,'errou','#bbb'); return true; } hurtPlayer(Math.round(r.d*(m.mul||1)), src);
+      if(m.kind==='melee'){ const r=roll(m.atk, def()); if(r.miss){ floatAt(player,'errou','#bbb'); return true; } const hit=Math.round(r.d*(m.mul||1)); hurtPlayer(hit, src);
+        { const rf=stats().reflect; if(rf>0&&o&&!o.dead&&!player.dead) netHit(o, Math.max(1,Math.round(hit*Math.min(60,rf)/100)), false, '#ff7a5a'); } // atributo único: dano refletido
         if(m.grab&&R()<0.3&&!player.dead){ player.slowT=Math.max(player.slowT||0,2200); floatAt(player,'AGARRADO!','#d07ac0'); uiDirty=true; }
         const pz=m.poison; if(pz&&R()<pz.ch&&!player.dead){ player.poison={ticks:pz.ticks,dmg:pz.dmg,t:2000,fire:pz.fire}; log(pz.fire?'Você está pegando fogo!':'Você foi envenenado.','dmg'); uiDirty=true; } return true; }
       if(m.kind==='ranged'){ const apply=()=>{ if(player.dead) return; hurtPlayer(Math.max(1,Math.round(m.dmg*20/(20+def()*0.5))), src); burst(player,m.col,10,70);
@@ -5676,7 +5737,7 @@ function netOnMob(m){
     case 'mtalk': { const o=netMobs.get(m.id); if(!o||o.map!==cur.id) return true; const K=m.kind&&FIELD_KIND[m.kind]; const text=K?K.say:m.text; floatAt(o,text,K?K.p[0]:'#ffb0a0',true);
       if(m.say){ log(o.def.name+': "'+text+'"','dmg'); trauma=Math.min(1,trauma+0.35); if(m.enrage) log(o.def.name+' fica furioso e ataca mais rápido!','dmg'); } return true; }
     case 'fields': if(m.map===cur.id) for(const [x,y,dmg,life,warn,kind] of m.list) addField(cur.id,x,y,dmg,life,warn,kind); return true;
-    case 'bosses': for(const b of m.list){ for(const sp of spawns) if(sp.type===b.type){ sp.netAlive=b.alive; sp.timer=b.timer; } } uiDirty=true; return true;
+    case 'bosses': Net.bcd={}; for(const b of m.list) Net.bcd[b.type]=Date.now()+(b.cd||0); uiDirty=true; return true;
     case 'ink': { player.inkT=5000; log((m.src||'O Kraken')+' solta uma nuvem de tinta! Você mal enxerga.','dmg'); return true; }
   }
   return false;
@@ -5693,6 +5754,109 @@ window.claude?.hot?.snapshot?.(()=>({save: running?serialize():null}));
 const boot = data => { if(!ONLINE && data && data.save){ begin(data.save); } };
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 window.__miniView=()=>miniView();
+// ============================================================ online: grupo, denúncias, baús e arenas de chefe
+const fmtCd = ms => { const m=Math.ceil(ms/60000); return m>=60 ? Math.floor(m/60)+' h'+(m%60?' '+(m%60)+' min':'') : m>1 ? m+' min' : fmtT(ms); };
+// ---- grupo
+Net.party=null; Net.invites=[];
+function renderParty(){ const el=$('partyui'); if(!el) return; const P=Net.party, me=Net.charId, lead=P&&P.leader===me;
+  $('partyCount').textContent=P?P.members.length+'/5':'';
+  const inv=Net.invites.filter(i=>Date.now()-i.t<120000).map(i=>`<div class="pm pinv"><b>${esc(i.name)} <small style="display:inline">nível ${i.level}</small></b><div class="pmb"><button type="button" class="primary" data-pa="accept" data-id="${esc(i.from)}">Aceitar</button><button type="button" data-pa="decline" data-id="${esc(i.from)}">Recusar</button></div><small>convidou você para o grupo</small></div>`).join('');
+  const mem=P?P.members.map(o=>{ const pct=o.maxHp?Math.max(0,Math.min(100,Math.round(o.hp/o.maxHp*100))):100, isMe=o.id===me;
+    return `<div class="pm${o.dead?' dead':''}"><b>${P.leader===o.id?'★ ':''}${esc(o.name)}${isMe?' (você)':''}</b><div class="pmb">${lead&&!isMe?`<button type="button" data-pa="lead" data-id="${esc(o.id)}" title="Passar a liderança">Líder</button><button type="button" data-pa="kick" data-id="${esc(o.id)}" title="Tirar do grupo">Tirar</button>`:''}</div>
+      <div class="bar hp"><i style="width:${pct}%"></i><span></span></div><small>${(CLASSES[o.cls]||CLASSES.guerreiro).name} · nível ${o.level} · ${o.dead?'morto':esc(MAPS[o.map]?.name||(String(o.map).startsWith('arena#')?'numa arena':o.map))}</small></div>`; }).join(''):'';
+  const html=inv+(P?mem:'<p class="hint" style="margin:0">Você não está em um grupo. Em grupo, a experiência dos monstros é dividida entre quem está perto (+10% por pessoa) e dá para enfrentar o Colosso das Brumas juntos.</p>')+
+    (!P||lead?`<form class="prow" id="pInvite" autocomplete="off"><input id="pName" maxlength="16" placeholder="Nome do jogador" aria-label="Nome do jogador para convidar"><button type="submit">Convidar</button></form>`:'')+
+    (P?`<div class="prow"><button type="button" data-pa="leave">Sair do grupo</button><button type="button" data-pa="chat">Falar no grupo</button></div>`:'');
+  if(el.dataset.h!==html){ const f=document.activeElement?.id==='pName', v=$('pName')?.value||''; el.innerHTML=html; el.dataset.h=html; if($('pName')){ $('pName').value=v; if(f) $('pName').focus(); } } }
+$('partyui').addEventListener('click',e=>{ const b=e.target.closest('[data-pa]'); if(!b) return; const a=b.dataset.pa;
+  if(a==='chat'){ $('chatCh').value='grupo'; $('chatIn').focus(); return; }
+  if(a==='accept'||a==='decline'){ Net.invites=Net.invites.filter(i=>i.from!==b.dataset.id); netSend({t:'party',a,from:b.dataset.id}); renderParty(); return; }
+  if(a==='kick'&&b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Certeza?'; return; }
+  netSend({t:'party',a,id:b.dataset.id}); });
+$('partyui').addEventListener('submit',e=>{ e.preventDefault(); const i=$('pName'), n=i?.value.trim(); if(!n) return; netSend({t:'party',a:'invite',name:n}); i.value=''; });
+$('partyui').addEventListener('keydown',e=>e.stopPropagation());
+// vida para o painel do grupo (só quando está em grupo)
+let hpSent='';
+setInterval(()=>{ if(!Net.inWorld||!Net.party) return; const st=stats(), k=Math.round(player.hp)+'/'+st.maxHp; if(k===hpSent) return; hpSent=k; netSend({t:'state',hp:Math.round(player.hp),maxHp:st.maxHp}); },1000);
+
+// ---- denúncia
+function openReport(){ if(!Net.inWorld) return;
+  const names=[...new Set([...Net.others.values()].map(o=>o.name).concat((Net.party?.members||[]).map(o=>o.name)))].filter(n=>n!==player.name);
+  const reasons=['Xingamento ou assédio','Trapaça ou programa externo','Nome ofensivo','Golpe ou roubo','Bug ou problema no jogo','Outro'];
+  openDialog(player,'Denunciar ou avisar um problema',`<p>Conte o que aconteceu. Um administrador vai ler. As últimas mensagens do chat por perto vão junto, para ajudar.</p>
+    <label class="f" for="repName">Jogador (deixe vazio se for um bug)</label><input id="repName" maxlength="16" list="repNames" autocomplete="off"><datalist id="repNames">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+    <label class="f" for="repReason" style="margin-top:8px">Motivo</label><select id="repReason">${reasons.map(r=>`<option>${esc(r)}</option>`).join('')}</select>
+    <label class="f" for="repText" style="margin-top:8px">O que aconteceu?</label><textarea id="repText" rows="4" maxlength="600" style="width:100%;resize:vertical"></textarea>
+    <div class="row"><button class="primary" type="button" data-act="send">Enviar</button><button type="button" data-act="close">Cancelar</button></div>`,act=>{
+      if(act!=='send') return closeDialog();
+      const name=$('repName').value.trim(), reason=$('repReason').value, text=$('repText').value.trim();
+      if(!name&&!text){ $('repText').focus(); return; }
+      netSend({t:'report',name,reason,text}); closeDialog(); });
+  for(const id of ['repName','repText']) $(id).addEventListener('keydown',e=>e.stopPropagation());
+  $('repName').focus(); }
+$('btnReport').addEventListener('click',openReport);
+
+// ---- baús: o servidor sorteia o que tem dentro
+let chestBusy=0;
+function openChest(it){ if(!ONLINE||!Net.inWorld){ log('Os baús só abrem no Brumaval Online.','sys'); return; } if(Date.now()-chestBusy<4000) return; chestBusy=Date.now(); netSend({t:'chest',id:it.id}); }
+function chestResult(m){ chestBusy=0; if(m.err){ log(m.err,'sys'); return; }
+  takeItem(m.id,1); const rows=[];
+  m.items.forEach((it,i)=>{ const ok=addItem(it); if(!ok) toFeet(it); const sub=(it.id==='gold'?fmtN(it.n)+' moedas':(it.n>1?it.n+'× · ':'')+itemSub(it))+(ok?'':' · <span class="bad">mochila cheia: ficou no chão</span>');
+    rows.push(itemRow(it,sub,'').replace('<div class="it">',`<div class="it${i===m.jackpot?' jack':''}">`)); if(it.id!=='gold') log('Do '+ITEMS[m.id].name+': '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); });
+  const J=m.items[m.jackpot]; if(J){ floatAt(player,RAR[J.r]+'!',RAR_COL[J.r],true); burst(player,RAR_COL[J.r],40,120); trauma=Math.min(1,trauma+0.3); } else burst(player,'#ffd54a',20,80);
+  openDialog(player,ITEMS[m.id].name+' aberto',`${J?`<p class="good"><b>Sorte grande: ${esc(itemName(J))} (${RAR[J.r]})!</b></p>`:'<p>Veja o que tinha dentro:</p>'}<div class="list chestres">${rows.join('')}</div>
+    <div class="row">${countItem(m.id)?`<button class="primary" type="button" data-act="again">Abrir outro (${countItem(m.id)})</button>`:''}<button type="button" data-act="close">Fechar</button></div>`,act=>{
+      if(act==='again'){ const s=allItems().find(x=>x.id===m.id); if(s) openChest(s); return; } closeDialog(); });
+  uiDirty=true; save(); }
+const chestIcons={};
+function chestIconURL(id){ if(chestIcons[id]) return chestIcons[id]; const d=ITEMS[id], c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d'), r=(col,x,y,w,h)=>{ g.fillStyle=col; g.fillRect(x,y,w,h); };
+  const L=d.look, band=d.chest===3?'#e8d8ff':d.chest===2?'#f0f2f4':'#c9a440', dark=d.chest===3?'#3a2a5a':d.chest===2?'#4a4e56':'#4a2e14';
+  r('#120c08',3,10,26,19); r(dark,4,11,24,17); r(L,5,12,22,6); r(L,5,19,22,8); r('rgba(255,255,255,.25)',5,12,22,1); r('rgba(0,0,0,.3)',5,18,22,1);
+  for(const x of [8,22]) r(band,x,11,3,17); r(band,4,17,24,2); r('#120c08',14,16,5,7); r(band,15,17,3,5); r('#120c08',16,19,1,2);
+  if(d.chest===3){ g.fillStyle='rgba(200,170,255,.9)'; for(const [x,y] of [[6,7],[25,6],[16,4]]){ g.fillRect(x,y-1,1,3); g.fillRect(x-1,y,3,1); } }
+  return chestIcons[id]=c.toDataURL(); }
+
+// ---- Portal dos Chefes (uma arena só sua; a espera para repetir é individual)
+const PORTAL_TOWNS=['over','ash','fae','ice','sea'];
+for(const t of PORTAL_TOWNS){ const M=MAPS[t]; if(!M||!M.spawn) continue; const q=freeSpot(t,M.spawn.x+3,M.spawn.y+1);
+  npcs.push({kind:'npc', id:'bossportal_'+t, name:'Portal dos Chefes', map:t, x:q.x, y:q.y, look:'portal', px:q.x, py:q.y, moving:false, mt:0, mdur:1, phase:0, dir:'down'}); }
+let portalRef=null;
+function openBossPortal(n){ portalRef=n; if(!Net.inWorld){ log('O portal só funciona no Brumaval Online.','sys'); return; } netSend({t:'boss',a:'list'});
+  openDialog(n,'Portal dos Chefes','<p class="hint">Consultando as brumas…</p>',()=>closeDialog()); }
+function bossPortalDialog(m){ if(!portalRef||dlg.hidden||dialogRef!==portalRef) return; const G=m.group, gd=MON[G.type];
+  const row=b=>{ const d=MON[b.type]; if(!d) return ''; const low=player.level<b.lvl, w=b.cd>0;
+    return `<div class="it"><div class="meta"><b>${esc(d.name)}</b><small>nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(b.cd):low?'<span class="bad">nível baixo</span>':'<span class="good">disponível</span>'}${player.bossKills[b.type]?' · derrotado '+player.bossKills[b.type]+'×':''}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${b.type}" ${w||low?'disabled':''}>Entrar</button></div></div>`; };
+  const gw=G.cd>0, glow=player.level<G.lvl;
+  openDialog(portalRef,'Portal dos Chefes',`<p>Cada chefe é só seu: entre numa arena, vença em até ${Math.round(G.soloTime/60000)} minutos e ganhe um <b>Baú de Ferro</b>. Depois de vencer, espere para enfrentar o mesmo chefe de novo (a espera é só sua).</p>
+    <h4>Chefe de grupo</h4><div class="list blist"><div class="it"><div class="meta"><b>${esc(gd.name)}</b><small>até ${G.max} pessoas · nível ${G.lvl}+ · ${Math.round(G.time/60000)} minutos · fica mais forte com o nível e o tamanho do grupo. Prêmio: <span class="rn r3">Baú das Brumas</span> e chance de um <span class="rn r4">amuleto exclusivo da sua classe, com o seu nome</span>.<br>${gw?'de novo em '+fmtCd(G.cd):glow?'<span class="bad">exige nível '+G.lvl+'</span>':G.leader?'<span class="good">disponível</span> · seu grupo: '+G.size+(G.size>1?' pessoas (todos perto do portal entram juntos)':' pessoa (dá para ir sozinho, mas é muito difícil)'):'só o líder do grupo abre o portal'}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${G.type}" ${gw||glow||!G.leader?'disabled':''}>Entrar</button></div></div></div>
+    <h4>Chefes solo</h4><div class="list blist">${m.list.map(row).join('')}</div><div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
+      if(act==='go'){ closeDialog(); if(bot.on) toggleBot(false); netSend({t:'boss',a:'enter',type:ds.t}); return; } closeDialog(); }); }
+
+// ---- arena: o mapa é criado aqui quando o servidor avisa; contador de tempo e botão de sair
+Net.inst=null;
+function arenaMap(m){ if(!MAPS[m.map]){ const A=makeArena(m.map,!!m.big); A.name=m.name||A.name; A.region=m.region||'over'; MAPS[m.map]=A; } return MAPS[m.map]; }
+function renderInst(){ const h=$('instHud'), I=Net.inst; h.hidden=!I||!running||cur.id!==I.map; if(h.hidden) return;
+  const now2=Date.now(); $('instName').textContent=I.group?'Salão das Brumas':MON[I.type]?.name||'Arena';
+  if(I.won){ h.classList.add('won'); $('instTime').textContent='Vitória! Saída em '+fmtT(I.leaveAt-now2); } else { h.classList.remove('won'); $('instTime').textContent=fmtT(I.ends-now2); } }
+setInterval(renderInst,500);
+$('instLeave').addEventListener('click',()=>{ const b=$('instLeave'); if(!Net.inst?.won&&b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Sair mesmo?'; setTimeout(()=>{ b.dataset.armed=''; b.textContent='Sair da arena'; },3000); return; } netSend({t:'boss',a:'leave'}); });
+if(typeof BOSS_ART!=='undefined'&&!BOSS_ART.colosso) BOSS_ART.colosso=BOSS_ART.aurorath||BOSS_ART.oakking||BOSS_ART.boss;
+
+function netOnExtra(m){
+  switch(m.t){
+    case 'party': Net.party=m.id?m:null; if(!m.id) hpSent=''; renderParty(); return true;
+    case 'pinv': Net.invites=Net.invites.filter(i=>i.from!==m.from); Net.invites.push({...m,t:Date.now()}); renderParty(); return true;
+    case 'pinvdel': Net.invites=Net.invites.filter(i=>i.from!==m.from); renderParty(); return true;
+    case 'chestres': chestResult(m); return true;
+    case 'blist': bossPortalDialog(m); return true;
+    case 'inst': if(!m.map){ Net.inst=null; renderInst(); return true; } arenaMap(m); Net.inst={...m}; renderInst(); return true;
+    case 'gotitem': if(m.excl){ const it=m.item; if(!addItem(it)) toFeet(it); log('Você recebeu o '+itemName(it)+'! Um amuleto Lendário só seu.','r4'); floatAt(player,'EXCLUSIVO!','#ff9a2a',true); burst(player,'#ff9a2a',50,140); save(); return true; } return false;
+  }
+  return false;
+}
+setInterval(()=>{ if(Net.invites.length&&Net.invites.some(i=>Date.now()-i.t>=120000)){ Net.invites=Net.invites.filter(i=>Date.now()-i.t<120000); renderParty(); } },5000);
+renderParty();
+
 // ============================================================ celular: menu da barra de cima, botão de caça e joystick
 (function mobileUi(){
   const menu=$('topMenu'), mb=$('btnMenu');

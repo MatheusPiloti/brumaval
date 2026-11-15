@@ -20,7 +20,8 @@ const isAdm = acc => ADMINS.has(acc) || !!(db.accounts[acc] && db.accounts[acc].
 const TICK = 50;
 
 // ---------------------------------------------------------------- mundo (mesmos mapas do cliente)
-try { execFileSync('python3', [path.join(ROOT, 'mmo/tools/extract.py')], { stdio: 'ignore' }); } catch (e) { console.warn('Aviso: não consegui regenerar shared/sim.js (python3). Usando o arquivo existente.'); }
+try { require(path.join(ROOT, 'mmo/tools/extract.js'))(ROOT); } catch (e) {
+  try { execFileSync('python3', [path.join(ROOT, 'mmo/tools/extract.py')], { stdio: 'ignore' }); } catch (e2) { console.warn('Aviso: não consegui regenerar shared/sim.js (' + e.message + '). Usando o arquivo existente.'); } }
 // o mundo (mapas, monstros, itens e pontos de nascimento) vem do próprio jogo, executado sem tela
 const vm = require('vm');
 const fake = new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? (() => '') : k === 'length' ? 0 : fake, apply: () => fake, construct: () => fake, set: () => true });
@@ -86,24 +87,25 @@ function freeNear(map, x, y, self) {
   }
   return { x, y };
 }
-function saveChar(p) { const c = db.chars[p.id]; if (!c) return; Object.assign(c, { map: p.map, x: p.x, y: p.y, dir: p.dir, level: p.level, look: p.look || null, mount: p.mount || null, nameCol: p.nameCol || null, lastSeen: Date.now() }); markDirty(); }
+function saveChar(p) { const c = db.chars[p.id]; if (!c) return; const at = (EX && EX.retPos(p)) || p; // dentro de uma arena, guarda o lugar de onde a pessoa entrou
+  Object.assign(c, { map: at.map, x: at.x, y: at.y, dir: p.dir, level: p.level, look: p.look || null, mount: p.mount || null, nameCol: p.nameCol || null, lastSeen: Date.now() }); markDirty(); }
 
 function warp(p, map, x, y, text) {
   const from = p.map; const spot = freeNear(map, x, y, p);
   toMap(from, { t: 'leave', id: p.id }, p);
-  p.map = map; p.x = spot.x; p.y = spot.y; p.queue.length = 0; p.next = Date.now() + 300;
+  p.map = map; p.x = spot.x; p.y = spot.y; p.queue.length = 0; p.next = Date.now(); p.warping = false;
   send(p.ws, { t: 'warp', map, x: p.x, y: p.y, text: text || null, others: [...online.values()].filter(o => o !== p && o.map === map).map(pub) }); sendMobs(p);
-  toMap(map, { t: 'join', p: pub(p) }, p); saveChar(p);
+  toMap(map, { t: 'join', p: pub(p) }, p); saveChar(p); if (EX) EX.onMapChange(p);
 }
 
 // ---------------------------------------------------------------- monstros compartilhados
 const playersOn = map => { const out = []; for (const p of online.values()) if (p.map === map) out.push(p); return out; };
+let EX = null; // extras.js: grupo, denúncias, baús e arenas de chefe
 const mobsApi = require('./mobs.js')(S, { players: playersOn, toMap: (map, msg, except) => { const s2 = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p.id !== except && p.ws.readyState === 1) p.ws.send(s2); },
-  toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); } }, simCtx);
+  toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); },
+  partyOf: id => (EX ? EX.partyOfId(id) : null), onKill: (m, ranked) => EX && EX.onKill(m, ranked) }, simCtx);
 const sendMobs = p => send(p.ws, mobsApi.snapshot(p.map));
-// painel Chefes: quem está vivo e quanto falta para renascer
-const bossList = () => mobsApi.spawns.filter(sp => S.MON[sp.type].boss).map(sp => ({ type: sp.type, alive: !!sp.mob, timer: Math.max(0, Math.round(sp.timer)) }));
-setInterval(() => { if (online.size) toAll({ t: 'bosses', list: bossList() }); }, 5000);
+EX = require('./extras.js')({ S, db, online, send, toAll, toMap, warp, saveChar, markDirty: () => markDirty(), mobsApi, DATA_DIR, cleanText: (s, n) => cleanText(s, n), norm: s => norm(s), TOWNS, simCtx });
 let lastTick = Date.now(); setInterval(() => { const n = Date.now(), dt = Math.min(200, n - lastTick); lastTick = n; try { mobsApi.tick(dt); } catch (e) { console.error('erro nos monstros', e); } }, 50);
 
 // ---------------------------------------------------------------- movimento (com fila curta para esconder a latência)
@@ -114,13 +116,16 @@ function tryStep(p, dx, dy, seq) {
   if (!passPlayer(M, nx, ny) || cornerBlocked(M, p.x, p.y, dx, dy) || blockedByPlayer(p.map, nx, ny, p)) {
     send(p.ws, { t: 'fix', x: p.x, y: p.y, map: p.map, seq }); return;
   }
-  const dur = Math.round(p.step * (dx && dy ? 1.4 : 1));
-  p.x = nx; p.y = ny; p.next = Date.now() + dur - 25;
+  const dur = Math.round(p.step * (dx && dy ? 1.4 : 1)), now = Date.now();
+  // o ritmo conta a partir de quando o passo deveria começar: pacotes que chegam juntos (rede instável) não atrasam o personagem,
+  // mas ninguém anda mais rápido que o permitido (no máximo ~250 ms de folga acumulada)
+  p.x = nx; p.y = ny; p.next = Math.max(p.next, now - 250) + Math.round(dur * 0.92);
   toMap(p.map, { t: 'mv', id: p.id, x: nx, y: ny, dir: p.dir, dur }, p);
   send(p.ws, { t: 'ack', seq, x: nx, y: ny });
   p.moved = true;
   const link = M.links[ny * M.W + nx];
-  if (link) setTimeout(() => { if (online.get(p.id) === p && p.x === nx && p.y === ny && p.map === M.id) warp(p, link.map, link.x, link.y); }, dur);
+  // escada/buraco: troca de andar quase na hora (antes esperava o passo inteiro + a fila e o jogador ficava parado na escada)
+  if (link) { p.queue.length = 0; p.warping = true; setTimeout(() => { p.warping = false; if (online.get(p.id) === p && p.x === nx && p.y === ny && p.map === M.id) warp(p, link.map, link.x, link.y); }, Math.min(dur, 90)); }
 }
 setInterval(() => {
   const now = Date.now();
@@ -137,6 +142,8 @@ function chat(p, text, ch) {
   if (p.chatT > now) { send(p.ws, { t: 'sys', text: 'Calma: espere um pouco antes de mandar outra mensagem.' }); return; }
   p.chatT += 700;
   if (text[0] === '/') return command(p, text);
+  if (ch === 'grupo') return EX.partyChat(p, text);
+  EX.logChat(p, ch, text);
   const msg = { t: 'chat', ch, id: p.id, from: p.name, level: p.level, text };
   if (ch === 'mundo') { if (p.level < 5 && !p.adm) { send(p.ws, { t: 'sys', text: 'O canal Mundo libera no nível 5. Use o canal Local.' }); return; } toAll(msg); }
   else { for (const o of online.values()) if (o.map === p.map && cheb(o, p) <= 9) send(o.ws, msg); }
@@ -145,9 +152,10 @@ function command(p, text) {
   const [cmd, ...a] = text.slice(1).split(/\s+/); const c = cmd.toLowerCase();
   const reply = t => send(p.ws, { t: 'sys', text: t });
   if (c === 'versao' || c === 'versão') { let v = '?'; try { v = fs.readFileSync(path.join(DATA_DIR, 'version.txt'), 'utf8').trim().slice(0, 7); } catch (e) {} return reply('Versão do servidor: ' + v + ' · atualização automática: ' + (process.send ? 'LIGADA' : 'DESLIGADA (o servidor foi ligado com server.js; ligue com supervisor.js)') + '.'); }
-  if (c === 'ajuda' || c === 'comandos') return reply('Comandos: /quem · /versao' + (p.adm ? ' · ADM: /nivel N · /ir mapa [x y] · /ir Nome · /trazer Nome · /aviso texto · /invocar tipo [n] · /limpar · /chefes · /atualizar · botão ADM no topo (modo deus, itens, ouro...)' : ''));
+  if (c === 'ajuda' || c === 'comandos') return reply('Comandos: /quem · /versao · /convidar Nome · /aceitar · /sairgrupo · /g texto (chat do grupo) · /denunciar Nome o que aconteceu' + (p.adm ? ' · ADM: /denuncias · /denuncia N · /nivel N · /ir mapa [x y] · /ir Nome · /trazer Nome · /aviso texto · /invocar tipo [n] · /limpar · /atualizar · botão ADM no topo (modo deus, itens, ouro...)' : ''));
   if (c === 'quem' || c === 'online') return reply('Online (' + online.size + '): ' + [...online.values()].map(o => o.name + ' (' + o.level + ')').join(', '));
-  if (!p.adm) return reply('Comando desconhecido. Comandos: /quem · /versao · /ajuda');
+  if (EX.command(p, c, a, text)) return;
+  if (!p.adm) return reply('Comando desconhecido. Digite /ajuda.');
   if (c === 'nivel') { const n = Math.max(1, Math.min(500, a[0] | 0)); p.level = n; p.step = stepDur(n); saveChar(p); send(p.ws, { t: 'you', level: n, step: p.step }); toMap(p.map, { t: 'lvl', id: p.id, level: n }, p); return reply('Nível ajustado para ' + n + '.'); }
   if (c === 'atualizar') { if (!process.send) return reply('A atualização automática está desligada: ligue o servidor com supervisor.js.'); process.send({ t: 'check' }); return reply('Procurando versão nova no GitHub…'); }
   if (c === 'invocar') { const n = mobsApi.gmSummon(p, String(a[0] || ''), Math.max(1, Math.min(20, (a[1] | 0) || 1))); return reply(n ? 'Invocado: ' + n + '.' : 'Tipo inválido ou sem espaço. Ex.: /invocar wolf 3'); }
@@ -169,13 +177,13 @@ function enterWorld(conn, id) {
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
   send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
-  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); send(p.ws, { t: 'bosses', list: bossList() });
+  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); EX.onEnter(p);
   toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'entrou', p.name, '(' + conn.acc + ')', 'online:', online.size);
 }
 function leaveWorld(p) {
   if (!p || online.get(p.id) !== p) return;
-  saveChar(p); online.delete(p.id); toMap(p.map, { t: 'leave', id: p.id }); toAll({ t: 'count', online: online.size });
+  saveChar(p); EX.onLeave(p); online.delete(p.id); toMap(p.map, { t: 'leave', id: p.id }); toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'saiu', p.name, 'online:', online.size);
 }
 function onMessage(conn, m) {
@@ -214,11 +222,12 @@ function onMessage(conn, m) {
     case 'logout': leaveWorld(p); conn.player = null; return send(ws, { t: 'chars', chars: charList(conn.acc) });
   }
   if (!p) return;
+  if (EX.onMessage(p, m)) return;
   switch (m.t) {
-    case 'step': if (p.queue.length < 3) p.queue.push({ dx: m.dx, dy: m.dy, seq: m.seq | 0 }); else send(ws, { t: 'fix', x: p.x, y: p.y, map: p.map, seq: m.seq | 0 }); return;
+    case 'step': if (p.warping) return; if (p.queue.length < 5) p.queue.push({ dx: m.dx, dy: m.dy, seq: m.seq | 0 }); else send(ws, { t: 'fix', x: p.x, y: p.y, map: p.map, seq: m.seq | 0 }); return;
     case 'stop': p.queue.length = 0; return;
     case 'turn': if (['up', 'down', 'left', 'right'].includes(m.dir)) { p.dir = m.dir; toMap(p.map, { t: 'turn', id: p.id, dir: p.dir }, p); } return;
-    case 'say': return chat(p, m.text, m.ch === 'mundo' ? 'mundo' : 'local');
+    case 'say': return chat(p, m.text, m.ch === 'mundo' ? 'mundo' : m.ch === 'grupo' ? 'grupo' : 'local');
     case 'travel': {
       const to = String(m.to || ''), M = MAPS[p.map];
       if (!TOWNS.includes(to) || to === p.map || !M.boatman || cheb(p, M.boatman) > 3) return send(ws, { t: 'sys', text: 'Fale com o barqueiro no porto para viajar.' });
@@ -229,8 +238,8 @@ function onMessage(conn, m) {
     case 'hit': return mobsApi.onHit(p, m);
     case 'meff': return mobsApi.onEffect(p, m);
     case 'knock': return mobsApi.onKnock(p, m);
-    case 'loot': { const it = mobsApi.onLoot(p, m); if (it) send(ws, { t: 'gotitem', item: it, cid: m.cid }); return; }
-    case 'state': if ('dead' in m) p.dead = !!m.dead; if ('bot' in m) p.bot = !!m.bot; return;
+    case 'loot': { const it = mobsApi.onLoot(p, m); if (it) { EX.onLooted(p, it); send(ws, { t: 'gotitem', item: it, cid: m.cid }); } return; }
+    case 'state': if ('dead' in m) p.dead = !!m.dead; if ('bot' in m) p.bot = !!m.bot; EX.onState(p, m); return;
     case 'gm': { if (!p.adm) return send(ws, { t: 'sys', text: 'Só ADM.' });
       if (m.cmd === 'summon') { const n = mobsApi.gmSummon(p, String(m.type || ''), Math.max(1, Math.min(20, m.n | 0))); return send(ws, { t: 'sys', text: n ? 'Invocado: ' + n + '.' : 'Sem espaço ou tipo inválido.' }); }
       if (m.cmd === 'clear') { const n = mobsApi.gmClear(p); return send(ws, { t: 'sys', text: n + ' monstros removidos deste andar.' }); }
@@ -242,7 +251,7 @@ function onMessage(conn, m) {
       const c = db.chars[p.id]; if (!c) return; c.save = m.data; const lv = Math.max(1, Math.min(1000, m.data.level | 0)); if (lv !== p.level) { p.level = lv; toMap(p.map, { t: 'lvl', id: p.id, level: lv }, p); } c.level = lv; markDirty(); return; }
     case 'look': { if (m.look && typeof m.look === 'object' && JSON.stringify(m.look).length < 4000) p.look = m.look;
       p.mount = typeof m.mount === 'string' && m.mount.length < 24 ? m.mount : null; p.nameCol = typeof m.name === 'string' && m.name.length < 24 ? m.name : null;
-      if (m.level) p.level = Math.max(1, Math.min(1000, m.level | 0)); if (m.spd) p.step = Math.max(90, Math.min(400, m.spd | 0));
+      if (m.level) p.level = Math.max(1, Math.min(1000, m.level | 0)); if (m.spd) p.step = Math.max(90, Math.min(400, m.spd | 0)); p.luck = Math.max(0, Math.min(60, m.luck | 0));
       return toMap(p.map, { t: 'look', id: p.id, look: p.look, mount: p.mount, name: p.nameCol, level: p.level }, p); }
     case 'sync': { // troca de mapa feita pelo jogo (renascer no templo, sair da torre)
       const M = MAPS[m.map]; if (!M || !passPlayer(M, m.x | 0, m.y | 0)) return send(ws, { t: 'fix', x: p.x, y: p.y, map: p.map });
@@ -250,7 +259,7 @@ function onMessage(conn, m) {
       p.map = m.map; p.x = m.x | 0; p.y = m.y | 0; p.queue.length = 0; p.next = 0;
       if (from !== m.map) { send(ws, { t: 'roster', map: p.map, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub) }); toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); }
       else toMap(p.map, { t: 'mv', id: p.id, x: p.x, y: p.y, dir: p.dir, dur: 1 }, p);
-      saveChar(p); return; }
+      EX.onMapChange(p); saveChar(p); return; }
   }
 }
 function login(conn, acc) {
