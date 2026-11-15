@@ -14,10 +14,12 @@
 //   answer  digitar a resposta (npc ou obj): ans = respostas aceitas
 //   choice  escolher um caminho (opts); choiceFinal na quest dá o prêmio de cada escolha
 //   awaken  abrir o portal do Colosso Desperto (quest final)
-// give: {gold, xp (fração de um nível), items, chest, flags, title, cos, toAll, bonusHour, loot:{region, lv, n}}
+// give: {gold, xp (em níveis: 1 = um nível inteiro, 0.4 = 40% do nível atual), items, chest, flags, title, cos, toAll, bonusHour, loot:{region, lv, n}}
 'use strict';
 
-const T1 = 0.4, T2 = 0.8, T3 = 1.2;
+// prêmio em níveis: fácil 1, média 2, difícil 5 (a barra de experiência fica na mesma posição)
+const T1 = 1, T2 = 2, T3 = 5;
+const TS = 0.4; // Baús Selados: bônus pequeno
 
 // ================================================================ objetos nos mapas
 // at: ponto de referência (npc, chefe, monstro i-ésimo, ou o centro da cidade); d: distância em passos a partir dele
@@ -364,27 +366,27 @@ const QUESTS = [
     steps: [{ t: 'obj', obj: 'ov_fountain', goal: 'Fonte da praça de Pedraluz: o baú que veio do fundo do mar (precisa da Bússola do Hálvar e da Chave de Coral)',
       lock: { flags: ['compass', 'key_coral'], say: ['Você mexe na fonte, mas nada acontece. Uma placa de bronze diz: "Para quem veio do mar e sabe voltar para casa."', '(Precisa da Bússola do Hálvar, dos Fiordes, e da Chave de Coral, do Recife.)'] },
       say: ['A bússola gira e aponta para baixo. A água da fonte desce sozinha e revela um baú de coral. A Chave de Coral encaixa.', 'O Baú do Abismo, guardado pelo Rei Aurelião!'], give: { flags: ['chest_abyss'], loot: { region: 'sea', lv: 115, n: 4 } } }],
-    reward: { xp: T1 } },
+    reward: { xp: TS } },
   { id: 'sc_aurora', hidden: true, city: 'fae', tier: 0, lvl: 1, name: 'Baú Selado: Baú da Aurora', reqFlags: ['hint_aurora'], startMsg: 'Nova pista: o Capitão Hálvar escondeu um baú atrás da cachoeira do Bosque, em Lunária.',
     steps: [{ t: 'obj', obj: 'fa_waterfall', goal: 'Cachoeira do Bosque, em Lunária: o baú do Hálvar (o rio precisa cantar, e é preciso a Chave de Gelo)',
       lock: { flags: ['river_song', 'key_ice'], say: ['A água cai forte demais para passar. Atrás dela, uma sombra de baú.', '(A cachoeira só para quando o rio canta de novo: quest "A Flauta Calada". E o baú pede uma Chave de Gelo, consertada pelo Bjorn.)'] },
       say: ['O rio canta e a cachoeira abre como uma cortina. A Chave de Gelo abre o baú com um estalo frio.', 'O Baú da Aurora, guardado pelo Capitão Hálvar!'], give: { flags: ['chest_aurora'], loot: { region: 'ice', lv: 95, n: 4 } } }],
-    reward: { xp: T1 } },
+    reward: { xp: TS } },
   { id: 'sc_ash', hidden: true, city: 'sea', tier: 0, lvl: 1, name: 'Baú Selado: Baú das Cinzas', reqFlags: ['hint_ember'], startMsg: 'Nova pista: a Irmã Brasa sonhou com um baú de cinzas dentro de um coral que brilha, no Recife.',
     steps: [{ t: 'obj', obj: 'se_coral', goal: 'Recife (perto de Coralina): o coral que brilha (precisa da Chave de Brasa)',
       lock: { flags: ['key_ember'], say: ['Dentro do coral há um baú quente, mesmo embaixo d\'água. A fechadura tem forma de chama.', '(Precisa da Chave de Brasa, do andar secreto da Necrópole de Cinzas.)'] },
       say: ['A Chave de Brasa ferve a água em volta e o baú abre. Cinzas que não molham!', 'O Baú das Cinzas, guardado por Grimbal, o ferreiro!'], give: { flags: ['chest_ash'], loot: { region: 'ash', lv: 85, n: 4 } } }],
-    reward: { xp: T1 } },
+    reward: { xp: TS } },
   { id: 'sc_leaf', hidden: true, city: 'ice', tier: 0, lvl: 1, name: 'Baú Selado: Baú das Folhas', reqFlags: ['frag2'], startMsg: 'O Fragmento do Mapa nº 2 mostra um bloco de gelo nos Fiordes, com uma folha desenhada dentro.',
     steps: [{ t: 'obj', obj: 'ic_iceblock', goal: 'Fiordes Gelados: o bloco de gelo antigo (precisa da Lanterna do Repouso e da Chave de Raiz)',
       lock: { flags: ['lantern', 'key_root'], say: ['Dentro do bloco de gelo há um baú de madeira viva, com folhas verdes congeladas.', '(Para derreter o gelo: a Lanterna do Repouso, de Cinzaforte. Para abrir: a Chave de Raiz, que a Mestra Sylva dá no fim de "A Raiz Podre".)'] },
       say: ['A Lanterna do Repouso derrete o gelo devagar. A Chave de Raiz cresce dentro da fechadura e abre o baú.', 'O Baú das Folhas, guardado por Silvano, o fauno!'], give: { flags: ['chest_leaf'], loot: { region: 'fae', lv: 50, n: 4 } } }],
-    reward: { xp: T1 } },
+    reward: { xp: TS } },
   { id: 'sc_crown', hidden: true, city: 'ash', tier: 0, lvl: 1, name: 'Baú Selado: Baú da Coroa', reqFlags: ['hint_crown'], startMsg: 'Nova pista: embaixo da bigorna velha da Varga, em Cinzaforte, há um baú trancado com chave de osso.',
     steps: [{ t: 'obj', obj: 'as_anvil', goal: 'Bigorna velha da Varga, em Cinzaforte (precisa da Chave de Osso)',
       lock: { flags: ['key_bone'], say: ['Embaixo da bigorna há um baú com uma coroa gravada. A fechadura é de osso.', '(Precisa da Chave de Osso, da parede falsa da Cripta Esquecida, em Pedraluz.)'] },
       say: ['A Chave de Osso abre o baú. Dentro, o brasão do Rei Aurelião.', 'O Baú da Coroa, guardado pelos reis de Pedraluz!'], give: { flags: ['chest_crown'], loot: { region: 'over', lv: 30, n: 4 } } }],
-    reward: { xp: T1 } },
+    reward: { xp: TS } },
 
   // ---------------------------------------------------------------- QUEST FINAL
   { id: 'final', hidden: true, city: 'over', tier: 3, lvl: 60, name: 'As Cinco Brumas',

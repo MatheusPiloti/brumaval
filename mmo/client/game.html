@@ -5923,7 +5923,12 @@ function questReward(m){
   if(m.title) log(m.title+'!','lvl');
   if(m.text) log(m.text,'npc');
   if(m.gold){ player.gold+=m.gold; log('Você recebeu '+fmtN(m.gold)+' moedas de ouro.','loot'); }
-  if(m.xp){ const need=Math.max(1,totalXp(player.level+1)-totalXp(player.level)); gainXp(Math.max(1,Math.round(need*m.xp)),player); }
+  if(m.xp){ // m.xp em níveis: a parte inteira sobe níveis mantendo a posição na barra; a fração é % do nível de chegada
+    const L=player.level, span=l=>Math.max(1,totalXp(l+1)-totalXp(l)), k=Math.floor(m.xp), r=m.xp-k;
+    const frac=Math.max(0,Math.min(0.999,(player.xp-totalXp(L))/span(L)));
+    let gain=k>0 ? totalXp(L+k)+frac*span(L+k)-player.xp + r*span(L+k) : r*span(L);
+    { const b=stats().xpb; if(b>0) gain/=1+Math.min(50,b)/100; } // gainXp aplica o bônus de experiência; aqui o prêmio é em níveis exatos
+    gainXp(Math.max(1,Math.round(gain)),player); }
   for(const it of m.items||[]){ if(it.id==='gold'){ player.gold+=it.n; log('Você recebeu '+fmtN(it.n)+' moedas de ouro.','loot'); continue; }
     if(!addItem(it)){ toFeet(it); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } else log('Você recebeu '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
   if(m.newTitle){ const T=TITLES.find(t=>t.k===m.newTitle), D=towerData(); if(!D.titles.includes(m.newTitle)) D.titles.push(m.newTitle); if(T){ log('Título conquistado: "'+T.n+'". Escolha em Visual → Título.','lvl'); floatAt(player,'Título: '+T.n,'#ffd54a',true); } }

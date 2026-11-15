@@ -55,7 +55,8 @@ cp src/game.html mmo/client/game.html && python3 mmo/tools/make_online.py
 - As cidades se ligam: um NPC manda falar com outro em outra cidade. Quando um passo pede isso, o barco leva você mesmo abaixo do nível da ilha.
 - **Enigmas:** pedras e alavancas em ordem, túmulos certos, cogumelos "quente/frio", pedras musicais, espelhos e estátuas para girar, cadeado, mensagem em código, resposta digitada, e a maré do Naufrágio (baixa 3 minutos a cada 10).
 - **5 Baús Selados:** cada um escondido numa cidade e aberto com a chave de outra; começam sozinhos quando a pista aparece. **5 Fragmentos do Mapa** levam à quest final, **As Cinco Brumas**, com o Colosso das Brumas Desperto (uma vez por personagem). Vencer dá 1 hora de experiência e saque em dobro para todos.
-- Prêmios: ouro, experiência, Baú de Ferro, itens Lendários com nome próprio, títulos (Visual → Título) e visuais (Coroa Rachada, Capa dos Fiordes, Asas de Lirael, Dragonete Escarlate, Manto das Brumas).
+- **Níveis de prêmio:** a quest fácil dá 1 nível, a média 2 e a difícil 5 (a final, As Cinco Brumas, também 5). A barra de experiência fica na mesma posição. Os Baús Selados dão 40% de um nível. Os valores ficam no começo de `server/questdata.js` (`T1`, `T2`, `T3`, `TS`).
+- Prêmios: ouro, Baú de Ferro, itens Lendários com nome próprio, títulos (Visual → Título) e visuais (Coroa Rachada, Capa dos Fiordes, Asas de Lirael, Dragonete Escarlate, Manto das Brumas).
 - Tudo fica no servidor: `server/quests.js` (o motor) e `server/questdata.js` (as histórias, os passos e onde ficam os objetos). O texto completo está em `QUESTS.md`.
 - **ADM, para testar:** `/quest dar ID`, `/quest pular [ID]`, `/quest flag NOME`, `/quest feita ID…`, `/quest obj ID` (vai até o objeto), `/quest mob tipo` (vai até onde o monstro nasce), `/quest mare` (força a maré baixa) e `/quest reset`.
 
