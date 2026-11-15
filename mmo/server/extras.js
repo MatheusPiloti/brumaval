@@ -155,6 +155,7 @@ module.exports = function extras(X) {
       add({ id: 'gold', n: 500 + lv * ri(100, 200), r: 0, a: [] }); add({ id: hp, n: ri(10, 20), r: 0, a: [] }); add({ id: mp, n: ri(8, 15), r: 0, a: [] });
       add(gear(p, lv, 3)); add(gear(p, lv, 3)); add(gear(p, lv, 3));
       if (R() < 0.15) jackpot = add(gear(p, lv, 4, 4));
+      for (const it of out) if (S.ITEMS[it.id] && S.ITEMS[it.id].slot) it.s = 'do Colosso'; // equipamento do Baú das Brumas leva o nome do chefe
     }
     return { items: out, jackpot };
   }

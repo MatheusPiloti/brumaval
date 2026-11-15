@@ -1202,16 +1202,17 @@ Object.assign(ITEMS, {
   chest1: {name:'Baú de Madeira', stack:true, chest:1, sell:20, icon:'chest', look:'#9a6a3a'},
   chest2: {name:'Baú de Ferro', stack:true, chest:2, sell:80, icon:'chest', look:'#a4aab3'},
   chest3: {name:'Baú das Brumas', stack:true, chest:3, sell:300, icon:'chest', look:'#b49aff'},
-  xamulet_guerreiro: {name:'Amuleto do Bastião', slot:'amulet', cls:['guerreiro'], def:25, hp:400, lvl:30, sell:5000, icon:'amulet', look:'#e0b040', excl:'absorb'},
-  xamulet_cacador:   {name:'Amuleto da Fortuna', slot:'amulet', cls:['cacador'], atk:20, crit:4, lvl:30, sell:5000, icon:'amulet', look:'#5fd068', excl:'luck'},
-  xamulet_feiticeiro:{name:'Amuleto da Sabedoria', slot:'amulet', cls:['feiticeiro'], mag:28, mp:300, lvl:30, sell:5000, icon:'amulet', look:'#c06aff', excl:'xpb'},
-  xamulet_xama:      {name:'Amuleto do Vento', slot:'amulet', cls:['xama'], mag:22, hp:250, lvl:30, sell:5000, icon:'amulet', look:'#7ad0ff', excl:'dodge'},
-  xamulet_monge:     {name:'Amuleto do Espinho', slot:'amulet', cls:['monge'], atk:22, hp:300, lvl:30, sell:5000, icon:'amulet', look:'#ff7a5a', excl:'reflect'},
+  xamulet_guerreiro: {name:'Bastião do Colosso', slot:'amulet', cls:['guerreiro'], def:25, hp:400, lvl:30, sell:5000, icon:'amulet', look:'#e0b040', excl:'absorb'},
+  xamulet_cacador:   {name:'Fortuna do Colosso', slot:'amulet', cls:['cacador'], atk:20, crit:4, lvl:30, sell:5000, icon:'amulet', look:'#5fd068', excl:'luck'},
+  xamulet_feiticeiro:{name:'Ampulheta do Colosso', slot:'amulet', cls:['feiticeiro'], mag:28, mp:300, lvl:30, sell:5000, icon:'amulet', look:'#c06aff', excl:'cdr'},
+  xamulet_xama:      {name:'Seiva do Colosso', slot:'amulet', cls:['xama'], mag:22, hp:250, lvl:30, sell:5000, icon:'amulet', look:'#7ad0ff', excl:'healb'},
+  xamulet_monge:     {name:'Espinho do Colosso', slot:'amulet', cls:['monge'], atk:22, hp:300, lvl:30, sell:5000, icon:'amulet', look:'#ff7a5a', excl:'reflect'},
 });
 // atributos únicos (só nos amuletos exclusivos; nunca saem em itens comuns)
-Object.assign(AFF, { absorb:{l:'absorção de dano',min:10,max:14,pct:1}, luck:{l:'sorte no saque',min:25,max:35,pct:1}, xpb:{l:'experiência ganha',min:15,max:20,pct:1},
-  dodge:{l:'esquiva',min:8,max:12,pct:1}, reflect:{l:'dano corpo a corpo refletido',min:20,max:30,pct:1} });
-const UNIQ_AFF = new Set(['absorb','luck','xpb','dodge','reflect']);
+Object.assign(AFF, { absorb:{l:'absorção de dano',min:10,max:14,pct:1}, luck:{l:'sorte no saque',min:25,max:35,pct:1},
+  cdr:{l:'recarga das magias mais rápida',min:15,max:20,pct:1}, healb:{l:'mais cura recebida (magias e poções)',min:25,max:35,pct:1},
+  reflect:{l:'dano corpo a corpo refletido',min:20,max:30,pct:1}, xpb:{l:'experiência ganha',min:15,max:20,pct:1}, dodge:{l:'esquiva',min:8,max:12,pct:1} });
+const UNIQ_AFF = new Set(['absorb','luck','cdr','healb','reflect','xpb','dodge']);
 // chefe de grupo (até 5 pessoas). No servidor a força acompanha o nível médio e o tamanho do grupo.
 MON.colosso = {name:'Colosso das Brumas', lvl:60, hp:26000, atk:600, def:58, xp:60000, step:400, as:1500, sight:12, col:'#8a7aa8', boss:true, group:true, respawn:0, charge:true,
   breath:{cd:9000, range:6, min:320, max:520},
@@ -1426,7 +1427,7 @@ const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];
 const oldTotalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
 function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
-  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0, absorb:0, luck:0, xpb:0, dodge:0, reflect:0};
+  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0, absorb:0, luck:0, xpb:0, dodge:0, reflect:0, cdr:0, healb:0};
   for(const k in player.eq){ const it=player.eq[k]; if(!it) continue; const d=ITEMS[it.id];
     for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal','atkspd']) if(d[f]) s[f]+=d[f];
     for(const a of it.a||[]) s[a.k]+=a.v; }

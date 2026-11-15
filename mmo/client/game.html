@@ -1639,16 +1639,17 @@ Object.assign(ITEMS, {
   chest1: {name:'Baú de Madeira', stack:true, chest:1, sell:20, icon:'chest', look:'#9a6a3a'},
   chest2: {name:'Baú de Ferro', stack:true, chest:2, sell:80, icon:'chest', look:'#a4aab3'},
   chest3: {name:'Baú das Brumas', stack:true, chest:3, sell:300, icon:'chest', look:'#b49aff'},
-  xamulet_guerreiro: {name:'Amuleto do Bastião', slot:'amulet', cls:['guerreiro'], def:25, hp:400, lvl:30, sell:5000, icon:'amulet', look:'#e0b040', excl:'absorb'},
-  xamulet_cacador:   {name:'Amuleto da Fortuna', slot:'amulet', cls:['cacador'], atk:20, crit:4, lvl:30, sell:5000, icon:'amulet', look:'#5fd068', excl:'luck'},
-  xamulet_feiticeiro:{name:'Amuleto da Sabedoria', slot:'amulet', cls:['feiticeiro'], mag:28, mp:300, lvl:30, sell:5000, icon:'amulet', look:'#c06aff', excl:'xpb'},
-  xamulet_xama:      {name:'Amuleto do Vento', slot:'amulet', cls:['xama'], mag:22, hp:250, lvl:30, sell:5000, icon:'amulet', look:'#7ad0ff', excl:'dodge'},
-  xamulet_monge:     {name:'Amuleto do Espinho', slot:'amulet', cls:['monge'], atk:22, hp:300, lvl:30, sell:5000, icon:'amulet', look:'#ff7a5a', excl:'reflect'},
+  xamulet_guerreiro: {name:'Bastião do Colosso', slot:'amulet', cls:['guerreiro'], def:25, hp:400, lvl:30, sell:5000, icon:'amulet', look:'#e0b040', excl:'absorb'},
+  xamulet_cacador:   {name:'Fortuna do Colosso', slot:'amulet', cls:['cacador'], atk:20, crit:4, lvl:30, sell:5000, icon:'amulet', look:'#5fd068', excl:'luck'},
+  xamulet_feiticeiro:{name:'Ampulheta do Colosso', slot:'amulet', cls:['feiticeiro'], mag:28, mp:300, lvl:30, sell:5000, icon:'amulet', look:'#c06aff', excl:'cdr'},
+  xamulet_xama:      {name:'Seiva do Colosso', slot:'amulet', cls:['xama'], mag:22, hp:250, lvl:30, sell:5000, icon:'amulet', look:'#7ad0ff', excl:'healb'},
+  xamulet_monge:     {name:'Espinho do Colosso', slot:'amulet', cls:['monge'], atk:22, hp:300, lvl:30, sell:5000, icon:'amulet', look:'#ff7a5a', excl:'reflect'},
 });
 // atributos únicos (só nos amuletos exclusivos; nunca saem em itens comuns)
-Object.assign(AFF, { absorb:{l:'absorção de dano',min:10,max:14,pct:1}, luck:{l:'sorte no saque',min:25,max:35,pct:1}, xpb:{l:'experiência ganha',min:15,max:20,pct:1},
-  dodge:{l:'esquiva',min:8,max:12,pct:1}, reflect:{l:'dano corpo a corpo refletido',min:20,max:30,pct:1} });
-const UNIQ_AFF = new Set(['absorb','luck','xpb','dodge','reflect']);
+Object.assign(AFF, { absorb:{l:'absorção de dano',min:10,max:14,pct:1}, luck:{l:'sorte no saque',min:25,max:35,pct:1},
+  cdr:{l:'recarga das magias mais rápida',min:15,max:20,pct:1}, healb:{l:'mais cura recebida (magias e poções)',min:25,max:35,pct:1},
+  reflect:{l:'dano corpo a corpo refletido',min:20,max:30,pct:1}, xpb:{l:'experiência ganha',min:15,max:20,pct:1}, dodge:{l:'esquiva',min:8,max:12,pct:1} });
+const UNIQ_AFF = new Set(['absorb','luck','cdr','healb','reflect','xpb','dodge']);
 // chefe de grupo (até 5 pessoas). No servidor a força acompanha o nível médio e o tamanho do grupo.
 MON.colosso = {name:'Colosso das Brumas', lvl:60, hp:26000, atk:600, def:58, xp:60000, step:400, as:1500, sight:12, col:'#8a7aa8', boss:true, group:true, respawn:0, charge:true,
   breath:{cd:9000, range:6, min:320, max:520},
@@ -1862,7 +1863,7 @@ const totalXp = L => XP_TABLE[Math.max(1,Math.min(401,L|0))];
 const oldTotalXp = L => 50*(L-1)*L;  // XP total para chegar ao nível L
 function stats(){
   const C=CLASSES[player.cls]||CLASSES.guerreiro, L=player.level;
-  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0, absorb:0, luck:0, xpb:0, dodge:0, reflect:0};
+  const s={atk:4+Math.floor(L*C.atkLv), mag:Math.floor(L*C.magLv), def:1+Math.floor(L*C.defLv), hp:0, mp:0, crit:5+C.crit, critdmg:150, atkspd:0, lifesteal:0, regen:0, speed:0, absorb:0, luck:0, xpb:0, dodge:0, reflect:0, cdr:0, healb:0};
   for(const k in player.eq){ const it=player.eq[k]; if(!it) continue; const d=ITEMS[it.id];
     for(const f of ['atk','mag','def','hp','mp','crit','speed','regen','lifesteal','atkspd']) if(d[f]) s[f]+=d[f];
     for(const a of it.a||[]) s[a.k]+=a.v; }
@@ -2298,7 +2299,7 @@ function hurtPlayer(dmg, src){
   const mxh=stats().maxHp; if(dmg>=mxh*0.08) trauma=Math.min(1,trauma+Math.min(0.35,dmg/mxh*1.2));
   if(player.hp<=0){ player.hp=0; die(src); }
 }
-function heal(n){ const st=stats(); const v=Math.min(n, st.maxHp-player.hp); player.hp+=v; floatAt(player,'+'+v,'#7ee07a'); log('Você recuperou '+v+' de vida.','heal'); }
+function heal(n){ const st=stats(); if(st.healb>0) n=Math.round(n*(1+Math.min(60,st.healb)/100)); /* healb: atributo único do Xamã */ const v=Math.min(n, st.maxHp-player.hp); player.hp+=v; floatAt(player,'+'+v,'#7ee07a'); log('Você recuperou '+v+' de vida.','heal'); }
 function die(src){
   if(ONLINE&&!inTower()) netSend({t:'state',dead:true});
   if(inTower()) return towerDie(src);
@@ -2449,7 +2450,7 @@ function cast(i){
   const st0=stats(), st={...st0, spMul:skillMul(mainSkill())}; castHealMul=skillMul('ml');
   curSpell=s; let ok; try{ ok=s.run(st, player.level); } finally{ curSpell=null; castHealMul=1; } if(ok===false) return;
   { const el=SPELL_FX[s.name]?.el||'arcane'; fx('rune',player.x,player.y,{r:0.85,el,life:480,ground:true,mine:true}); if(AIM[s.name]===1&&target&&!target.dead) fx('slash',target.x,target.y,{el,ang:Math.atan2(target.y-player.y,target.x-player.x),life:320,mine:true}); }
-  player.mp-=cost; player.spellCd[i]=Math.round(s.cd*cdMul()); uiDirty=true; train('ml', cost);
+  player.mp-=cost; player.spellCd[i]=Math.round(s.cd*cdMul()*(1-Math.min(30,st0.cdr||0)/100)); uiDirty=true; train('ml', cost); // cdr: atributo único do Feiticeiro
 }
 
 // ============================================================ IA dos monstros
@@ -5036,7 +5037,7 @@ const tip=document.createElement('div'); tip.className='tip'; tip.hidden=true; d
 const SLOT_NAME={weapon:'Arma',armor:'Armadura',shield:'Mão esquerda',helmet:'Elmo',boots:'Botas',amulet:'Colar',bag:'Mochila',legs:'Calça',ring:'Anel'};
 const OK_NAME={shield:'escudo',book:'livro de magias',quiver:'aljava'};
 const WK_NAME={blade:'lâmina',bow:'arco',wand:'varinha',staff:'cajado',fist:'punhos'};
-const STAT_L={absorb:'% de absorção de dano',luck:'% de sorte no saque',xpb:'% de experiência',dodge:'% de esquiva',reflect:'% de dano refletido',atk:'ataque',mag:'magia',def:'defesa',hp:'vida',mp:'mana',crit:'% de crítico',critdmg:'% de dano crítico',atkspd:'% de vel. de ataque',lifesteal:'% de roubo de vida',regen:'de regeneração',speed:'de velocidade'};
+const STAT_L={cdr:'% de recarga mais rápida',healb:'% de cura recebida',absorb:'% de absorção de dano',luck:'% de sorte no saque',xpb:'% de experiência',dodge:'% de esquiva',reflect:'% de dano refletido',atk:'ataque',mag:'magia',def:'defesa',hp:'vida',mp:'mana',crit:'% de crítico',critdmg:'% de dano crítico',atkspd:'% de vel. de ataque',lifesteal:'% de roubo de vida',regen:'de regeneração',speed:'de velocidade'};
 function itemTotals(it){ const d=ITEMS[it.id], t={}; for(const k in STAT_L) if(d[k]) t[k]=d[k]; for(const a of it.a||[]) t[a.k]=(t[a.k]||0)+a.v; return t; }
 const fmtStat=(k,v)=>(v>0?'+':'')+v+(STAT_L[k].startsWith('%')?'':' ')+STAT_L[k];
 function tipHtml(it, equipped){
