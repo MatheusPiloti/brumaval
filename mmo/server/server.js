@@ -103,7 +103,7 @@ const playersOn = map => { const out = []; for (const p of online.values()) if (
 let EX = null; // extras.js: grupo, denúncias, baús e arenas de chefe
 const mobsApi = require('./mobs.js')(S, { players: playersOn, toMap: (map, msg, except) => { const s2 = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p.id !== except && p.ws.readyState === 1) p.ws.send(s2); },
   toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); },
-  partyOf: id => (EX ? EX.partyOfId(id) : null), onKill: (m, ranked) => EX && EX.onKill(m, ranked) }, simCtx);
+  partyOf: id => (EX ? EX.partyOfId(id) : null), onKill: (m, ranked) => EX && EX.onKill(m, ranked), bonus: () => (EX ? EX.bonusMul() : 1) }, simCtx);
 const sendMobs = p => send(p.ws, mobsApi.snapshot(p.map));
 EX = require('./extras.js')({ S, db, online, send, toAll, toMap, warp, saveChar, markDirty: () => markDirty(), mobsApi, DATA_DIR, cleanText: (s, n) => cleanText(s, n), norm: s => norm(s), TOWNS, simCtx });
 let lastTick = Date.now(); setInterval(() => { const n = Date.now(), dt = Math.min(200, n - lastTick); lastTick = n; try { mobsApi.tick(dt); } catch (e) { console.error('erro nos monstros', e); } }, 50);
@@ -297,7 +297,7 @@ wss.on('connection', (ws, req) => {
   ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; });
 });
 setInterval(() => { for (const ws of wss.clients) { if (!ws.isAlive) { ws.terminate(); continue; } ws.isAlive = false; ws.ping(); } }, 30000);
-function shutdown() { for (const p of online.values()) saveChar(p); dirty = true; flush(); process.exit(0); }
+function shutdown() { try { EX.onShutdown(); } catch (e) {} for (const p of online.values()) saveChar(p); dirty = true; flush(); process.exit(0); }
 process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
 // mensagens do supervisor (atualização automática)
 process.on('message', m => { if (m === 'shutdown') { toAll({ t: 'sys', text: 'Servidor atualizando… você reconecta sozinho em alguns segundos.', big: true }); setTimeout(shutdown, 300); } else if (m && m.t === 'notice') toAll({ t: 'sys', text: m.text, big: true }); });

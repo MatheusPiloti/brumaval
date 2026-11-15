@@ -135,11 +135,11 @@ module.exports = function createMobs(S, io, ctx) {
     remove(m); if (!temp) m.sp.timer = d.boss ? BOSS_RESPAWN : (d.respawn || (25000 + R() * 15000));
     const total = [...m.dmg.values()].reduce((a, b) => a + b, 0) || 1, xp = temp ? m.xp / 2 : m.xp;
     const ranked = [...m.dmg.entries()].sort((a, b) => b[1] - a[1]), top = ranked[0]?.[0] || null;
-    const items = [];
+    const items = [], B = io.bonus ? io.bonus() : 1; // B = 2 nos 20 minutos depois de um reinício (experiência e saque em dobro)
     if (!temp) {
       const players = io.players(m.map), topP = players.find(p => p.id === top), pen = topP && topP.bot ? BOT_LOOT : 1; // caça automática: fator do saque (1 = sem penalidade)
-      const luck = 1 + Math.min(60, Math.max(0, (topP && topP.luck) || 0)) / 100; // atributo "sorte" (amuleto exclusivo do Caçador)
-      for (const [id, ch, a, b] of d.loot) if (R() < ch * pen * luck) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen : 1))) });
+      const luck = (1 + Math.min(60, Math.max(0, (topP && topP.luck) || 0)) / 100) * B; // atributo "sorte" (amuleto exclusivo do Caçador) e bônus de reinício
+      for (const [id, ch, a, b] of d.loot) if (R() < ch * pen * luck) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen * B : 1))) });
       const extra = d.boss ? (pen < 1 ? 2 : 3) : (R() < (0.04 + lv * 0.006) * pen * luck ? 1 : 0);
       if (topP) S.player.cls = topP.cls || 'guerreiro';
       for (let i = 0; i < extra; i++) { const id = S.randomGearId(lv, S.monRegion(m.type)); if (id) items.push(S.makeItem(id, S.rollRarity(lv, d.boss), lv)); }
@@ -154,7 +154,7 @@ module.exports = function createMobs(S, io, ctx) {
       for (const p of io.players(m.map)) if (g.pt.members.has(p.id) && cheb(p, m) <= 15) ids.add(p.id);
       const n = ids.size, pool = xp * g.dmg / total * (1 + 0.1 * (n - 1)); for (const id of ids) shares.set(id, (shares.get(id) || 0) + pool / n); }
     const names = items.length ? items.map(i => (i.n > 1 ? i.n + ' ' : '') + (S.ITEMS[i.id]?.name || i.id)) : null;
-    for (const [pid, v] of shares) io.toPlayer(pid, { t: 'kill', id: m.id, type: m.type, boss: !!d.boss, temp, xp: Math.max(1, Math.round(v)), top: pid === top, items: names });
+    for (const [pid, v] of shares) io.toPlayer(pid, { t: 'kill', id: m.id, type: m.type, boss: !!d.boss, temp, xp: Math.max(1, Math.round(v * B)), top: pid === top, items: names });
     if (io.onKill) try { io.onKill(m, ranked); } catch (e) { console.error('erro ao vencer chefe', e); }
     const c = { id: nextCorpse++, map: m.map, x: m.x, y: m.y, type: m.type, items, t: now, life: items.length ? 120000 : 15000 };
     corpses.set(c.id, c); io.toMap(m.map, { t: 'corpse', c });

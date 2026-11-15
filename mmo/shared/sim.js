@@ -694,8 +694,8 @@ function restrictText(d){
   if(d.slot==='shield') return d.ok==='quiver' ? 'só Caçador' : 'Caçador e Monge não usam escudo';
   return '';
 }
-const itemName = it => ITEMS[it.id].name + (it.own?' de '+it.own:'') + (it.s?' '+it.s:'');
-const sellPrice = it => { const d=ITEMS[it.id]; if(it.own) return 0; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
+const itemName = it => ITEMS[it.id].name + (it.s?' '+it.s:'');
+const sellPrice = it => { const d=ITEMS[it.id]; if(it.own||it.bound||d.excl) return 0; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
 function statLines(it){
   const d=ITEMS[it.id], s=[];
   if(d.atk) s.push('Ataque +'+d.atk); if(d.mag) s.push('Magia +'+d.mag); if(d.def) s.push('Defesa +'+d.def);
@@ -713,7 +713,7 @@ function itemSub(it, opts={}){
   if(it.r) parts.push(`<span class="rn r${it.r}">${RAR[it.r]}</span>`);
   const sl=statLines(it); if(sl.length) parts.push(sl.join(', '));
   for(const a of it.a||[]) parts.push(`<span class="aff${typeof UNIQ_AFF!=='undefined'&&UNIQ_AFF.has(a.k)?' uniq':''}">${affLine(a)}</span>`);
-  if(it.own) parts.push(`<span class="aff uniq">Exclusivo de ${esc(it.own)} · não pode ser vendido</span>`);
+  if(it.own||it.bound||d.excl) parts.push(`<span class="aff uniq">Exclusivo do Colosso das Brumas · não pode ser vendido</span>`);
   if(d.chest) parts.push('Use para abrir · pode ter um item raro');
   if(d.slot){ if(!canUse(d)) parts.push(`<span class="bad">${restrictText(d)}</span>`); if((d.lvl||1)>player.level) parts.push(`<span class="bad">requer nível ${d.lvl}</span>`); }
   if(!d.slot && !d.heal && !d.mana && opts.sell!==false) parts.push('vende por '+sellPrice(it)+' ouro');

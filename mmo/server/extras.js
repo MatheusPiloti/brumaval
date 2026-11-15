@@ -14,7 +14,8 @@ const GROUP_LVL = 30;                  // nível mínimo para o chefe de grupo
 const GROUP_BOSS = 'colosso';
 const LEAVE_AFTER_WIN = 60 * 1000;     // depois da vitória, todos saem sozinhos em 1 minuto
 const EXCL_CHANCE = 0.35, EXCL_PITY = 4; // chance do amuleto exclusivo; garantido na 4ª vitória sem ele
-const REPORT_REASONS = ['Xingamento ou assédio', 'Trapaça ou programa externo', 'Nome ofensivo', 'Golpe ou roubo', 'Bug ou problema no jogo', 'Outro'];
+const RESTART_BONUS_MIN = 20;          // depois de cada reinício: experiência e saque em dobro por 20 minutos
+const REPORT_REASONS =['Xingamento ou assédio', 'Trapaça ou programa externo', 'Nome ofensivo', 'Golpe ou roubo', 'Bug ou problema no jogo', 'Outro'];
 
 module.exports = function extras(X) {
   const { S, db, online, send, toAll, warp, markDirty, mobsApi, DATA_DIR, cleanText, norm, TOWNS, simCtx } = X;
@@ -261,7 +262,7 @@ module.exports = function extras(X) {
     S.player.cls = p.cls; const it = S.makeItem(id, 4, Math.max(30, p.level)); delete it.s;
     const A = S.AFF || (() => { try { return require('vm').runInContext('AFF', simCtx); } catch (e) { return null; } })();
     const u = A && A[d.excl] ? A[d.excl] : { min: 10, max: 15 };
-    it.a.push({ k: d.excl, v: ri(u.min, u.max) }); it.own = p.name; return it;
+    it.a.push({ k: d.excl, v: ri(u.min, u.max) }); it.bound = true; return it;
   }
   // chamado pelos monstros quando um chefe morre
   function onKill(m) {
@@ -277,7 +278,7 @@ module.exports = function extras(X) {
         grantChest(o, 'chest3', 1);
         c.gpity = (c.gpity || 0) + 1;
         if (R() < EXCL_CHANCE || c.gpity >= EXCL_PITY) { c.gpity = 0; const it = exclusiveFor(o); send(o.ws, { t: 'gotitem', item: it, excl: true });
-          toAll({ t: 'sys', text: o.name + ' recebeu o ' + S.ITEMS[it.id].name + ' de ' + o.name + ', um amuleto exclusivo do Colosso das Brumas!', big: true }); }
+          toAll({ t: 'sys', text: o.name + ' recebeu o ' + S.ITEMS[it.id].name + ', um amuleto exclusivo do Colosso das Brumas!', big: true }); }
         else sys(o, 'O amuleto exclusivo não veio desta vez (garantido em no máximo ' + (EXCL_PITY - c.gpity) + ' vitória' + (EXCL_PITY - c.gpity > 1 ? 's' : '') + ').');
       } else grantChest(o, 'chest2', 1);
       sys(o, 'Vitória! Você sai da arena em 1 minuto (ou use o botão Sair). Próxima vez: daqui a ' + fmtWait(cdv) + '.', true);
@@ -291,6 +292,28 @@ module.exports = function extras(X) {
       else if (inst.done && now > inst.leaveAt) { for (const id of [...inst.players]) { const o = online.get(id); if (o) exitInst(o, 'Você sai da arena com a vitória.'); } if (insts.has(inst.id)) destroy(inst); }
       else for (const id of [...inst.players]) if (!online.has(id)) { inst.players.delete(id); if (!inst.players.size) destroy(inst); }
     } }, 1000);
+
+  // ================================================================ reinício do servidor: bônus para todos e Baú de Ferro para quem caiu junto
+  // A cada 15 s (e ao desligar) o servidor anota quem está online. Ao ligar de novo, quem estava na lista ganha um Baú de Ferro
+  // (quando entrar) e todos têm experiência e saque em dobro por RESTART_BONUS_MIN minutos.
+  const ONLINE_FILE = path.join(DATA_DIR, 'online.json'), COMP_FILE = path.join(DATA_DIR, 'compensation.json');
+  const bonusEnd = Date.now() + RESTART_BONUS_MIN * 60000;
+  let comp = {}; try { comp = JSON.parse(fs.readFileSync(COMP_FILE, 'utf8')) || {}; } catch (e) {}
+  try { const o = JSON.parse(fs.readFileSync(ONLINE_FILE, 'utf8')); for (const id of o.ids || []) if (db.chars[id]) comp[id] = o.at || Date.now(); } catch (e) {}
+  const saveJson = (file, obj) => { try { const tmp = file + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(obj)); fs.renameSync(tmp, file); } catch (e) { console.error('não consegui salvar', file, e.message); } };
+  saveJson(COMP_FILE, comp);
+  if (Object.keys(comp).length) console.log('Reinício: ' + Object.keys(comp).length + ' personagem(ns) vão ganhar um Baú de Ferro ao entrar.');
+  const writeOnline = () => saveJson(ONLINE_FILE, { at: Date.now(), ids: [...online.keys()] });
+  writeOnline(); setInterval(writeOnline, 15000); // a lista antiga já foi usada: começa de novo vazia
+  const bonusMul = () => (Date.now() < bonusEnd ? 2 : 1);
+  const bonusLeft = () => Math.max(0, bonusEnd - Date.now());
+  setTimeout(() => toAll({ t: 'sys', text: 'O bônus de experiência e saque em dobro acabou. Bom jogo!', big: true }), RESTART_BONUS_MIN * 60000);
+  function restartWelcome(p) {
+    if (bonusLeft() > 0) { send(p.ws, { t: 'bonus', until: Date.now() + bonusLeft() });
+      sys(p, 'Desculpe pela reinicialização do servidor! Para compensar: experiência e saque em dobro para todos por mais ' + fmtWait(bonusLeft()) + '.', true); }
+    if (comp[p.id]) { delete comp[p.id]; saveJson(COMP_FILE, comp); grantChest(p, 'chest2', 1);
+      sys(p, 'Você estava online quando o servidor reiniciou. Pedimos desculpas: aqui está um Baú de Ferro.', true); }
+  }
 
   // ================================================================ ganchos para o server.js
   function command(p, c, a, raw) {
@@ -312,11 +335,11 @@ module.exports = function extras(X) {
     }
     return false;
   }
-  function onEnter(p) { sendBossCds(p); send(p.ws, { t: 'party', id: null }); }
+  function onEnter(p) { sendBossCds(p); send(p.ws, { t: 'party', id: null }); restartWelcome(p); }
   function onLeave(p) { leave(p, true); if (p.inst) exitInst(p, null, true); }
   function onMapChange(p) { const inst = p.inst && insts.get(p.inst); if (inst && p.map !== inst.map) exitInst(p, null, true); }
   function onState(p, m) {
     if ('hp' in m) p.hp = Math.max(0, m.hp | 0); if ('maxHp' in m) p.maxHp = Math.max(1, m.maxHp | 0);
   }
-  return { command, onMessage, onEnter, onLeave, onMapChange, onState, onLooted, onKill, partyOfId, partyChat, logChat, retPos, REPORT_REASONS };
+  return { command, onMessage, onEnter, onLeave, onMapChange, onState, onLooted, onKill, partyOfId, partyChat, logChat, retPos, REPORT_REASONS, bonusMul, onShutdown: writeOnline };
 };
