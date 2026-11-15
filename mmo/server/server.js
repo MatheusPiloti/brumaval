@@ -264,13 +264,17 @@ function onMessage(conn, m) {
 }
 function login(conn, acc) {
   const token = crypto.randomBytes(24).toString('hex'); sessions.set(token, acc); conn.acc = acc; conn.token = token;
-  send(conn.ws, { t: 'auth', user: acc, token, chars: charList(acc), adm: isAdm(acc) });
+  if (!pageVer) try { pageCache = page(); } catch (e) {}
+  send(conn.ws, { t: 'auth', user: acc, token, chars: charList(acc), adm: isAdm(acc), ver: pageVer });
 }
 
 // ---------------------------------------------------------------- HTTP: entrega a página do jogo e aceita a conexão em tempo real
+// versão da página: quem estiver com uma página antiga aberta recarrega sozinho ao reconectar
+let pageVer = '';
 function page() {
   const game = fs.readFileSync(path.join(ROOT, 'mmo/client/game.html'), 'utf8');
-  return `<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="theme-color" content="#13100d">\n<title>Brumaval Online</title>\n<script>window.BRUMAVAL_CONFIG={};window.BRUMAVAL_ONLINE={server:''};</script>\n${game}\n</html>\n`;
+  pageVer = crypto.createHash('sha1').update(game).digest('hex').slice(0, 12);
+  return `<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="theme-color" content="#13100d">\n<title>Brumaval Online</title>\n<script>window.BRUMAVAL_CONFIG={};window.BRUMAVAL_ONLINE={server:'',ver:'${pageVer}'};</script>\n${game}\n</html>\n`;
 }
 let pageCache = null;
 const server = http.createServer((req, res) => {

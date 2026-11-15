@@ -137,7 +137,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .game-col{min-width:0;min-height:0;display:flex;flex-direction:column;gap:10px}
 .viewport{position:relative;flex:1 1 auto;min-height:260px;width:100%;display:flex;align-items:center;justify-content:center;background:#000;border:2px solid var(--line);border-radius:4px;overflow:hidden;touch-action:manipulation}
 .viewport canvas{display:block;flex:none;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,8,6,.55)}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,8,6,.55)}
+#dialog .card{display:flex;flex-direction:column;overflow:hidden;max-width:520px}
+#dialog .dlghead{display:flex;align-items:center;gap:8px;flex:none;margin:0 0 8px}
+#dialog .dlghead h2{margin:0;flex:1;min-width:0}
+#dlgX{flex:none;width:34px;height:34px;padding:0;font-size:16px;line-height:1}
+#dlgBody{overflow:auto;min-height:0;overscroll-behavior:contain}
+#dlgBody .row:last-child{position:sticky;bottom:-1px;background:var(--panel);padding-top:6px;margin-top:6px}
+@media (max-height:560px){
+  .overlay{padding:6px}
+  #dialog .card{max-width:min(820px,100%);padding:10px 14px}
+  #dialog .dlghead h2{font-size:17px}
+  #dialog .card p{margin:0 0 6px;font-size:14px}
+  #dialog .card h4{margin:6px 0 4px}
+}
 .overlay.dim{background:rgba(10,8,6,.82)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;max-width:440px;width:100%;max-height:100%;overflow:auto;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
 .card h2{font-family:var(--display);font-size:20px;margin:0 0 8px;color:var(--accent)}
@@ -379,7 +392,7 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
       </div></div>
       <div class="overlay" id="dialog" hidden>
         <div class="card" role="dialog" aria-modal="false">
-          <h2 id="dlgTitle"></h2>
+          <div class="dlghead"><h2 id="dlgTitle"></h2><button type="button" id="dlgX" aria-label="Fechar">✕</button></div>
           <div id="dlgBody"></div>
         </div>
       </div>
@@ -3529,6 +3542,9 @@ const dlg=$('dialog'), dlgTitle=$('dlgTitle'), dlgBody=$('dlgBody');
 let dlgHandler=null;
 function openDialog(ref, title, html, handler){ dialogRef=ref; dlgTitle.textContent=title; dlgBody.innerHTML=html; dlgHandler=handler; dlg.hidden=false; }
 function closeDialog(){ dlg.hidden=true; dialogRef=null; dlgHandler=null; }
+// o ✕ do topo só aparece quando o diálogo já tem um botão Fechar, e faz exatamente o mesmo que ele
+new MutationObserver(()=>{ $('dlgX').hidden=!dlgBody.querySelector('[data-act="close"]'); }).observe(dlgBody,{childList:true,subtree:true});
+$('dlgX').addEventListener('click',()=>{ const b=dlgBody.querySelector('[data-act="close"]'); if(b&&dlgHandler) dlgHandler('close',b.dataset); else closeDialog(); });
 dlgBody.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); if(!b||!dlgHandler) return; dlgHandler(b.dataset.act, b.dataset); });
 dlg.addEventListener('pointerdown', e=>{ if(e.target===dlg) closeDialog(); });
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -5598,7 +5614,10 @@ function netOn(m){
   if(netOnExtra(m)) return;
   if(netOnMob(m)) return;
   switch(m.t){
-    case 'auth': Net.token=m.token; Net.user=m.user; Net.chars=m.chars; Net.adm=!!m.adm; sset(TOKEN_KEY,m.token); if(!Net.inWorld) onlineChars(); break;
+    case 'auth': { const mine=window.BRUMAVAL_ONLINE?.ver; // página antiga aberta: recarrega uma vez para pegar a versão nova
+      if(m.ver&&mine&&m.ver!==mine){ let tried=''; try{ tried=sessionStorage.getItem('brumavalReload')||''; }catch(e){}
+        if(tried!==m.ver){ try{ sessionStorage.setItem('brumavalReload',m.ver); }catch(e){} sset(TOKEN_KEY,m.token); log('Versão nova do jogo: recarregando…','sys'); setTimeout(()=>location.reload(),400); return; } } }
+      Net.token=m.token; Net.user=m.user; Net.chars=m.chars; Net.adm=!!m.adm; sset(TOKEN_KEY,m.token); if(!Net.inWorld) onlineChars(); break;
     case 'autherr': if(m.expired){ sset(TOKEN_KEY,null); Net.token=null; if(Net.inWorld){ leaveOnlineWorld('Sua sessão expirou. Entre de novo.'); return; } onlineLogin(); return; } { const el=$('authMsg'); if(el) el.textContent=m.text; for(const b of document.querySelectorAll('#loginForm button')) b.disabled=false; } break;
     case 'err': { const el=$('charMsg'); if(el&&!running){ el.textContent=m.text; const b=$('btnNew'); if(b) b.disabled=false; } else log(m.text,'sys'); } break;
     case 'chars': Net.chars=m.chars; if(!running) onlineChars(); break;
@@ -5836,7 +5855,7 @@ function bossPortalDialog(m){ if(!portalRef||dlg.hidden||dialogRef!==portalRef) 
     return `<div class="it"><div class="meta"><b>${esc(d.name)}</b><small>nível ${b.lvl}+ · ${w?'de novo em '+fmtCd(b.cd):low?'<span class="bad">nível baixo</span>':'<span class="good">disponível</span>'}${player.bossKills[b.type]?' · derrotado '+player.bossKills[b.type]+'×':''}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${b.type}" ${w||low?'disabled':''}>Entrar</button></div></div>`; };
   const gw=G.cd>0, glow=player.level<G.lvl;
   openDialog(portalRef,'Portal das Brumas',`<p>Os outros chefes ficam nos portais dentro de cada caverna, no lugar onde eles moravam.</p>
-    <h4>Chefe de grupo</h4><div class="list blist"><div class="it"><div class="meta"><b>${esc(gd.name)}</b><small>até ${G.max} pessoas · nível ${G.lvl}+ · ${Math.round(G.time/60000)} minutos · fica mais forte com o nível e o tamanho do grupo. Prêmio: <span class="rn r3">Baú das Brumas</span> e chance de um <span class="rn r4">amuleto exclusivo da sua classe, com o seu nome</span>.<br>${gw?'de novo em '+fmtCd(G.cd):glow?'<span class="bad">exige nível '+G.lvl+'</span>':G.leader?'<span class="good">disponível</span> · seu grupo: '+G.size+(G.size>1?' pessoas (todos perto do portal entram juntos)':' pessoa (dá para ir sozinho, mas é muito difícil)'):'só o líder do grupo abre o portal'}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${G.type}" ${gw||glow||!G.leader?'disabled':''}>Entrar</button></div></div></div>
+    <h4>Chefe de grupo</h4><div class="list blist"><div class="it"><div class="meta"><b>${esc(gd.name)}</b><small>até ${G.max} pessoas · nível ${G.lvl}+ · ${Math.round(G.time/60000)} minutos · fica mais forte com o nível e o tamanho do grupo. Prêmio: <span class="rn r3">Baú das Brumas</span> e chance de um <span class="rn r4">amuleto exclusivo da sua classe</span>.<br>${gw?'de novo em '+fmtCd(G.cd):glow?'<span class="bad">exige nível '+G.lvl+'</span>':G.leader?'<span class="good">disponível</span> · seu grupo: '+G.size+(G.size>1?' pessoas (todos perto do portal entram juntos)':' pessoa (dá para ir sozinho, mas é muito difícil)'):'só o líder do grupo abre o portal'}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${G.type}" ${gw||glow||!G.leader?'disabled':''}>Entrar</button></div></div></div>
     <div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
       if(act==='go'){ closeDialog(); if(bot.on) toggleBot(false); netSend({t:'boss',a:'enter',type:ds.t}); return; } closeDialog(); }); }
 
@@ -5897,7 +5916,7 @@ renderParty();
   joy.addEventListener('contextmenu',e=>e.preventDefault());
   setInterval(()=>{ const h=!running||!touch.matches; if(joy.hidden!==h){ joy.hidden=h; if(h&&jid!==null) end({pointerId:jid}); } },500);
 })();
-window.__game = {Net, netSend, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {Net, netSend, openBossPortal, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
