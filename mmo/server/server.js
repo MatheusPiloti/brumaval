@@ -101,11 +101,13 @@ function warp(p, map, x, y, text) {
 // ---------------------------------------------------------------- monstros compartilhados
 const playersOn = map => { const out = []; for (const p of online.values()) if (p.map === map) out.push(p); return out; };
 let EX = null; // extras.js: grupo, denúncias, baús e arenas de chefe
+let QU = null; // quests.js: quests das cidades, enigmas, baús selados
 const mobsApi = require('./mobs.js')(S, { players: playersOn, toMap: (map, msg, except) => { const s2 = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p.id !== except && p.ws.readyState === 1) p.ws.send(s2); },
   toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); },
-  partyOf: id => (EX ? EX.partyOfId(id) : null), onKill: (m, ranked) => EX && EX.onKill(m, ranked), bonus: () => (EX ? EX.bonusMul() : 1) }, simCtx);
+  partyOf: id => (EX ? EX.partyOfId(id) : null), onKill: (m, ranked) => { if (EX) EX.onKill(m, ranked); if (QU) try { QU.onKill(m, ranked); } catch (e) { console.error('erro na quest', e); } }, bonus: () => (EX ? EX.bonusMul() : 1) }, simCtx);
 const sendMobs = p => send(p.ws, mobsApi.snapshot(p.map));
 EX = require('./extras.js')({ S, db, online, send, toAll, toMap, warp, saveChar, markDirty: () => markDirty(), mobsApi, DATA_DIR, cleanText: (s, n) => cleanText(s, n), norm: s => norm(s), TOWNS, simCtx });
+QU = require('./quests.js')({ S, db, online, send, toAll, toMap, warp, markDirty: () => markDirty(), mobsApi, EX });
 let lastTick = Date.now(); setInterval(() => { const n = Date.now(), dt = Math.min(200, n - lastTick); lastTick = n; try { mobsApi.tick(dt); } catch (e) { console.error('erro nos monstros', e); } }, 50);
 
 // ---------------------------------------------------------------- movimento (com fila curta para esconder a latência)
@@ -155,6 +157,7 @@ function command(p, text) {
   if (c === 'ajuda' || c === 'comandos') return reply('Comandos: /quem · /versao · /convidar Nome · /aceitar · /sairgrupo · /g texto (chat do grupo) · /denunciar Nome o que aconteceu' + (p.adm ? ' · ADM: /denuncias · /denuncia N · /nivel N · /ir mapa [x y] · /ir Nome · /trazer Nome · /aviso texto · /invocar tipo [n] · /limpar · /atualizar · botão ADM no topo (modo deus, itens, ouro...)' : ''));
   if (c === 'quem' || c === 'online') return reply('Online (' + online.size + '): ' + [...online.values()].map(o => o.name + ' (' + o.level + ')').join(', '));
   if (EX.command(p, c, a, text)) return;
+  if (QU.command(p, c, a, text)) return;
   if (!p.adm) return reply('Comando desconhecido. Digite /ajuda.');
   if (c === 'nivel') { const n = Math.max(1, Math.min(500, a[0] | 0)); p.level = n; p.step = stepDur(n); saveChar(p); send(p.ws, { t: 'you', level: n, step: p.step }); toMap(p.map, { t: 'lvl', id: p.id, level: n }, p); return reply('Nível ajustado para ' + n + '.'); }
   if (c === 'atualizar') { if (!process.send) return reply('A atualização automática está desligada: ligue o servidor com supervisor.js.'); process.send({ t: 'check' }); return reply('Procurando versão nova no GitHub…'); }
@@ -177,7 +180,7 @@ function enterWorld(conn, id) {
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
   send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
-  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); EX.onEnter(p);
+  toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); EX.onEnter(p); QU.onEnter(p);
   toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'entrou', p.name, '(' + conn.acc + ')', 'online:', online.size);
 }
@@ -223,6 +226,7 @@ function onMessage(conn, m) {
   }
   if (!p) return;
   if (EX.onMessage(p, m)) return;
+  if (QU.onMessage(p, m)) return;
   switch (m.t) {
     case 'step': if (p.warping) return; if (p.queue.length < 5) p.queue.push({ dx: m.dx, dy: m.dy, seq: m.seq | 0 }); else send(ws, { t: 'fix', x: p.x, y: p.y, map: p.map, seq: m.seq | 0 }); return;
     case 'stop': p.queue.length = 0; return;
@@ -231,7 +235,7 @@ function onMessage(conn, m) {
     case 'travel': {
       const to = String(m.to || ''), M = MAPS[p.map];
       if (!TOWNS.includes(to) || to === p.map || !M.boatman || cheb(p, M.boatman) > 3) return send(ws, { t: 'sys', text: 'Fale com o barqueiro no porto para viajar.' });
-      if (p.level < BOAT_LVL[to]) return send(ws, { t: 'sys', text: 'Você precisa do nível ' + BOAT_LVL[to] + ' para essa viagem.' });
+      if (p.level < BOAT_LVL[to] && !QU.canTravel(p, to)) return send(ws, { t: 'sys', text: 'Você precisa do nível ' + BOAT_LVL[to] + ' para essa viagem.' });
       const D = MAPS[to]; return warp(p, to, D.dock.x, D.dock.y, D.enter || ('Você chega a ' + D.name + '.'));
     }
     case 'ping': return send(ws, { t: 'pong', at: m.at });

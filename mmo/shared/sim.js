@@ -694,7 +694,7 @@ function restrictText(d){
   if(d.slot==='shield') return d.ok==='quiver' ? 'só Caçador' : 'Caçador e Monge não usam escudo';
   return '';
 }
-const itemName = it => ITEMS[it.id].name + (it.s?' '+it.s:'');
+const itemName = it => it.nm ? it.nm : ITEMS[it.id].name + (it.s?' '+it.s:'');
 const sellPrice = it => { const d=ITEMS[it.id]; if(it.own||it.bound||d.excl) return 0; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
 function statLines(it){
   const d=ITEMS[it.id], s=[];

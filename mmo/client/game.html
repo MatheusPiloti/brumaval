@@ -302,6 +302,10 @@ input[type=text],input[type=number],input[type=email],input[type=password]{width
 .log .chatg{color:#8fe36a}
 .chestres{display:flex;flex-direction:column;gap:4px}.chestres .it.jack{border-color:#ff9a2a;box-shadow:0 0 12px rgba(255,154,42,.5)}
 .blist .it{grid-template-columns:minmax(0,1fr) auto}
+.quests .qline{position:relative;padding:4px 26px 4px 6px;margin:3px 0;background:var(--panel-2);border-left:2px solid var(--accent);border-radius:3px}
+.quests .qab{position:absolute;top:3px;right:3px;padding:0 6px;min-height:0;font-size:11px;line-height:18px}
+.quests .qmk{color:#ffd54a}.quests .qhead{margin-bottom:2px}.quests .qsub{margin-top:6px}
+.qans{align-items:center}.qans input{flex:1;min-width:0;padding:6px 8px;font-size:15px}
 /* Celular: menu da barra de cima que recolhe, botão de caça automática e joystick. */
 .topmenu{display:contents}
 .menubtn{display:none}
@@ -1146,7 +1150,7 @@ function restrictText(d){
   if(d.slot==='shield') return d.ok==='quiver' ? 'só Caçador' : 'Caçador e Monge não usam escudo';
   return '';
 }
-const itemName = it => ITEMS[it.id].name + (it.s?' '+it.s:'');
+const itemName = it => it.nm ? it.nm : ITEMS[it.id].name + (it.s?' '+it.s:'');
 const sellPrice = it => { const d=ITEMS[it.id]; if(it.own||it.bound||d.excl) return 0; return Math.floor((d.sell ?? Math.floor((d.price||0)*0.4)) * RAR_SELL[it.r||0]); };
 function statLines(it){
   const d=ITEMS[it.id], s=[];
@@ -3345,7 +3349,10 @@ const TCURSE=[
   {k:'fast', n:'Pressa Sombria', d:'monstros andam e atacam 30% mais rápido'}, {k:'tough', n:'Carne de Pedra', d:'monstros com +40% de vida'},
   {k:'weakpot', n:'Poções Ralas', d:'poções curam metade'}, {k:'dark', n:'Névoa Densa', d:'o andar fica escuro'},
 ];
-const TITLES=[{k:'t5',n:'Curioso da Torre',need:5},{k:'t10',n:'Escalador da Bruma',need:10},{k:'t25',n:'Desafiante da Torre',need:25},{k:'t50',n:'Senhor da Bruma',need:50},{k:'t75',n:'Terror das Alturas',need:75},{k:'t100',n:'Lenda da Torre',need:100}];
+const TITLES=[{k:'t5',n:'Curioso da Torre',need:5},{k:'t10',n:'Escalador da Bruma',need:10},{k:'t25',n:'Desafiante da Torre',need:25},{k:'t50',n:'Senhor da Bruma',need:50},{k:'t75',n:'Terror das Alturas',need:75},{k:'t100',n:'Lenda da Torre',need:100},
+  // títulos de quest (dados pelo servidor)
+  {k:'q_usurper',n:'o Usurpador',need:Infinity,q:'quest A Coroa do Usurpador (ficar com a coroa)'},{k:'q_grove',n:'Guardião do Bosque',need:Infinity,q:'quest A Raiz Podre (lado de Aurélia)'},{k:'q_fae',n:'Amigo das Fadas',need:Infinity,q:'quest A Raiz Podre (lado de Lirael)'},
+  {k:'q_dragon',n:'Mata-Dragão',need:Infinity,q:'quest O Último Ovo'},{k:'q_sky',n:'Quem Fechou o Céu',need:Infinity,q:'quest A Aurora Partida'},{k:'q_tides',n:'Voz das Marés',need:Infinity,q:'quest O Olho que Sonha (devolver a pérola)'},{k:'q_awake',n:'Aquele que Acordou',need:Infinity,q:'quest final As Cinco Brumas'}];
 // bônus permanentes (Árvore de Ecos) e da subida atual (bênçãos), aplicados em stats()
 function applyMods(s){
   s.maxHp=Math.round(s.maxHp*(1+eco('vigor')*0.02+tBless('hp')*0.08)); s.maxMp=Math.round(s.maxMp*(1+eco('mente')*0.02));
@@ -3432,7 +3439,7 @@ function openTower(){ const D=towerData(), tabs=[['subir','Subir'],['ecos','Árv
     body=`<p>Ecos livres: <b>${D.ecos}</b>. Você ganha 1 Eco a cada 5 andares de recorde. Os bônus valem para sempre, em todo lugar.</p><div class="ecog">${ECO.map(e=>{ const r=eco(e.k); return `<div class="eco"><b>${e.n}</b><small>${e.d} por ponto</small><span class="pips">${Array.from({length:e.max},(_,i)=>`<i class="${i<r?'on':''}"></i>`).join('')}</span><button type="button" data-act="eco" data-k="${e.k}" ${D.ecos<1||r>=e.max?'disabled':''}>+1</button></div>`; }).join('')}</div>
       <div class="row"><button type="button" data-act="ecoreset" ${!spent||player.gold<cost?'disabled':''}>Devolver todos os Ecos (${fmtN(cost)} ouro)</button></div>`; }
   if(towerTab==='loja'){ const own=cosOwned();
-    body=`<p>Fragmentos: <b>${D.frags}</b>. Tudo aqui é só visual. Depois de comprar, escolha em <b>Visual</b> (botão no topo).</p>${['aura','name','tint'].map(cat=>`<h4>${COS_CAT[cat]}</h4><div class="cosg">${COS.filter(c=>c.cat===cat).map(c=>`<div class="cos"><span class="sw" style="background:${c.col}"></span><b>${c.n}</b>${own.includes(c.k)?'<small class="good">comprado</small>':`<button type="button" data-act="buyf" data-k="${c.k}" ${D.frags<c.frags?'disabled':''}>${c.frags} frag.</button>`}</div>`).join('')}</div>`).join('')}`; }
+    body=`<p>Fragmentos: <b>${D.frags}</b>. Tudo aqui é só visual. Depois de comprar, escolha em <b>Visual</b> (botão no topo).</p>${['aura','name','tint'].map(cat=>`<h4>${COS_CAT[cat]}</h4><div class="cosg">${COS.filter(c=>c.cat===cat&&!c.quest).map(c=>`<div class="cos"><span class="sw" style="background:${c.col}"></span><b>${c.n}</b>${own.includes(c.k)?'<small class="good">comprado</small>':`<button type="button" data-act="buyf" data-k="${c.k}" ${D.frags<c.frags?'disabled':''}>${c.frags} frag.</button>`}</div>`).join('')}</div>`).join('')}`; }
   if(towerTab==='rank'){ const rows=towerRanking();
     body=`<p>Recordes dos personagens deste navegador.</p><div class="list">${rows.map((r,i)=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><b>${i+1}º</b><div class="meta"><b>${esc(r.name)}</b><small>${(CLASSES[r.cls]||CLASSES.guerreiro).name} · nível ${r.level}${r.title?' · '+esc(r.title):''}</small></div><b>andar ${r.best}</b></div>`).join('')||'<p class="hint">Ninguém subiu ainda.</p>'}</div>`; }
   openDialog(towerPortal(),'Torre das Brumas',`<div class="tabs">${tabs.map(([k,l])=>`<button type="button" data-act="ttab" data-t="${k}" aria-pressed="${towerTab===k}">${l}</button>`).join('')}</div>${body}<div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
@@ -3462,6 +3469,12 @@ const COS=[
   {k:'m_frost',cat:'mount',n:'Lobo das Neves',gold:180000,lvl:70,type:'frostwolf',col:'#e8f0f8'},
   {k:'m_hell',cat:'mount',n:'Cão Infernal',gold:280000,lvl:85,type:'hellhound',col:'#8a1a10'},
   {k:'m_drake',cat:'mount',n:'Dragonete',gold:500000,lvl:100,type:'dragonling',col:'#c0402a'},
+  // prêmios de quest (não estão à venda)
+  {k:'o_usurper',cat:'outfit',n:'Coroa Rachada',quest:'quest A Coroa do Usurpador (ficar com a coroa)',look:{body:'#3a2a3a',legs:'#1e1418',boots:'#120c0a',crown:true,cape:'#2a0a14',capeTrim:'#8a8a8a',trim:'#6a5a2a',chestTrim:'#8a7a3a'},col:'#3a2a3a'},
+  {k:'o_fjord',cat:'outfit',n:'Capa de Pele dos Fiordes',quest:'quest Peles para o Inverno',look:{body:'#6a5a4a',legs:'#3a3028',boots:'#2a1e14',hood:'#e8e0d0',hoodTrim:'#a89070',cape:'#d8ccb8',capeTrim:'#8a7a60',trim:'#a89070'},col:'#d8ccb8'},
+  {k:'o_mist',cat:'outfit',n:'Manto das Brumas',quest:'quest final As Cinco Brumas',look:{body:'#c8d0dc',legs:'#6a7280',boots:'#3a404a',hood:'#e8eef6',hoodTrim:'#9ab0d0',cape:'#b8c4d8',capeTrim:'#ffffff',trim:'#9ab0d0'},col:'#e0e8f4'},
+  {k:'m_scarlet',cat:'mount',n:'Dragonete Escarlate',quest:'quest O Último Ovo (chocar o ovo)',type:'dragonling',col:'#e0402a'},
+  {k:'a_lirael',cat:'aura',n:'Asas de Lirael',quest:'quest A Raiz Podre (lado de Lirael)',el:'nature',col:'#c8ff9a'},
   {k:'a_gold',cat:'aura',n:'Aura Dourada',frags:80,el:'holy',col:'#ffd54a'},{k:'a_mist',cat:'aura',n:'Aura de Bruma',frags:80,el:'wind',col:'#e0f4ff'},
   {k:'a_ember',cat:'aura',n:'Aura de Brasas',frags:120,el:'fire',col:'#ff7a2a'},{k:'a_frost',cat:'aura',n:'Aura Gélida',frags:120,el:'ice',col:'#a8dcff'},
   {k:'a_leaf',cat:'aura',n:'Aura da Floresta',frags:120,el:'nature',col:'#7ad04a'},{k:'a_void',cat:'aura',n:'Aura do Vazio',frags:200,el:'shadow',col:'#8a3aba'},
@@ -3507,14 +3520,14 @@ function runLookPreview(){ cancelAnimationFrame(prevRaf); const loop=()=>{ const
   prevRaf=requestAnimationFrame(loop); }; prevRaf=requestAnimationFrame(loop); }
 function openTailor(n){ const own=cosOwned();
   const row=c=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><span class="sw" style="background:${c.col}"></span><div class="meta"><b>${c.n}</b><small>${c.cat==='mount'?'+10% de velocidade ao andar (fora da torre) · ':''}nível ${c.lvl}</small></div><div class="btns"><button data-act="try" data-k="${c.k}" aria-pressed="${prevTry?.k===c.k}">Provar</button>${own.includes(c.k)?'<span class="good">Seu</span>':`<button class="primary" data-act="buy" data-k="${c.k}" ${player.gold<c.gold||player.level<c.lvl?'disabled':''}>${fmtN(c.gold)} ouro</button>`}</div></div>`;
-  openDialog(n,n.name,`<div class="lookwrap">${lookPrevHTML()}<div class="lookside"><p>"Roupa nova e uma boa montaria: é assim que se chega com estilo. Prove à vontade."</p><h4>Roupas</h4><div class="list">${COS.filter(c=>c.cat==='outfit').map(row).join('')}</div><h4>Montarias</h4><div class="list">${COS.filter(c=>c.cat==='mount').map(row).join('')}</div></div></div><p class="hint">Depois de comprar, troque quando quiser em <b>Visual</b> (botão no topo).</p><div class="row"><button data-act="wardrobe">Abrir Visual</button><button data-act="close">Até logo</button></div>`,(act,ds)=>{
+  openDialog(n,n.name,`<div class="lookwrap">${lookPrevHTML()}<div class="lookside"><p>"Roupa nova e uma boa montaria: é assim que se chega com estilo. Prove à vontade."</p><h4>Roupas</h4><div class="list">${COS.filter(c=>c.cat==='outfit'&&!c.quest).map(row).join('')}</div><h4>Montarias</h4><div class="list">${COS.filter(c=>c.cat==='mount'&&!c.quest).map(row).join('')}</div></div></div><p class="hint">Depois de comprar, troque quando quiser em <b>Visual</b> (botão no topo).</p><div class="row"><button data-act="wardrobe">Abrir Visual</button><button data-act="close">Até logo</button></div>`,(act,ds)=>{
     if(act==='try'){ const c=COSK[ds.k]; prevTry=prevTry?.k===c.k?null:{cat:c.cat,k:c.k}; const keep=prevTry; openTailor(n); prevTry=keep; return; }
     if(act==='buy'){ const c=COSK[ds.k]; if(c&&player.gold>=c.gold&&player.level>=c.lvl&&!own.includes(c.k)){ player.gold-=c.gold; own.push(c.k); cosData()[c.cat]=c.k; prevTry=null; log('Você comprou '+c.n+' e já está usando.','lvl'); uiDirty=true; save(); } return openTailor(n); }
     if(act==='wardrobe'){ prevTry=null; return openWardrobe(); } prevTry=null; closeDialog(); });
   runLookPreview(); }
 let wardTab='outfit';
 function openWardrobe(){ const C=cosData(), own=C.owned, D=towerData();
-  const all = wardTab==='title' ? TITLES.map(t=>({...t, have:D.titles.includes(t.k), how:'andar '+t.need+' da torre'})) : COS.filter(c=>c.cat===wardTab).map(c=>({...c, have:own.includes(c.k), how:c.gold?fmtN(c.gold)+' ouro · alfaiate':c.frags+' Fragmentos · portal da torre'}));
+  const all = wardTab==='title' ? TITLES.map(t=>({...t, have:D.titles.includes(t.k), how:t.q||'andar '+t.need+' da torre'})) : COS.filter(c=>c.cat===wardTab).map(c=>({...c, have:own.includes(c.k), how:c.quest?c.quest:c.gold?fmtN(c.gold)+' ouro · alfaiate':c.frags+' Fragmentos · portal da torre'}));
   const curK = wardTab==='title' ? D.title : C[wardTab]||null;
   const none={k:'',n:wardTab==='outfit'?'Equipamento (padrão)':wardTab==='title'?'Sem título':'Nenhum',have:true};
   const card=o=>`<div class="cos${(o.k||null)===curK?' on':''}">${o.col?`<span class="sw" style="background:${o.col}"></span>`:''}<b>${o.n}</b>${o.have?`<button type="button" data-act="wear" data-k="${o.k}" aria-pressed="${(o.k||null)===curK}">${(o.k||null)===curK?'Usando':'Usar'}</button>`:`<button type="button" data-act="try" data-k="${o.k}" title="${esc(o.how)}" aria-pressed="${prevTry?.k===o.k}">Provar</button>`}${o.have?'':`<small>${esc(o.how)}</small>`}</div>`;
@@ -3580,7 +3593,9 @@ function lootWinHTML(){ const c=lootWin; if(!c) return '';
   return `<section class="panel cont lootwin"><h2><span>${esc(title)}</span><span class="price">${c.items.length} ${c.items.length===1?'item':'itens'}</span><button type="button" class="x" data-lootclose aria-label="Fechar">×</button></h2>
     <div class="bag">${c.items.map((s,i)=>`<button type="button" class="slot r${s.r||0}" data-loot="${i}" aria-label="Pegar ${esc(itemName(s))}" title="Clique para pegar"><img alt="" src="${iconURL(s.id)}">${s.n>1?`<span class="n">${s.n}</span>`:''}</button>`).join('')}</div>
     <div class="row" style="margin-top:6px"><button type="button" class="primary" data-lootall>Pegar tudo</button></div></section>`; }
-function talk(n){
+function talk(n, noQ){
+  if(n.prop){ netSend({t:'quest',a:'obj',id:n.qid}); return; }
+  if(!noQ&&ONLINE&&Net.inWorld&&Net.q?.marks?.[n.id]){ qTalkNpc=n; netSend({t:'quest',a:'talk',npc:n.id}); return; }
   const nm=esc(player.name);
   if(/^priest\d?$/.test(n.id)){
     openDialog(n, n.name, `<p>"Que a luz de ${n.town||'Pedraluz'} te guarde, ${nm}. Se estiver ferido ou envenenado, posso cuidar de você. Sem custo."</p>
@@ -3597,7 +3612,7 @@ function talk(n){
       {map:'fae',name:'Lunária, no Bosque Encantado',cost:150,lvl:25,say:'Lunária fica rio acima, entre árvores gigantes.'},
       {map:'ash',name:'Cinzaforte, nas Terras Queimadas',cost:200,lvl:50,say:'Cinzaforte são três dias de mar, até a ilha de fogo.'},
       {map:'ice',name:'Invernália, nos Fiordes Gelados',cost:400,lvl:70,say:'Um quebra-gelo leva você ao norte, entre icebergs. Leve roupa de pele ou Poções Quentes.'},
-      {map:'sea',name:'Coralina, a cidade submersa',cost:600,lvl:90,say:'O sino de mergulho desce até a bolha de ar no fundo do recife. Fora dela, falta ar.'}].filter(d=>d.map!==here);
+      {map:'sea',name:'Coralina, a cidade submersa',cost:600,lvl:90,say:'O sino de mergulho desce até a bolha de ar no fundo do recife. Fora dela, falta ar.'}].filter(d=>d.map!==here).map(d=>ONLINE&&player.level<d.lvl&&(Net.q?.pass||[]).includes(d.map)?{...d,lvl:0,say:d.say+' Liberado pela sua quest: vá direto à cidade, o porto é perigoso.'}:d);
     const rows=DEST.map((d,i)=>`<div class="it" style="grid-template-columns:minmax(0,1fr) auto"><div class="meta"><b>${d.name}</b><small>${d.say}${d.lvl?` Exige nível ${d.lvl}.`:''}${player.level<d.lvl?' <span class="bad">"Lá fora é perigoso demais para você. Volte no nível '+d.lvl+'."</span>':''}</small></div><div class="btns"><button class="primary" data-act="go" data-i="${i}" ${player.gold<d.cost||player.level<d.lvl?'disabled':''}>Viajar (${d.cost} ouro)</button></div></div>`).join('');
     openDialog(n, n.name, `<p>"Para onde vamos? Eu levo você a qualquer porto."</p><div class="list">${rows}</div><div class="row"><button data-act="close">Agora não</button></div>`, (act,ds)=>{
       const d=DEST[+ds.i]; if(ONLINE&&act==='go'&&d){ closeDialog(); if(player.gold<d.cost||player.level<d.lvl) return; player.gold-=d.cost; uiDirty=true; netSend({t:'travel',to:d.map,level:player.level}); return; }
@@ -4715,6 +4730,7 @@ function drawPortal(c,x,y){ const t=now/600; c.save(); c.fillStyle='rgba(0,0,0,.
   c.globalCompositeOperation='lighter'; glowDot(c,x+16,y+10,19,'#8a4aff',.55+Math.sin(t*3)*.1); c.translate(x+16,y+10);
   for(let i=0;i<3;i++){ c.save(); c.rotate(t*(i%2?-1:1)+i*2.1); c.strokeStyle=['#c07aff','#e8d8ff','#7ad0ff'][i]; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,8-i*2,14-i*3.5,0,0.4,5.3); c.stroke(); c.restore(); } c.restore(); }
 function drawNpc(c,n,x,y){
+  if(n.prop){ drawProp(c,n,x,y); return; }
   if(n.look==='chest'){ drawChest(c,x,y); return; }
   if(n.look==='portal'){ drawPortal(c,x,y); return; }
   const look={sage:{skin:'#e8c4a0',robe:'#4a3a8a',body:'#4a3a8a',hair:'#d8d8e8',hs:'long',robeTrim:'#d8b04a',trim:'#d8b04a',amulet:'#9ad8ff'}, firesage:{skin:'#c99070',robe:'#8a2a10',body:'#8a2a10',hair:'#2a1a10',hat:'#3a1a0a',beard:'#2a1a10',robeTrim:'#ffb02a',trim:'#ffb02a'}, druid:{skin:'#e8c4a0',robe:'#3a6a3a',body:'#3a6a3a',hair:'#f0f0f0',hs:'braid',robeTrim:'#c8e08a',band:'#7ad04a'}, gnome:{skin:'#e0b48a',body:'#7a4a8a',legs:'#4a3a2a',wizhat:'#c0302a',hair:'#f0f0f0',beard:'#f0f0f0'}, boatman:{skin:'#c99070',body:'#2a4a6a',legs:'#2a2a3a',hat:'#1a2a3a',hair:'#2a1a10',hs:'tail',chestTrim:'#e8e0cc',trim:'#e8e0cc'}, smith:{skin:'#b07050',body:'#4a3a2a',arm:'#b07050',legs:'#2a2018',hair:'#1a1210',hs:'bun',weapon:'#8a8e96',belt:'#2a1a10',trim:'#6a4a2a'}, firepriest:{skin:'#e8c4a0',robe:'#8a2a1a',body:'#8a2a1a',hair:'#e0e0e0',hs:'long',robeTrim:'#ffb02a',amulet:'#ff7a2a'},
@@ -4839,6 +4855,7 @@ function render(){
     for(const p of projectiles) if(p.map===m.id){ const q=projPos(p); hole(q.x-cam.x, q.y-cam.y, 50); }
     for(const v of vfx) if(v.map===m.id&&v.t>=0&&!v.ground&&v.kind!=='beam') hole(v.x*T-cam.x+16, v.y*T-cam.y+16, 46);
     for(const fd of fields) if(fd.map===m.id&&fd.t>=fd.warn) hole(fd.x*T-cam.x+16,fd.y*T-cam.y+16,55);
+    for(const n of npcs) if(n.prop&&n.map===m.id) hole(n.x*T-cam.x+16, n.y*T-cam.y+16, 54);
     for(const l of m.lights||[]){ const lx=l.x*T-cam.x+16, ly=l.y*T-cam.y+16; if(lx>-120&&ly>-120&&lx<cv.width+120&&ly<cv.height+120) hole(lx,ly,l.r+Math.sin(now/120+l.x)*3); }
     ctx.drawImage(dark,0,0);
     drawWallEdges(m,x0,y0,x1,y1);
@@ -4851,12 +4868,13 @@ function render(){
   // barras e nomes por cima
   ctx.textAlign='center'; ctx.font='500 10px "Pixelify Sans", monospace';
   for(const [e] of [...rows.values()].flat()){
-    const r=rpos(e), sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y)-(e.def?.boss?(BOSS_ART[e.type]?58:16):0)-(e===player?(cosOn('mount')?27:13):e.kind==='pc'?(e.mount?27:13):(e.kind==='npc'&&e.look!=='chest'&&e.look!=='portal')?13:0);
+    const r=rpos(e), sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y)-(e.def?.boss?(BOSS_ART[e.type]?58:16):0)-(e===player?(cosOn('mount')?27:13):e.kind==='pc'?(e.mount?27:13):(e.kind==='npc'&&e.look!=='chest'&&e.look!=='portal'&&!e.prop)?13:0);
     const showName = e.kind==='npc' || e.kind==='pc' || e===target || e.def?.boss || e===player;
     if(e.kind!=='npc'&&e.kind!=='pc'){ const st=e===player?stats():null, mh=e===player?st.maxHp:e.maxHp, hp=Math.max(0,e.hp), k=clamp(hp/mh,0,1);
       rect(ctx,'#000',sx+3,sy-5,26,4); rect(ctx,k>0.5?'#4caf50':k>0.25?'#e0b030':'#e04a3a',sx+4,sy-4,Math.round(24*k),2); }
     if(showName){ const name=e===player?player.name:e.kind==='npc'||e.kind==='pc'?e.name:e.def.name; const col=e===player?(COSK[player.cos?.name]?.c||'#9fe08a'):e.kind==='pc'?(COSK[e.nameCol]?.c||'#9fe08a'):e.kind==='npc'?'#9cc3ee':'#ff8a7a';
       ctx.fillStyle='#000'; ctx.fillText(name,sx+17,sy-8); ctx.fillStyle=col; ctx.fillText(name,sx+16,sy-9);
+      if(e.kind==='npc'&&ONLINE&&Net.q?.marks?.[e.id]){ const mk=Net.q.marks[e.id], yy=sy-21+Math.sin(now/250)*2; ctx.save(); ctx.font='700 17px "Pixelify Sans", monospace'; ctx.fillStyle='#000'; ctx.fillText(mk,sx+17,yy+1); ctx.fillStyle=mk==='!'?'#ffd54a':'#7ad0ff'; ctx.fillText(mk,sx+16,yy); ctx.restore(); }
       if(e===player&&titleName()){ ctx.save(); ctx.font='italic 500 9px "Pixelify Sans", monospace'; const tt='« '+titleName()+' »'; ctx.fillStyle='#000'; ctx.fillText(tt,sx+17,sy-18); ctx.fillStyle='#e7c86a'; ctx.fillText(tt,sx+16,sy-19); ctx.restore(); } }
   }
   for(const f of floats){ if(f.map!==m.id) continue; const k=f.t/f.life; const y=f.y-cam.y-k*(f.big?34:22); ctx.globalAlpha=clamp(1.4-k*1.4,0,1);
@@ -4944,7 +4962,7 @@ function renderUI(){
     return `<button class="slot r${it?.r||0}" style="grid-row:${r};grid-column:${c}" data-slot="${s}" ${it&&s!=='bag'?'draggable="true"':''} aria-label="${it?esc(itemName(it)):label+' vazio'}">${it?`<img alt="" src="${iconURL(it.id)}">`:`<span class="ph">${label}</span>`}</button>`; }).join('');
   renderContainers();
   for(const k in actEls){ const el=actEls[k], sl=el.s; if(!sl||sl.t!=='p') continue; const t=String(slotCount(sl)), c=el.btn.querySelector('.c'); if(c&&c.textContent!==t) c.textContent=t; }
-  const q=quests; const ql=[];
+  const q=quests; const ql=[]; if(ONLINE&&Net.q) ql.push(questPanelHTML());
   if(q.wolves.state===1) ql.push(`<div>Lobos do bosque <small>· ${Math.min(8,q.wolves.count)}/8 ${q.wolves.count>=8?'· fale com o Capitão Bento':''}</small></div>`);
   if(q.king.state===1) ql.push(`<div>O rei morto <small>· Cripta Esquecida, a noroeste</small></div>`);
   if(q.king.state===2) ql.push(`<div>O rei morto <small>· fale com o Capitão Bento</small></div>`);
@@ -5869,12 +5887,87 @@ setInterval(renderInst,500);
 $('instLeave').addEventListener('click',()=>{ const b=$('instLeave'); if(!Net.inst?.won&&b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Sair mesmo?'; setTimeout(()=>{ b.dataset.armed=''; b.textContent='Sair da arena'; },3000); return; } netSend({t:'boss',a:'leave'}); });
 if(typeof BOSS_ART!=='undefined'&&!BOSS_ART.colosso) BOSS_ART.colosso=BOSS_ART.aurorath||BOSS_ART.oakking||BOSS_ART.boss;
 
+// ---- quests (online): o servidor manda o estado, os diálogos e os prêmios; aqui só desenhamos
+Net.q=null; let qTalkNpc=null;
+const Q_TIER=['Baú/segredo','Fácil','Média','Complexa'], Q_CITY={over:'Pedraluz',fae:'Lunária',ash:'Cinzaforte',ice:'Invernália',sea:'Coralina'};
+function applyQState(m){ Net.q=m;
+  for(let i=npcs.length-1;i>=0;i--) if(npcs[i].prop) npcs.splice(i,1);
+  for(const o of m.objs||[]) npcs.push({kind:'npc', prop:true, id:'qo_'+o.id, qid:o.id, name:o.name, map:o.map, x:o.x, y:o.y, px:o.x, py:o.y, look:o.look, moving:false, mt:0, mdur:1, phase:0, dir:'down'});
+  const D=towerData(), own=cosOwned(); let ch=false;
+  for(const k of m.titles||[]) if(!D.titles.includes(k)){ D.titles.push(k); ch=true; }
+  for(const k of m.cos||[]) if(!own.includes(k)){ own.push(k); ch=true; }
+  if(ch) save(); uiDirty=true; }
+function questPanelHTML(){ const Q=Net.q; if(!Q) return '';
+  const act=Q.list.map(x=>`<div class="qline"><b>${esc(x.name)}</b> <small>· ${x.tier?Q_TIER[x.tier]+' · ':''}${esc(Q_CITY[x.city]||'')} · passo ${x.step}/${x.steps}</small><br><small>${esc(x.goal)}</small>${x.tier?`<button type="button" class="qab" data-qab="${esc(x.id)}" title="Abandonar esta quest">✕</button>`:''}</div>`).join('');
+  const av=Q.avail.slice(0,5).map(x=>`<div><small><b class="qmk">!</b> ${esc(x.name)} — ${esc(x.who)}, ${esc(x.city)} · ${Q_TIER[x.tier]} · nível ${x.lvl}+</small></div>`).join('');
+  const nDone=Q.done.filter(n=>!/^Baú Selado|^A Chave Rachada/.test(n)).length;
+  return `<div class="qhead"><small>Quests das cidades: ${Math.min(nDone,Q.total)}/${Q.total} concluídas</small></div>${act||'<div><small>Nenhuma quest ativa. Procure NPCs com <b class="qmk">!</b> em cima.</small></div>'}${av?'<div class="qsub"><small>Para pegar:</small></div>'+av:''}`; }
+$('quests').addEventListener('click',e=>{ const b=e.target.closest('[data-qab]'); if(!b) return;
+  if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Abandonar?'; setTimeout(()=>{ b.dataset.armed=''; b.textContent='✕'; },3000); return; }
+  netSend({t:'quest',a:'abandon',id:b.dataset.qab}); });
+function questDialog(m){
+  if(m.none){ const n=qTalkNpc; qTalkNpc=null; if(n) talk(n,true); return; }
+  const ref=npcs.find(n=>n.id===m.ref||n.qid===m.ref)||player;
+  const paras=(m.text||[]).map(t=>t.startsWith('<lvl>')?`<p class="hint">${esc(t.slice(5))}</p>`:`<p>${esc(t)}</p>`).join('');
+  const inp=m.input?`<div class="row qans"><input type="text" id="qAns" maxlength="60" autocomplete="off" placeholder="${esc(m.input.ph||'Sua resposta')}"><button type="button" class="primary" data-act="qans">Responder</button></div>`:'';
+  let btns=(m.opts||[]).map(o=>o.k==='close'?`<button type="button" data-act="close">${esc(o.label)}</button>`:`<button type="button" class="${o.primary?'primary':''}" data-act="qopt" data-k="${esc(o.k)}">${esc(o.label)}</button>`).join('');
+  if(m.other&&ref!==player) btns+=`<button type="button" data-act="qother">Outros assuntos</button>`;
+  if(!btns&&!inp) btns=`<button type="button" data-act="close">Certo</button>`;
+  openDialog(ref, m.title||'Quest', paras+inp+(btns?`<div class="row">${btns}</div>`:''), (act,ds)=>{
+    if(act==='qopt'){ closeDialog(); netSend({t:'quest',a:'opt',ref:m.ref,k:ds.k}); return; }
+    if(act==='qans'){ const v=($('qAns')?.value||'').trim(); if(!v) return; closeDialog(); netSend({t:'quest',a:'ans',ref:m.ref,k:m.input.k,v}); return; }
+    if(act==='qother'){ closeDialog(); talk(ref,true); return; }
+    closeDialog(); });
+  const box=$('qAns'); if(box){ box.addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter'){ e.preventDefault(); dlgHandler&&dlgHandler('qans',{}); } }); box.addEventListener('keyup',e=>e.stopPropagation()); setTimeout(()=>box.focus(),50); } }
+function questReward(m){
+  if(m.title) log(m.title+'!','lvl');
+  if(m.text) log(m.text,'npc');
+  if(m.gold){ player.gold+=m.gold; log('Você recebeu '+fmtN(m.gold)+' moedas de ouro.','loot'); }
+  if(m.xp){ const need=Math.max(1,totalXp(player.level+1)-totalXp(player.level)); gainXp(Math.max(1,Math.round(need*m.xp)),player); }
+  for(const it of m.items||[]){ if(it.id==='gold'){ player.gold+=it.n; log('Você recebeu '+fmtN(it.n)+' moedas de ouro.','loot'); continue; }
+    if(!addItem(it)){ toFeet(it); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } else log('Você recebeu '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
+  if(m.newTitle){ const T=TITLES.find(t=>t.k===m.newTitle), D=towerData(); if(!D.titles.includes(m.newTitle)) D.titles.push(m.newTitle); if(T){ log('Título conquistado: "'+T.n+'". Escolha em Visual → Título.','lvl'); floatAt(player,'Título: '+T.n,'#ffd54a',true); } }
+  if(m.newCos){ const C=COSK[m.newCos], own=cosOwned(); if(!own.includes(m.newCos)) own.push(m.newCos); if(C){ log('Visual novo: '+C.n+'. Use em Visual.','lvl'); floatAt(player,C.n+'!','#c89aff',true); } }
+  if(m.title){ floatAt(player,'QUEST!','#ffd54a',true); burst(player,'#ffd54a',36,120); }
+  uiDirty=true; save(); }
+// objetos de quest: desenhos simples de 32×32 com um brilho para mostrar que dá para usar
+function drawProp(c,n,x,y){ const r=(col,a,b,w,h)=>{ c.fillStyle=col; c.fillRect(x+a,y+b,w,h); }, t=now/600;
+  c.save(); c.fillStyle='rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(x+16,y+28,12,3.5,0,0,7); c.fill(); c.restore();
+  switch(n.look){
+    case 'stone': r('#5a5a62',7,14,18,14); r('#6e6e78',9,12,14,4); r('#46464e',7,24,18,4); c.globalAlpha=.6+Math.sin(t*3)*.3; r('#7ad0ff',14,17,4,6); r('#7ad0ff',12,19,8,2); c.globalAlpha=1; break;
+    case 'musicstone': r('#6a6a72',8,14,16,14); r('#7e7e88',10,12,12,4); c.globalAlpha=.7+Math.sin(t*4)*.3; r('#ffd54a',15,15,2,7); r('#ffd54a',12,20,5,3); r('#ffd54a',17,15,4,2); c.globalAlpha=1; break;
+    case 'lever': r('#3a3a40',8,22,16,6); r('#55555c',9,22,14,2); r('#6a4a2a',15,8,3,15); r('#c03a2a',13,5,7,5); break;
+    case 'tomb': r('#4a4448',9,8,14,20); r('#5e585c',11,6,10,4); r('#3a3438',9,24,14,4); r('#2a2428',13,12,6,1); r('#2a2428',15,10,2,6); r('#e8d8b0',22,20,2,5); c.globalAlpha=.6+Math.sin(t*5)*.3; r('#ffb02a',22,17,2,3); c.globalAlpha=1; break;
+    case 'lantern': r('#4a4a52',13,12,6,16); r('#5a5a62',10,26,12,3); r('#3a3a42',10,6,12,8); c.save(); c.globalCompositeOperation='lighter'; glowDot(c,x+16,y+10,12,'#7ad0ff',.4+Math.sin(t*2)*.15); c.restore(); r('#bfe8ff',14,8,4,4); break;
+    case 'mirror': r('#a8d8f0',9,4,14,22); r('#e8f6ff',11,6,10,18); r('#7ab8d8',9,26,14,3); c.globalAlpha=.5+Math.sin(t*3)*.3; r('#ffffff',13,8,2,12); c.globalAlpha=1; break;
+    case 'statue': r('#4a5a5a',8,24,16,5); r('#6a7a7a',11,10,10,15); r('#7a8a8a',12,4,8,8); r('#3a4a4a',13,7,2,2); r('#3a4a4a',17,7,2,2); break;
+    case 'chest': drawChest(c,x,y); break;
+    case 'mushroom': r('#e8e0c8',13,16,6,12); c.save(); c.globalCompositeOperation='lighter'; glowDot(c,x+16,y+13,13,'#c07aff',.35+Math.sin(t*3)*.15); c.restore(); r('#a04ad0',7,10,18,7); r('#c86af0',9,8,14,4); r('#ffffff',11,11,2,2); r('#ffffff',19,12,2,2); break;
+    case 'crack': r('#3a3430',4,4,24,24); r('#2a2420',4,4,24,2); r('#0a0806',15,5,2,8); r('#0a0806',13,12,3,6); r('#0a0806',16,17,2,9); r('#0a0806',11,18,3,2); break;
+    case 'fountain': r('#7a7a82',4,16,24,10); r('#9a9aa2',4,15,24,2); r('#3a7ab8',6,17,20,6); r('#8a8a92',14,6,4,11); c.globalAlpha=.7; r('#9ad0ff',15,3+Math.round(Math.sin(t*4)),2,6); c.globalAlpha=1; break;
+    case 'waterfall': for(let i=0;i<5;i++){ r(i%2?'#5aa0e0':'#8ac8ff',6+i*4,0,4,26); } c.globalAlpha=.8; for(let i=0;i<5;i++) r('#ffffff',7+i*4,((now/60+i*7)%24)|0,2,3); c.globalAlpha=1; r('#cfeaff',4,24,24,4); break;
+    case 'altar': r('#4a4456',6,16,20,12); r('#5e566c',5,14,22,4); c.save(); c.globalCompositeOperation='lighter'; glowDot(c,x+16,y+10,16,'#c8d8ff',.35+Math.sin(t*2)*.15); c.restore(); c.globalAlpha=.6; r('#e8eeff',10+Math.round(Math.sin(t)*3),6,12,3); c.globalAlpha=1; break;
+    case 'islet': r('#d8c890',4,16,24,10); r('#c8b880',6,24,20,3); r('#6a4a2a',15,8,2,10); r('#4a8a3a',10,5,12,5); break;
+    case 'anvil': r('#2a2a30',8,14,18,5); r('#3a3a42',6,12,22,3); r('#2a2a30',13,19,8,6); r('#1a1a20',10,25,14,3); break;
+    case 'iceblock': c.globalAlpha=.85; r('#bfe4ff',5,6,22,22); r('#e8f6ff',7,8,18,4); c.globalAlpha=1; r('#6a4a2a',11,14,10,8); r('#4a8a3a',13,16,6,2); break;
+    case 'coral': c.save(); c.globalCompositeOperation='lighter'; glowDot(c,x+16,y+16,14,'#ff7ab8',.35+Math.sin(t*2)*.15); c.restore(); r('#ff7ab8',9,10,3,18); r('#ff9ad0',15,6,3,22); r('#ff7ab8',21,12,3,16); r('#ff9ad0',12,14,4,2); r('#ff9ad0',18,10,4,2); break;
+    case 'lock': r('#5a3a1e',6,2,20,26); r('#6a4a2a',8,4,16,22); r('#c8a040',13,13,6,6); r('#3a2a10',15,15,2,3); r('#a8a8b0',14,9,4,5); break;
+    case 'bellpart': r('#8a6a2a',10,14,12,10); r('#b8903a',12,12,8,4); r('#4a7a4a',11,20,4,2); break;
+    default: r('#888',10,10,12,12);
+  }
+  // brilho que sobe: "dá para usar"
+  const k=(now/900+((n.x*7+n.y*3)%10)/10)%1; c.globalAlpha=(1-k)*.9; c.fillStyle='#fff6c0'; c.fillRect(x+16+Math.round(Math.sin(k*9)*4),y+6-Math.round(k*14),2,2); c.globalAlpha=1; }
+
 function netOnExtra(m){
   switch(m.t){
     case 'party': Net.party=m.id?m:null; if(!m.id) hpSent=''; renderParty(); return true;
     case 'pinv': Net.invites=Net.invites.filter(i=>i.from!==m.from); Net.invites.push({...m,t:Date.now()}); renderParty(); return true;
     case 'pinvdel': Net.invites=Net.invites.filter(i=>i.from!==m.from); renderParty(); return true;
     case 'chestres': chestResult(m); return true;
+    case 'qstate': applyQState(m); return true;
+    case 'qdlg': questDialog(m); return true;
+    case 'qreward': questReward(m); return true;
+    case 'qitem': log('Item de quest: '+m.name+' ('+m.n+'/'+m.of+').','loot'); floatAt(player,m.name+' '+m.n+'/'+m.of,'#9fe08a'); return true;
     case 'bonus': Net.bonusUntil=m.until; onlineBadge(); return true;
     case 'blist': bossPortalDialog(m); return true;
     case 'inst': if(!m.map){ Net.inst=null; renderInst(); return true; } arenaMap(m); Net.inst={...m}; renderInst(); return true;

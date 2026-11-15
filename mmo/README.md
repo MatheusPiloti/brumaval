@@ -48,6 +48,17 @@ cp src/game.html mmo/client/game.html && python3 mmo/tools/make_online.py
 - **Reinício do servidor:** toda vez que o servidor liga de novo (atualização, manutenção ou queda), todos têm experiência e saque em dobro por 20 minutos, e quem estava online na hora ganha um Baú de Ferro com um pedido de desculpas ao entrar.
 - Os tempos e chances ficam no começo de `server/extras.js`.
 
+## Quests: *A Origem das Brumas*
+
+- **15 quests**, 3 por cidade (fácil, média e complexa), com história. NPC com **!** amarelo tem quest para dar; com **?** azul, um passo está esperando nele. Clique no NPC: a conversa da quest aparece primeiro, e **Outros assuntos** abre a loja ou o serviço de sempre.
+- O painel **Missões** mostra o passo atual, as contagens e as quests que dá para pegar. O **✕** abandona uma quest (dá para pegar de novo).
+- As cidades se ligam: um NPC manda falar com outro em outra cidade. Quando um passo pede isso, o barco leva você mesmo abaixo do nível da ilha.
+- **Enigmas:** pedras e alavancas em ordem, túmulos certos, cogumelos "quente/frio", pedras musicais, espelhos e estátuas para girar, cadeado, mensagem em código, resposta digitada, e a maré do Naufrágio (baixa 3 minutos a cada 10).
+- **5 Baús Selados:** cada um escondido numa cidade e aberto com a chave de outra; começam sozinhos quando a pista aparece. **5 Fragmentos do Mapa** levam à quest final, **As Cinco Brumas**, com o Colosso das Brumas Desperto (uma vez por personagem). Vencer dá 1 hora de experiência e saque em dobro para todos.
+- Prêmios: ouro, experiência, Baú de Ferro, itens Lendários com nome próprio, títulos (Visual → Título) e visuais (Coroa Rachada, Capa dos Fiordes, Asas de Lirael, Dragonete Escarlate, Manto das Brumas).
+- Tudo fica no servidor: `server/quests.js` (o motor) e `server/questdata.js` (as histórias, os passos e onde ficam os objetos). O texto completo está em `QUESTS.md`.
+- **ADM, para testar:** `/quest dar ID`, `/quest pular [ID]`, `/quest flag NOME`, `/quest feita ID…`, `/quest obj ID` (vai até o objeto), `/quest mob tipo` (vai até onde o monstro nasce), `/quest mare` (força a maré baixa) e `/quest reset`.
+
 ## Comandos no chat
 
 - **Todos:** `/quem` lista quem está online.

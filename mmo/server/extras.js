@@ -221,12 +221,12 @@ module.exports = function extras(X) {
     const A = MAPS[inst.map]; mobsApi.spawnAt(inst.map, type, A.bossAt.x, A.bossAt.y, {}, { inst: inst.id });
     console.log(new Date().toISOString(), 'arena', p.name, type);
   }
-  function enterGroup(p) {
+  function enterGroup(p, awak) {
     const pt = partyOf(p);
     if (pt && pt.leader !== p.id) return sys(p, 'Só o líder do grupo pode abrir o Salão das Brumas.');
     const list = pt ? members(pt) : [p], go = [], why = [];
     for (const o of list) {
-      const cd = cdLeft(o, GROUP_BOSS);
+      const cd = awak ? 0 : cdLeft(o, GROUP_BOSS);
       if (o.level < GROUP_LVL) why.push([o, 'precisa do nível ' + GROUP_LVL]);
       else if (cd > 0) why.push([o, 'só pode voltar em ' + fmtWait(cd)]);
       else if (o.inst) why.push([o, 'já está em uma arena']);
@@ -237,12 +237,13 @@ module.exports = function extras(X) {
     if (!go.includes(p)) { const w = why.find(x => x[0] === p); return sys(p, 'Você não pode entrar: ' + (w ? w[1] : 'tente de novo') + '.'); }
     for (const [o, w] of why) { sys(o, 'Você ficou de fora do Salão das Brumas: ' + w + '.'); if (o !== p) sys(p, o.name + ' ficou de fora: ' + w + '.'); }
     const n = go.length, avg = go.reduce((s, o) => s + o.level, 0) / n, d = MON[GROUP_BOSS], r = Math.max(0.5, avg / d.lvl);
-    const k = Math.pow(r, 1.3), hp = Math.round(d.hp * Math.pow(r, 1.35) * (0.2 + 0.16 * n));
-    const inst = makeInst(GROUP_BOSS, true, go.map(o => o.name));
+    const k = Math.pow(r, 1.3) * (awak ? 1.25 : 1), hp = Math.round(d.hp * Math.pow(r, 1.35) * (0.2 + 0.16 * n) * (awak ? 1.6 : 1));
+    const inst = makeInst(GROUP_BOSS, true, go.map(o => o.name)); inst.awak = !!awak;
     for (const o of go) bring(o, inst);
     const A = MAPS[inst.map];
-    mobsApi.spawnAt(inst.map, GROUP_BOSS, A.bossAt.x, A.bossAt.y, { hp, maxHp: hp, atk: Math.round(d.atk * k), dfn: Math.round(d.def * Math.pow(r, 0.9)), xp: Math.round(d.xp * Math.pow(r, 1.3)), mult: k, summonMul: k }, { inst: inst.id });
-    console.log(new Date().toISOString(), 'salão das brumas', go.map(o => o.name).join(', '), 'nível médio', Math.round(avg));
+    mobsApi.spawnAt(inst.map, GROUP_BOSS, A.bossAt.x, A.bossAt.y, { hp, maxHp: hp, atk: Math.round(d.atk * k), dfn: Math.round(d.def * Math.pow(r, 0.9)), xp: Math.round(d.xp * Math.pow(r, 1.3)), mult: k, summonMul: k }, { inst: inst.id, awak: !!awak });
+    console.log(new Date().toISOString(), awak ? 'colosso desperto' : 'salão das brumas', go.map(o => o.name).join(', '), 'nível médio', Math.round(avg));
+    return true;
   }
   function onBossMsg(p, m) {
     if (m.a === 'list') { send(p.ws, bossInfo(p)); return sendBossCds(p); }
@@ -269,10 +270,10 @@ module.exports = function extras(X) {
     const inst = m.sp && m.sp.inst && insts.get(m.sp.inst); if (!inst || inst.done || m.type !== inst.type) return;
     inst.done = true; inst.leaveAt = Date.now() + LEAVE_AFTER_WIN;
     setTimeout(() => { if (insts.get(inst.id) === inst) mobsApi.clearMobs(inst.map); }, 0); // os lacaios somem junto com o chefe
-    const now = Date.now(), cdv = inst.group ? GROUP_CD : SOLO_CD;
+    const now = Date.now(), cdv = inst.awak ? 0 : inst.group ? GROUP_CD : SOLO_CD;
     for (const id of inst.players) {
       const o = online.get(id), c = db.chars[id]; if (!c) continue;
-      cdOf(c)[inst.type] = now + cdv; markDirty(); if (!o) continue;
+      if (cdv) cdOf(c)[inst.type] = now + cdv; markDirty(); if (!o) continue;
       send(o.ws, { t: 'inst', map: inst.map, won: true, leaveAt: inst.leaveAt, ends: inst.ends, type: inst.type, group: inst.group, big: inst.group, name: MAPS[inst.map].name, region: MAPS[inst.map].region });
       if (inst.group) {
         grantChest(o, 'chest3', 1);
@@ -284,7 +285,7 @@ module.exports = function extras(X) {
       sys(o, 'Vitória! Você sai da arena em 1 minuto (ou use o botão Sair). Próxima vez: daqui a ' + fmtWait(cdv) + '.', true);
       sendBossCds(o);
     }
-    if (inst.group) toAll({ t: 'sys', text: 'O grupo de ' + inst.names.join(', ') + ' derrotou o Colosso das Brumas!', big: true });
+    if (inst.group) toAll({ t: 'sys', text: 'O grupo de ' + inst.names.join(', ') + (inst.awak ? ' derrotou o Colosso das Brumas Desperto! As brumas se desfazem por uma hora: experiência e saque em dobro para todos!' : ' derrotou o Colosso das Brumas!'), big: true });
   }
   setInterval(() => { const now = Date.now();
     for (const inst of [...insts.values()]) {
@@ -297,7 +298,7 @@ module.exports = function extras(X) {
   // A cada 15 s (e ao desligar) o servidor anota quem está online. Ao ligar de novo, quem estava na lista ganha um Baú de Ferro
   // (quando entrar) e todos têm experiência e saque em dobro por RESTART_BONUS_MIN minutos.
   const ONLINE_FILE = path.join(DATA_DIR, 'online.json'), COMP_FILE = path.join(DATA_DIR, 'compensation.json');
-  const bonusEnd = Date.now() + RESTART_BONUS_MIN * 60000;
+  let bonusEnd = Date.now() + RESTART_BONUS_MIN * 60000;
   let comp = {}; try { comp = JSON.parse(fs.readFileSync(COMP_FILE, 'utf8')) || {}; } catch (e) {}
   try { const o = JSON.parse(fs.readFileSync(ONLINE_FILE, 'utf8')); for (const id of o.ids || []) if (db.chars[id]) comp[id] = o.at || Date.now(); } catch (e) {}
   const saveJson = (file, obj) => { try { const tmp = file + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(obj)); fs.renameSync(tmp, file); } catch (e) { console.error('não consegui salvar', file, e.message); } };
@@ -307,7 +308,7 @@ module.exports = function extras(X) {
   writeOnline(); setInterval(writeOnline, 15000); // a lista antiga já foi usada: começa de novo vazia
   const bonusMul = () => (Date.now() < bonusEnd ? 2 : 1);
   const bonusLeft = () => Math.max(0, bonusEnd - Date.now());
-  setTimeout(() => toAll({ t: 'sys', text: 'O bônus de experiência e saque em dobro acabou. Bom jogo!', big: true }), RESTART_BONUS_MIN * 60000);
+  setTimeout(() => { if (Date.now() >= bonusEnd - 1000) toAll({ t: 'sys', text: 'O bônus de experiência e saque em dobro acabou. Bom jogo!', big: true }); }, RESTART_BONUS_MIN * 60000);
   function restartWelcome(p) {
     if (bonusLeft() > 0) { send(p.ws, { t: 'bonus', until: Date.now() + bonusLeft() });
       sys(p, 'Desculpe pela reinicialização do servidor! Para compensar: experiência e saque em dobro para todos por mais ' + fmtWait(bonusLeft()) + '.', true); }
@@ -341,5 +342,8 @@ module.exports = function extras(X) {
   function onState(p, m) {
     if ('hp' in m) p.hp = Math.max(0, m.hp | 0); if ('maxHp' in m) p.maxHp = Math.max(1, m.maxHp | 0);
   }
-  return { command, onMessage, onEnter, onLeave, onMapChange, onState, onLooted, onKill, partyOfId, partyChat, logChat, retPos, REPORT_REASONS, bonusMul, onShutdown: writeOnline };
+  // quest final: uma hora de bônus para todos (soma ao que já houver)
+  function extendBonus(min) { bonusEnd = Math.max(bonusEnd, Date.now()) + min * 60000; toAll({ t: 'bonus', until: bonusEnd }); setTimeout(() => { if (Date.now() >= bonusEnd - 1000) toAll({ t: 'sys', text: 'As brumas voltaram. O bônus de experiência e saque acabou.', big: true }); }, bonusEnd - Date.now() + 500); }
+  function enterAwakened(p) { if (p.inst) { sys(p, 'Você já está numa arena.'); return false; } return !!enterGroup(p, true); }
+  return { grantChest, extendBonus, enterAwakened, command, onMessage, onEnter, onLeave, onMapChange, onState, onLooted, onKill, partyOfId, partyChat, logChat, retPos, REPORT_REASONS, bonusMul, onShutdown: writeOnline };
 };
