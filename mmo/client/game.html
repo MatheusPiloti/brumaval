@@ -2321,9 +2321,9 @@ function die(src){
   if(ONLINE&&!inTower()) netSend({t:'state',dead:true});
   if(inTower()) return towerDie(src);
   // na arena de chefe (online) nada cai do corpo: a arena some depois da luta
-  const arena=!!cur.arena, blessed=!!player.blessed||arena; if(!arena) player.blessed=false;
+  const arena=!!cur.arena, pvpA=!!cur.pvp, blessed=!!player.blessed||arena; if(!arena) player.blessed=false;
   player.dead=true; target=null; player.path=null; player.follow=false; player.poison=null; closeDialog();
-  const floor=totalXp(player.level); const lost=Math.max(0,Math.min(player.xp-floor, Math.floor(player.xp*(blessed?0.02:0.08)))); const goldLost=blessed?0:Math.floor(player.gold*0.1);
+  const floor=totalXp(player.level); const lost=Math.max(0,Math.min(player.xp-floor, Math.floor(player.xp*(pvpA?0:blessed?0.02:0.08)))); const goldLost=blessed?0:Math.floor(player.gold*0.1);
   player.xp-=lost; player.gold-=goldLost; player.deathInfo={src, lost, goldLost};
   const drop=[]; if(goldLost>0) drop.push({id:'gold',n:goldLost,r:0,a:[]});
   for(const c of containers()) for(let i=c.items.length-1;i>=0;i--){ const it=c.items[i]; if(!blessed && !isBag(it) && R()<0.1){ c.items.splice(i,1); drop.push(it); } }
@@ -2331,7 +2331,8 @@ function die(src){
   corpses.push({map:cur.id, x:player.x, y:player.y, player:true, name:player.name, items:drop, t:0, life:600000});
   const where=zoneName(cur,player.x,player.y), nItems=drop.filter(d=>d.id!=='gold').length;
   $('deathText').textContent = 'Derrotado por: '+src+'. Você perdeu '+lost+' de experiência. '+(drop.length?'Seu corpo ficou em '+where+' com '+(goldLost?goldLost+' moedas':'')+(goldLost&&nItems?' e ':'')+(nItems?nItems+' item(ns)':'')+' que caíram. Volte em até 10 minutos para pegar.':'Nada caiu do seu corpo.');
-  if(arena){ $('deathText').textContent+=' Na arena nada cai do corpo e a perda de experiência é menor.'; }
+  if(pvpA){ $('deathText').textContent='Derrotado por: '+src+', na Arena de Sangue. Na arena você não perde experiência, ouro nem itens.'; }
+  else if(arena){ $('deathText').textContent+=' Na arena nada cai do corpo e a perda de experiência é menor.'; }
   else if(blessed){ $('deathText').textContent+=' A bênção protegeu você: nenhum item nem ouro caiu, e a perda de experiência foi menor.'; log('A bênção do templo protegeu seus itens e seu ouro.','lvl'); }
   $('deathScreen').hidden=false; log('Você morreu para '+src+'.','dmg'); uiDirty=true;
 }
@@ -2855,7 +2856,7 @@ $('btnKeys').addEventListener('click',()=>{ if(running) openKeys(); });
 
 // ============================================================ caça automática por rota
 // a caça automática começa sem nada ligado: o jogador escolhe magias, saque, cura e reabastecimento quando quiser usar
-const BOT_DEF=()=>({how:'route', routes:{}, spells:{}, minMana:0, range:7, loot:{gold:false,pots:false,mats:false,bags:false,rar:5}, stopNoPots:false, dist:0, refill:{on:false,minHp:5,hp:100,minMp:0,mp:50,full:false,strong:false,ammo:500,minAmmo:0}});
+const BOT_DEF=()=>({how:'route', routes:{}, spells:{}, minMana:0, range:7, loot:{gold:false,pots:false,mats:false,bags:false,rar:5}, stopNoPots:false, dist:0, refill:{on:false,minHp:5,hp:100,minMp:0,mp:50,full:false,strong:false,ammo:500,minAmmo:0,sell:false,sellR:2,sellMats:false}});
 let bot={on:false, wp:0, mark:false, msg:'', lastLootFail:-1e9, think:0, stuck:0, mode:'hunt', sub:'', huntMap:null, town:null, fullAt:-1e9};
 const AIM={'Golpe Pesado':1,'Palma Explosiva':1,'Rajada de Golpes':1,'Punho do Dragão':1,'Mil Golpes':1,'Disparo Triplo':6,'Chuva de Flechas':6,'Flecha Envenenada':6,
   'Bola de Fogo':6,'Raio Encadeado':6,'Meteoro':6,'Lança de Gelo':6,'Chuva de Granizo':6};
@@ -3159,6 +3160,9 @@ function renderBot(){
     <label class="botrow">Ir quando restarem <input type="number" min="0" max="500" data-r="minHp" value="${B.refill.minHp}"> poções de vida</label>
     <label class="botrow">ou <input type="number" min="0" max="500" data-r="minMp" value="${B.refill.minMp}"> de mana <small class="hint" style="margin:0">(0 = não importa)</small></label>
     <label class="botrow"><input type="checkbox" data-r="full" ${B.refill.full?'checked':''}> Ir também quando a mochila encher</label>
+    <label class="botrow"><input type="checkbox" data-r="sell" ${B.refill.sell?'checked':''}> Vender no mercador os equipamentos até <select data-r="sellR">${[[0,'Comum'],[1,'Incomum'],[2,'Raro']].map(([v,l])=>`<option value="${v}" ${(B.refill.sellR??2)===v?'selected':''}>${l}</option>`).join('')}</select></label>
+    <label class="botrow"><input type="checkbox" data-r="sellMats" ${B.refill.sellMats?'checked':''}> Vender também os materiais (pós, peles, fragmentos…)</label>
+    <p class="hint" style="margin:2px 0 0">Épicos e Lendários sempre vão para o depósito. Itens presos ao personagem e exclusivos nunca são vendidos.</p>
     <label class="botrow">Comprar até ter <input type="number" min="0" max="2000" step="10" data-r="hp" value="${B.refill.hp}"> de vida e <input type="number" min="0" max="2000" step="10" data-r="mp" value="${B.refill.mp}"> de mana</label>
     <label class="botrow"><input type="checkbox" data-r="strong" ${B.refill.strong?'checked':''}> Comprar poções fortes (Cinzaforte e Lunária)</label>
     ${player.cls==='cacador'?`<label class="botrow">Comprar até ter <input type="number" min="0" max="5000" step="50" data-r="ammo" value="${B.refill.ammo??500}"> da flecha ativa</label><label class="botrow">Ir quando restarem <input type="number" min="0" max="2000" step="10" data-r="minAmmo" value="${B.refill.minAmmo??0}"> flechas <small class="hint" style="margin:0">(0 = não importa)</small></label>`:''}
@@ -3236,13 +3240,19 @@ function botTravel(B,st){
     if(bot.sub==='depot'){ botDeposit(B); bot.sub='shop'; return; }
     botBuy(B,n); if(potCount('hp')<=B.refill.minHp){ toggleBot(false,'Caça automática parou na cidade: não há ouro suficiente para comprar poções de vida.'); return; } bot.mode='return'; bot.stuck=0; log('Caça automática: reabastecido. Voltando para '+MAPS[bot.huntMap].name+'.','sys'); save(); return; }
   bot.mode='hunt'; bot.sub=''; bot.wp=nearestWp(); bot.stuck=0; log('Caça automática: de volta à caçada.','sys'); renderBot(); }
+// venda automática na volta da caça: equipamentos até a raridade escolhida (padrão: Raro) e, se marcado, os materiais
+function botSellable(B,it){ const F=B.refill, d=ITEMS[it.id]; if(!F||!F.sell&&!F.sellMats) return false; if(isBag(it)||it.own||it.bound||d.excl||sellPrice(it)<=0) return false;
+  if(d.slot) return !!F.sell && (it.r||0)<=Math.min(2,F.sellR??2);
+  return !!F.sellMats && d.sell>0 && !d.chest && !d.heal && !d.mana && !d.ammo && !d.warm && !d.air && !/^tome/.test(it.id); }
+function botSell(B){ let gold=0, n=0; for(const it of allItems().slice()){ if(!botSellable(B,it)) continue; const k=it.n||1; gold+=sellPrice(it)*k; n+=k; detach(it); }
+  if(n){ player.gold+=gold; sess.gold+=gold; log('Caça automática vendeu '+n+' ite'+(n===1?'m':'ns')+' por '+fmtN(gold)+' ouro.','loot'); uiDirty=true; } }
 function botDeposit(B){ const D=player.depot; let n=0, full=false;
-  for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana||d.ammo||(!d.slot&&(d.warm||d.air))) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
+  for(const it of allItems().slice()){ const d=ITEMS[it.id]; if(isBag(it)||d.heal||d.mana||d.ammo||(!d.slot&&(d.warm||d.air))||botSellable(B,it)) continue; if(depotAdd(it)){ detach(it); n++; } else full=true; }
   const cost=refillCost(B); const total=player.gold+D.gold; const keep=Math.min(cost,total); D.gold=total-keep; player.gold=keep;
   log('Caça automática guardou '+n+' ite'+(n===1?'m':'ns')+' e o ouro no depósito'+(full?' (o depósito encheu; alguns ficaram na mochila)':'')+'.','loot'); uiDirty=true; save(); }
 function potBuyId(B,k){ const strong=B.refill.strong&&bot.town!=='over', sup=strong&&(bot.town==='ice'||bot.town==='sea'); return k==='hp'?(sup?'hp3':strong?'hp2':'hp'):(sup?'mp3':strong?'mp2':'mp'); }
 function refillCost(B){ const F=B.refill; let c=0; for(const k of ['hp','mp']){ const want=k==='hp'?F.hp:F.mp, need=Math.max(0,want-potCount(k)); c+=need*ITEMS[potBuyId(B,k)].price; } const a=player.ammo; if(a&&ITEMS[a]) c+=Math.max(0,(F.ammo??500)-countItem(a))*ITEMS[a].price; if(bot.town==='ice') c+=8*40; if(bot.town==='sea') c+=30*50; return c; }
-function botBuy(B,n){ const F=B.refill; let msg=[];
+function botBuy(B,n){ const F=B.refill; let msg=[]; botSell(B);
   for(const k of ['hp','mp']){ const id=potBuyId(B,k), d=ITEMS[id], want=k==='hp'?F.hp:F.mp; let need=Math.max(0,want-potCount(k));
     need=Math.min(need, Math.floor(player.gold/d.price)); if(need<=0) continue;
     if(addItem({id,n:need,r:0,a:[]})){ player.gold-=need*d.price; msg.push(need+' '+d.name); } }
@@ -4841,7 +4851,7 @@ function render(){
       ctx.drawImage(tallImgs[t][hash2(x,y)%3], x*T-cam.x, y*T-cam.y-16); if(m.torch&&m.torch.has(y*m.W+x)) drawTorch(x*T-cam.x, y*T-cam.y); } }
     const row=rows.get(y); if(!row) continue; row.sort((a,b)=>a[1].x-b[1].x);
     for(const [e,r] of row){ const sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y);
-      if(e===player) drawPlayer(ctx,sx,sy); else if(e.kind==='mon') drawMonster(ctx,e,sx,sy); else if(e.kind==='pc') drawOther(ctx,e,sx,sy); else drawNpc(ctx,e,sx,sy); }
+      if(e===player) drawPlayer(ctx,sx,sy); else if(e.kind==='mon'){ if(!e.pvp) drawMonster(ctx,e,sx,sy); } else if(e.kind==='pc') drawOther(ctx,e,sx,sy); else drawNpc(ctx,e,sx,sy); }
   }
   drawVfx(ctx,false);
   for(const p of projectiles){ if(p.map!==m.id) continue; if(p.fx) drawProj(ctx,p); else drawProjOld(ctx,p); }
@@ -5234,9 +5244,13 @@ function update(dt){
   zoneT+=dt; if(zoneT>500){ zoneT=0; if(spawns.some(s=>!s.mon&&MON[s.type].boss)) renderBosses(); const z=zoneName(cur,player.x,player.y); if($('where').textContent!==z) $('where').textContent=z; }
   saveT+=dt; if(saveT>15000){ saveT=0; save(); }
 }
+// o jogo anda pelo relógio de verdade: se o navegador desenhar menos quadros (Alt+Tab, janela coberta, aba escondida),
+// os passos que faltaram são feitos de uma vez (até 10 s), em passos de no máximo 50 ms
+let simT=0;
+function simTo(t){ if(!simT){ simT=t; return; } let d=Math.min(10000,t-simT); simT=t; while(d>0){ const s=Math.min(50,d); if(running) update(s); else now+=s; d-=s; } }
 function frame(t){
   const dt=Math.min(50, t-(last||t)); last=t;
-  if(running) update(dt); else now+=dt;
+  simTo(performance.now());
   if(running && Date.now()-sess.t0-(sess.samples.at(-1)?.t||0)>=5000) sampleSess();
   if(galOpen){ galT-=dt; if(galT<=0){ galT=90; galTick(); } requestAnimationFrame(frame); return; }
   if(afkOpen){ afkT-=dt; if(afkT<=0){ afkT=1000; renderAfk(); } if(running&&uiDirty) renderUI(); requestAnimationFrame(frame); return; }
@@ -5300,7 +5314,7 @@ $('btnHelp').addEventListener('click',()=>{ if(!running) return; openDialog(play
 $('btnRespawn').addEventListener('click',respawn);
 
 // ============================================================ trocar de personagem
-$('btnChars').addEventListener('click', async ()=>{ if(!running) return; if(ONLINE){ netSave(true); netSend({t:'logout'}); leaveOnlineWorld(); return; } save(); if(Cloud.on&&Cloud.charId) await Cloud.flush(); location.reload(); });
+$('btnChars').addEventListener('click', async ()=>{ if(!running) return; if(ONLINE){ netSave(true); Net.leaving=true; if(!netSend({t:'logout'})){ Net.leaving=false; leaveOnlineWorld(); } return; } save(); if(Cloud.on&&Cloud.charId) await Cloud.flush(); location.reload(); });
 
 // ============================================================ painel de ADM (testes)
 // Offline: abra o jogo com ?admin no endereço (e ?admin=0 para desligar). Na nuvem: profiles.is_admin = true.
@@ -5621,9 +5635,9 @@ let netWarping=false; { const _cm=changeMap; changeMap=function(id,x,y,msg){ _cm
 // ---- outros jogadores
 function classLook(cls){ const C=CLASSES[cls]||CLASSES.guerreiro, L=C.look, eq={}; for(const id of C.start) eq[ITEMS[id].slot]=ITEMS[id];
   return {skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:eq.armor?.look||'#6a6a5a', shield:eq.shield?.ok==='shield'?eq.shield.look:null, weapon:eq.weapon?.look, legs:'#3e3428', wk:eq.weapon?.icon==='quarter'?'staff':eq.weapon?.wk, hs:L.bald?'bald':CLASS_HS[cls]}; }
-function addOther(p){ const o={kind:'pc', id:p.id, name:p.name, cls:p.cls, level:p.level, adm:p.adm, map:p.map||cur.id, x:p.x, y:p.y, px:p.x, py:p.y, dir:p.dir||'down', face:1, moving:false, mt:0, mdur:1, phase:R(), hp:1, maxHp:1,
+function addOther(p){ const o={kind:'pc', id:p.id, name:p.name, cls:p.cls, level:p.level, adm:p.adm, map:p.map||cur.id, x:p.x, y:p.y, px:p.x, py:p.y, dir:p.dir||'down', face:1, moving:false, mt:0, mdur:1, phase:R(), hp:p.hp??1, maxHp:p.maxHp??1,
   lk:p.look||classLook(p.cls), mount:p.mount||null, nameCol:p.nameCol||null}; Net.others.set(p.id,o); battleKey=null; return o; }
-function updateOthers(dt){ netMobTick(dt); for(const o of Net.others.values()){ o.phase+=dt/(o.moving?260:900); if(o.moving){ o.mt+=dt; if(o.mt>=o.mdur) o.moving=false; } } }
+function updateOthers(dt){ netMobTick(dt); pvpSync(); for(const o of Net.others.values()){ o.phase+=dt/(o.moving?260:900); if(o.moving){ o.mt+=dt; if(o.mt>=o.mdur) o.moving=false; } } }
 function drawOther(c,o,x,y){ if(o.mount){ drawCreatureArt(c,{type:o.mount, phase:o.phase*0.7, face:o.face||1},x,y+3); drawRiderHero(c,x,y-9,o.lk,o.phase,o.face||1); }
   else drawHero(c,x,y,{...o.lk,dir:o.dir},o.phase,o.moving); }
 
@@ -5638,7 +5652,7 @@ function netOn(m){
       Net.token=m.token; Net.user=m.user; Net.chars=m.chars; Net.adm=!!m.adm; sset(TOKEN_KEY,m.token); if(!Net.inWorld) onlineChars(); break;
     case 'autherr': if(m.expired){ sset(TOKEN_KEY,null); Net.token=null; if(Net.inWorld){ leaveOnlineWorld('Sua sessão expirou. Entre de novo.'); return; } onlineLogin(); return; } { const el=$('authMsg'); if(el) el.textContent=m.text; for(const b of document.querySelectorAll('#loginForm button')) b.disabled=false; } break;
     case 'err': { const el=$('charMsg'); if(el&&!running){ el.textContent=m.text; const b=$('btnNew'); if(b) b.disabled=false; } else log(m.text,'sys'); } break;
-    case 'chars': Net.chars=m.chars; if(!running) onlineChars(); break;
+    case 'chars': Net.chars=m.chars; if(Net.leaving){ Net.leaving=false; leaveOnlineWorld(); break; } if(!running) onlineChars(); break;
     case 'enter': enterOnline(m); break;
     case 'join': if(m.p.map===cur.id) addOther(m.p); break;
     case 'leave': Net.others.delete(m.id); battleKey=null; break;
@@ -5705,12 +5719,17 @@ function onlineChars(){
 }
 function enterOnline(m){ const y=m.you; Net.charId=y.id; Net.online=m.online||0; Net.others.clear(); sset(CHAR_KEY,y.id); lookKey='';
   const place=()=>{ netWarping=true; try{ if(cur.id!==y.map) changeMap(y.map,y.x,y.y,'Você está em '+(MAPS[y.map]?.name||y.map)+'.'); else { player.x=player.px=y.x; player.y=player.py=y.y; } } finally { netWarping=false; } player.moving=false; player.path=null; };
-  if(Net.inWorld&&running){ place(); for(const p of m.others) addOther(p); if(Net.retry) log('Conectado de novo.','sys'); Net.retry=0; onlineBadge(); return; }
+  const diedMsg=d=>log('Seu personagem ficou no mundo depois que a conexão caiu em combate e morreu para '+d.src+'.'+(d.lost||d.gold?' Perdeu '+fmtN(d.lost)+' de experiência'+(d.gold?' e '+fmtN(d.gold)+' moedas':'')+'.':''),'dmg');
+  if(Net.inWorld&&running){ // reconexão com o jogo ainda aberto
+    if(y.died){ const d=y.died; Net.inst=null; player.xp=Math.max(totalXp(player.level),player.xp-(d.lost|0)); player.gold=Math.max(0,player.gold-(d.gold|0)); player.dead=false; $('deathScreen').hidden=true; const st=stats(); player.hp=st.maxHp; player.mp=st.maxMp; diedMsg(d); uiDirty=true; }
+    else if(y.hp>0) player.hp=Math.min(player.hp,y.hp);
+    place(); for(const p of m.others) addOther(p); if(Net.retry) log('Conectado de novo.','sys'); Net.retry=0; onlineBadge(); return; }
   Net.inWorld=true; // antes do begin, para o save inicial já ir ao servidor
   chosenClass=y.cls;
   if(y.save&&y.save.level){ begin({...y.save, name:y.name, cls:y.cls, map:y.map, x:y.x, y:y.y}); }
   else { begin(null, y.name); }
   place(); reveal(); miniDirty=true; uiDirty=true; skillsDirty=true;
+  if(y.died) diedMsg(y.died); else if(y.hp>0) player.hp=Math.min(stats().maxHp,y.hp);
   for(const p of m.others) addOther(p); Net.retry=0; onlineBadge();
   $('chatBar').hidden=false; log('Você está no Brumaval Online. Aperte Enter para falar. Canal Mundo a partir do nível 5. /quem lista quem está online. Nesta versão, cada jogador vê os próprios monstros.','npc'); }
 function leaveOnlineWorld(note){ Net.inWorld=false; running=false; Net.others.clear(); speech=[]; $('chatBar').hidden=true; onlineStart(note); }
@@ -5718,6 +5737,12 @@ function onlineBadge(){ const el=$('acct'); if(!el) return; el.hidden=false; el.
   const bl=(Net.bonusUntil||0)-Date.now(); if(bl>0) el.textContent+=' · XP e saque x2 ('+Math.ceil(bl/60000)+' min)'; }
 setInterval(()=>{ if(Net.inWorld) netSend({t:'ping',at:Date.now()}); },5000);
 addEventListener('pagehide',()=>{ if(Net.inWorld) netSave(true); });
+// fechar a aba em combate: avisa que o personagem continua no mundo (o servidor não deixa fugir da luta)
+const inCombat=()=>running&&!player.dead&&(now-(player.lastHit??-1e9)<60000||now-(player.pvpT??-1e9)<60000||(target&&!target.dead&&cheb(player,target)<=8));
+addEventListener('beforeunload',e=>{ if(Net.inWorld&&inCombat()){ e.preventDefault(); e.returnValue='Você está em combate: se sair agora, seu personagem fica no jogo e pode morrer.'; } });
+// aba em segundo plano (Alt+Tab, minimizado, outra aba): o navegador pode parar de desenhar, mas o jogo continua andando
+// (curas automáticas, poções, caça automática): este relógio alcança o tempo perdido pelo menos uma vez por segundo
+setInterval(()=>{ const t=performance.now(); if(simT&&t-simT>900){ try{ simTo(t); }catch(e){ console.error(e); } } },1000);
 function sendChat(){ const i=$('chatIn'), t=i.value.trim(); if(!t){ i.blur(); return; } if(!netSend({t:'say',text:t,ch:$('chatCh').value})) log('Sem conexão com o servidor.','sys'); i.value=''; i.blur(); }
 $('chatBar').addEventListener('submit',e=>{ e.preventDefault(); sendChat(); });
 $('chatIn').addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.target.value=''; e.target.blur(); } e.stopPropagation(); });
@@ -5734,7 +5759,21 @@ function addNetMob(d){ const def0=MON[d.type]; if(!def0) return null; const old=
 function dropNetMob(id,quiet){ const m=netMobs.get(id); if(!m) return; netMobs.delete(id); m.dead=true; const i=monsters.indexOf(m); if(i>=0) monsters.splice(i,1); if(target===m){ target=null; player.follow=false; }
   if(!quiet&&m.map===cur.id) burst(m, m.def.undead?'#d8d0bc':'#8a1a10', 18, 90); battleKey=null; }
 function netMobTick(dt){ for(const m of netMobs.values()){ m.phase+=dt/(m.moving?300:800); if(m.moving){ m.mt+=dt; if(m.mt>=m.mdur) m.moving=false; } m.flash-=dt; if(m.slowT>0) m.slowT=m.slowT-dt; if(m.rootT>0) m.rootT=m.rootT-dt; } }
-function netHit(m,dmg,crit,color){ if(bestStage(m.type)===3) dmg=Math.round(dmg*1.05);
+// ---- Arena de Sangue (PvP): cada adversário vira um "alvo" na lista de monstros, para todos os ataques e magias funcionarem nele.
+// A posição e a vida vêm do jogador de verdade (Net.others); o golpe vai para o servidor, que entrega ao outro jogador.
+const pvpMobs=new Map();
+function pvpSync(){ const I=Net.inst, on=!!(I&&I.pvp&&cur.id===I.map&&Net.inWorld);
+  for(const [id,pm] of pvpMobs){ const o=Net.others.get(id); if(on&&o&&o.map===cur.id){ pm.hp=Math.max(0,o.hp??1); pm.maxHp=Math.max(1,o.maxHp??1); if(!monsters.includes(pm)) monsters.push(pm); continue; }
+    pvpMobs.delete(id); pm.dead=true; const i=monsters.indexOf(pm); if(i>=0) monsters.splice(i,1); if(target===pm){ target=null; player.follow=false; } battleKey=null; }
+  if(!on) return;
+  for(const o of Net.others.values()){ if(o.map!==cur.id||pvpMobs.has(o.id)) continue;
+    const pm={kind:'mon', net:true, pvp:true, pid:o.id, nid:'p'+o.id, type:'rat', def:{...MON.rat, name:o.name, loot:[], ranged:null, poison:null, undead:false, boss:false},
+      hp:Math.max(1,o.hp??1), maxHp:Math.max(1,o.maxHp??1), atk:0, dfn:0, xp:0, mult:1, state:'chase', flash:0, sp:{}, dead:false, ph:{}, stuck:0, phase:0};
+    for(const k of ['x','y','px','py','moving','mt','mdur','face','map']) Object.defineProperty(pm,k,{enumerable:true, get:()=>o[k], set:()=>{}});
+    pvpMobs.set(o.id,pm); monsters.push(pm); battleKey=null; } }
+function netHit(m,dmg,crit,color){
+  if(m.pvp){ m.flash=110; floatAt(m, String(Math.max(1,Math.round(dmg*0.5))), color||(crit?'#ffd54a':'#ff6a5a'), crit); blood(m,false); player.pvpT=now; netSend({t:'phit', to:m.pid, dmg, crit:!!crit, col:color||null}); return; }
+  if(bestStage(m.type)===3) dmg=Math.round(dmg*1.05);
   m.hp=Math.max(0,m.hp-dmg); m.flash=110; floatAt(m, String(dmg), color||(crit?'#ffd54a':'#ff6a5a'), crit); blood(m,m.def.undead); burst(m, m.def.undead?'#d8d0bc':'#b02a20', crit?12:6);
   if(crit) trauma=Math.min(1,trauma+0.1); netSend({t:'hit', id:m.nid, dmg, crit:!!crit, col:color||null}); }
 function netCorpse(c){ let k=corpses.find(x=>x.net&&x.cid===c.id);
@@ -5816,7 +5855,8 @@ $('partyui').addEventListener('submit',e=>{ e.preventDefault(); const i=$('pName
 $('partyui').addEventListener('keydown',e=>e.stopPropagation());
 // vida para o painel do grupo (só quando está em grupo)
 let hpSent='';
-setInterval(()=>{ if(!Net.inWorld||!Net.party) return; const st=stats(), k=Math.round(player.hp)+'/'+st.maxHp; if(k===hpSent) return; hpSent=k; netSend({t:'state',hp:Math.round(player.hp),maxHp:st.maxHp}); },1000);
+// vida e defesa: painel do grupo, barra dos adversários na Arena de Sangue e o personagem que fica no mundo se a conexão cair em combate
+setInterval(()=>{ if(!Net.inWorld||!running) return; const st=stats(), k=Math.round(player.hp)+'/'+st.maxHp+'/'+st.def; if(k===hpSent) return; hpSent=k; netSend({t:'state',hp:Math.round(player.hp),maxHp:st.maxHp,def:st.def}); },1000);
 
 // ---- denúncia
 function openReport(){ if(!Net.inWorld) return;
@@ -5874,14 +5914,17 @@ function bossPortalDialog(m){ if(!portalRef||dlg.hidden||dialogRef!==portalRef) 
   const gw=G.cd>0, glow=player.level<G.lvl;
   openDialog(portalRef,'Portal das Brumas',`<p>Os outros chefes ficam nos portais dentro de cada caverna, no lugar onde eles moravam.</p>
     <h4>Chefe de grupo</h4><div class="list blist"><div class="it"><div class="meta"><b>${esc(gd.name)}</b><small>até ${G.max} pessoas · nível ${G.lvl}+ · ${Math.round(G.time/60000)} minutos · fica mais forte com o nível e o tamanho do grupo. Prêmio: <span class="rn r3">Baú das Brumas</span> e chance de um <span class="rn r4">amuleto exclusivo da sua classe</span>.<br>${gw?'de novo em '+fmtCd(G.cd):glow?'<span class="bad">exige nível '+G.lvl+'</span>':G.leader?'<span class="good">disponível</span> · seu grupo: '+G.size+(G.size>1?' pessoas (todos perto do portal entram juntos)':' pessoa (dá para ir sozinho, mas é muito difícil)'):'só o líder do grupo abre o portal'}</small></div><div class="btns"><button type="button" class="primary" data-act="go" data-t="${G.type}" ${gw||glow||!G.leader?'disabled':''}>Entrar</button></div></div></div>
+    <h4>Arena de Sangue (PvP)</h4><div class="list blist"><div class="it"><div class="meta"><b>Arena de Sangue</b><small>nível 20+ · todos contra todos, com qualquer jogador que estiver lá · o dano entre jogadores é a metade do normal · morrer na arena não tira experiência, ouro nem itens · quem lutou há menos de 15 s não pode sair pelo botão.<br>${player.level<20?'<span class="bad">exige nível 20</span>':'<span class="good">aberta</span>'}</small></div><div class="btns"><button type="button" class="primary" data-act="pvp" ${player.level<20?'disabled':''}>Entrar</button></div></div></div>
     <div class="row"><button type="button" data-act="close">Fechar</button></div>`,(act,ds)=>{
+      if(act==='pvp'){ closeDialog(); if(bot.on) toggleBot(false); netSend({t:'boss',a:'pvp'}); return; }
       if(act==='go'){ closeDialog(); if(bot.on) toggleBot(false); netSend({t:'boss',a:'enter',type:ds.t}); return; } closeDialog(); }); }
 
 // ---- arena: o mapa é criado aqui quando o servidor avisa; contador de tempo e botão de sair
 Net.inst=null;
 function arenaMap(m){ if(!MAPS[m.map]){ const A=makeArena(m.map,!!m.big); A.name=m.name||A.name; A.region=m.region||'over'; MAPS[m.map]=A; } return MAPS[m.map]; }
 function renderInst(){ const h=$('instHud'), I=Net.inst; h.hidden=!I||!running||cur.id!==I.map; if(h.hidden) return;
-  const now2=Date.now(); $('instName').textContent=I.group?'Salão das Brumas':MON[I.type]?.name||'Arena';
+  const now2=Date.now(); $('instName').textContent=I.pvp?'Arena de Sangue':I.group?'Salão das Brumas':MON[I.type]?.name||'Arena';
+  if(I.pvp){ h.classList.remove('won'); const n=[...Net.others.values()].filter(o=>o.map===I.map).length; $('instTime').textContent=n?n+(n>1?' adversários':' adversário'):'ninguém por aqui'; return; }
   if(I.won){ h.classList.add('won'); $('instTime').textContent='Vitória! Saída em '+fmtT(I.leaveAt-now2); } else { h.classList.remove('won'); $('instTime').textContent=fmtT(I.ends-now2); } }
 setInterval(renderInst,500);
 $('instLeave').addEventListener('click',()=>{ const b=$('instLeave'); if(!Net.inst?.won&&b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Sair mesmo?'; setTimeout(()=>{ b.dataset.armed=''; b.textContent='Sair da arena'; },3000); return; } netSend({t:'boss',a:'leave'}); });
@@ -5975,7 +6018,10 @@ function netOnExtra(m){
     case 'qitem': log('Item de quest: '+m.name+' ('+m.n+'/'+m.of+').','loot'); floatAt(player,m.name+' '+m.n+'/'+m.of,'#9fe08a'); return true;
     case 'bonus': Net.bonusUntil=m.until; onlineBadge(); return true;
     case 'blist': bossPortalDialog(m); return true;
-    case 'inst': if(!m.map){ Net.inst=null; renderInst(); return true; } arenaMap(m); Net.inst={...m}; renderInst(); return true;
+    case 'inst': if(!m.map){ Net.inst=null; pvpSync(); renderInst(); return true; } { const A=arenaMap(m); if(m.pvp){ A.pvp=true; A.name=m.name||A.name; } } Net.inst={...m}; renderInst(); return true;
+    case 'patk': { if(player.dead) return true; const def=stats().def; player.pvpT=now; hurtPlayer(Math.max(1,Math.round(m.dmg*20/(20+def*0.5))), m.name||'um jogador'); return true; }
+    case 'php': { const o=Net.others.get(m.id); if(o){ o.hp=m.hp; o.maxHp=m.maxHp||o.maxHp; } return true; }
+    case 'nologout': Net.leaving=false; log(m.text,'dmg'); return true;
     case 'gotitem': if(m.excl){ const it=m.item; if(!addItem(it)) toFeet(it); log('Você recebeu o '+itemName(it)+'! Um amuleto Lendário exclusivo do Colosso.','r4'); floatAt(player,'EXCLUSIVO!','#ff9a2a',true); burst(player,'#ff9a2a',50,140); save(); return true; } return false;
   }
   return false;

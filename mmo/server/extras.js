@@ -15,10 +15,13 @@ const GROUP_BOSS = 'colosso';
 const LEAVE_AFTER_WIN = 60 * 1000;     // depois da vitória, todos saem sozinhos em 1 minuto
 const EXCL_CHANCE = 0.35, EXCL_PITY = 4; // chance do amuleto exclusivo; garantido na 4ª vitória sem ele
 const RESTART_BONUS_MIN = 20;          // depois de cada reinício: experiência e saque em dobro por 20 minutos
+const PVP_LVL = 20;                    // nível mínimo para a Arena de Sangue (PvP)
+const PVP_MUL = 0.5;                   // dano entre jogadores: metade do dano normal (como no Tibia)
+const PVP_LEAVE_LOCK = 15 * 1000;      // quem lutou há menos de 15 s não sai da arena pelo botão
 const REPORT_REASONS =['Xingamento ou assédio', 'Trapaça ou programa externo', 'Nome ofensivo', 'Golpe ou roubo', 'Bug ou problema no jogo', 'Outro'];
 
 module.exports = function extras(X) {
-  const { S, db, online, send, toAll, warp, markDirty, mobsApi, DATA_DIR, cleanText, norm, TOWNS, simCtx } = X;
+  const { S, db, online, send, toAll, toMap, warp, markDirty, mobsApi, DATA_DIR, cleanText, norm, TOWNS, simCtx } = X;
   const { MAPS, MON, cheb, R, ri } = S;
   const sys = (p, text, big) => send(p.ws, { t: 'sys', text, big: !!big });
   const charOf = p => db.chars[p.id];
@@ -245,9 +248,56 @@ module.exports = function extras(X) {
     console.log(new Date().toISOString(), awak ? 'colosso desperto' : 'salão das brumas', go.map(o => o.name).join(', '), 'nível médio', Math.round(avg));
     return true;
   }
+  // ================================================================ Arena de Sangue (PvP): uma arena aberta para todos, sem perda ao morrer
+  const PVP_NAME = 'Arena de Sangue';
+  let pvpInst = null;
+  const isPvp = p => { const inst = p && p.inst && insts.get(p.inst); return !!(inst && inst.pvp); };
+  function pvpArena() {
+    if (pvpInst && insts.get(pvpInst.id) === pvpInst) return pvpInst;
+    const id = nextInst++, map = 'arena#' + id, A = simCtx.makeArena(map, true); A.region = 'over'; A.name = PVP_NAME; A.pvp = true; MAPS[map] = A;
+    pvpInst = { id, map, type: 'pvp', group: false, pvp: true, players: new Set(), ret: new Map(), started: Date.now(), ends: Infinity, done: false, leaveAt: 0, names: [] };
+    insts.set(id, pvpInst); return pvpInst;
+  }
+  const instMsg = inst => inst.pvp ? { t: 'inst', map: inst.map, big: true, name: PVP_NAME, region: 'over', ends: 0, type: 'pvp', group: false, pvp: true }
+    : { t: 'inst', map: inst.map, big: inst.group, name: MAPS[inst.map].name, region: MAPS[inst.map].region, ends: inst.ends, type: inst.type, group: inst.group, won: inst.done || undefined, leaveAt: inst.leaveAt || undefined };
+  function resendInst(p) { const inst = p.inst && insts.get(p.inst); if (inst) send(p.ws, instMsg(inst)); }
+  function enterPvp(p) {
+    if (p.inst) return sys(p, 'Você já está numa arena.');
+    if (p.dead) return;
+    if (!TOWNS.includes(p.map)) return sys(p, 'Use o Portal das Brumas, na cidade, para ir à ' + PVP_NAME + '.');
+    if (p.level < PVP_LVL) return sys(p, 'A ' + PVP_NAME + ' exige nível ' + PVP_LVL + '.');
+    const inst = pvpArena(), A = MAPS[inst.map];
+    inst.ret.set(p.id, { map: p.map, x: p.x, y: p.y }); inst.players.add(p.id); p.inst = inst.id;
+    send(p.ws, instMsg(inst));
+    warp(p, inst.map, (A.W >> 1) + ri(-5, 5), (A.H >> 1) + ri(-3, 3),'Você entra na ' + PVP_NAME + '. Aqui todos podem atacar todos. Morrer aqui não tira experiência, ouro nem itens.');
+    toMap(inst.map, { t: 'sys', text: p.name + ' (nível ' + p.level + ') entrou na ' + PVP_NAME + '.' }, p);
+  }
+  function pvpHit(p, m) {
+    const o = online.get(String(m.to || '')); if (!o || o === p || o.dead || p.dead) return;
+    if (!isPvp(p) || o.inst !== p.inst || o.map !== p.map || cheb(o, p) > 9) return;
+    const now = Date.now(); p.pvpN = now - (p.pvpW || 0) > 1000 ? 1 : (p.pvpN || 0) + 1; if (p.pvpN === 1) p.pvpW = now; if (p.pvpN > 12) return; // no máximo 12 golpes por segundo
+    const dmg = Math.round(Math.max(0, Math.min(200000, m.dmg | 0)) * PVP_MUL); if (!dmg) return;
+    p.pvpT = o.pvpT = p.fightT = o.fightT = now; o.lastBy = p.id; o.lastByT = now;
+    if (o.ghost) { const def = o.def || 0; return X.ghostHurt(o, Math.max(1, Math.round(dmg * 20 / (20 + def * 0.5))), p.name); }
+    send(o.ws, { t: 'patk', from: p.id, name: p.name, dmg, crit: !!m.crit, col: typeof m.col === 'string' ? m.col.slice(0, 9) : null });
+  }
+  function pvpDeath(p) {
+    const inst = p.inst && insts.get(p.inst); if (!inst || !inst.pvp) return;
+    const k = Date.now() - (p.lastByT || 0) < 20000 ? online.get(p.lastBy) : null, c = charOf(p);
+    if (c) { c.pvp = c.pvp || { k: 0, d: 0 }; c.pvp.d++; }
+    if (k) { const kc = charOf(k); if (kc) { kc.pvp = kc.pvp || { k: 0, d: 0 }; kc.pvp.k++; } markDirty();
+      toMap(inst.map, { t: 'sys', text: k.name + ' derrotou ' + p.name + ' na ' + PVP_NAME + '!', big: true });
+      if (kc) sys(k, 'Seu placar na arena: ' + kc.pvp.k + ' vitória(s), ' + kc.pvp.d + ' derrota(s).'); }
+    else { markDirty(); toMap(inst.map, { t: 'sys', text: p.name + ' caiu na ' + PVP_NAME + '.' }); }
+    p.lastBy = null;
+  }
+
   function onBossMsg(p, m) {
     if (m.a === 'list') { send(p.ws, bossInfo(p)); return sendBossCds(p); }
-    if (m.a === 'leave') { if (p.inst) exitInst(p, 'Você sai da arena.'); return; }
+    if (m.a === 'pvp') return enterPvp(p);
+    if (m.a === 'leave') { if (!p.inst) return;
+      if (isPvp(p) && Date.now() - (p.pvpT || 0) < PVP_LEAVE_LOCK) return sys(p, 'Você lutou há pouco: espere ' + Math.ceil((PVP_LEAVE_LOCK - (Date.now() - p.pvpT)) / 1000) + ' s para sair da arena.');
+      exitInst(p, 'Você sai da arena.'); return; }
     if (m.a === 'enter') {
       if (p.inst) return sys(p, 'Você já está numa arena.');
       if (p.dead) return;
@@ -333,17 +383,20 @@ module.exports = function extras(X) {
       case 'report': report(p, m); return true;
       case 'chest': openChest(p, String(m.id || '')); return true;
       case 'boss': onBossMsg(p, m); return true;
+      case 'phit': pvpHit(p, m); return true;
     }
     return false;
   }
-  function onEnter(p) { sendBossCds(p); send(p.ws, { t: 'party', id: null }); restartWelcome(p); }
+  function onEnter(p) { sendBossCds(p); const pt = partyOf(p); if (pt) { pt.last = null; pushParty(pt); } else send(p.ws, { t: 'party', id: null }); restartWelcome(p); }
   function onLeave(p) { leave(p, true); if (p.inst) exitInst(p, null, true); }
   function onMapChange(p) { const inst = p.inst && insts.get(p.inst); if (inst && p.map !== inst.map) exitInst(p, null, true); }
   function onState(p, m) {
-    if ('hp' in m) p.hp = Math.max(0, m.hp | 0); if ('maxHp' in m) p.maxHp = Math.max(1, m.maxHp | 0);
+    if ('hp' in m) p.hp = Math.max(0, m.hp | 0); if ('maxHp' in m) p.maxHp = Math.max(1, m.maxHp | 0); if ('def' in m) p.def = Math.max(0, Math.min(5000, m.def | 0));
+    if (m.dead === true && isPvp(p)) pvpDeath(p);
+    if ('hp' in m && isPvp(p)) toMap(p.map, { t: 'php', id: p.id, hp: p.hp, maxHp: p.maxHp || p.hp }, p);
   }
   // quest final: uma hora de bônus para todos (soma ao que já houver)
   function extendBonus(min) { bonusEnd = Math.max(bonusEnd, Date.now()) + min * 60000; toAll({ t: 'bonus', until: bonusEnd }); setTimeout(() => { if (Date.now() >= bonusEnd - 1000) toAll({ t: 'sys', text: 'As brumas voltaram. O bônus de experiência e saque acabou.', big: true }); }, bonusEnd - Date.now() + 500); }
   function enterAwakened(p) { if (p.inst) { sys(p, 'Você já está numa arena.'); return false; } return !!enterGroup(p, true); }
-  return { grantChest, extendBonus, enterAwakened, command, onMessage, onEnter, onLeave, onMapChange, onState, onLooted, onKill, partyOfId, partyChat, logChat, retPos, REPORT_REASONS, bonusMul, onShutdown: writeOnline };
+  return { isPvp, pvpDeath, resendInst, grantChest, extendBonus, enterAwakened, command, onMessage, onEnter, onLeave, onMapChange, onState, onLooted, onKill, partyOfId, partyChat, logChat, retPos, REPORT_REASONS, bonusMul, onShutdown: writeOnline };
 };

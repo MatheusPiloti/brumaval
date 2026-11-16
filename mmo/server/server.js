@@ -70,7 +70,7 @@ const online = new Map();     // id do personagem -> jogador no mundo
 let nextConn = 1;
 
 function charList(acc) { return Object.values(db.chars).filter(c => c.owner === acc).map(c => ({ id: c.id, name: c.name, cls: c.cls, level: c.level, map: c.map, online: online.has(c.id) })); }
-function pub(p) { return { id: p.id, name: p.name, cls: p.cls, level: p.level, x: p.x, y: p.y, dir: p.dir, map: p.map, adm: p.adm || undefined, look: p.look || undefined, mount: p.mount || undefined, nameCol: p.nameCol || undefined }; }
+function pub(p) { return { id: p.id, name: p.name, cls: p.cls, level: p.level, x: p.x, y: p.y, dir: p.dir, map: p.map, adm: p.adm || undefined, look: p.look || undefined, mount: p.mount || undefined, nameCol: p.nameCol || undefined, hp: p.hp ?? undefined, maxHp: p.maxHp ?? undefined }; }
 function send(ws, msg) { if (ws.readyState === 1) ws.send(JSON.stringify(msg)); }
 function toMap(map, msg, except) { const s = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p !== except && p.ws.readyState === 1) p.ws.send(s); }
 function toAll(msg) { const s = JSON.stringify(msg); for (const p of online.values()) if (p.ws.readyState === 1) p.ws.send(s); }
@@ -103,10 +103,10 @@ const playersOn = map => { const out = []; for (const p of online.values()) if (
 let EX = null; // extras.js: grupo, denúncias, baús e arenas de chefe
 let QU = null; // quests.js: quests das cidades, enigmas, baús selados
 const mobsApi = require('./mobs.js')(S, { players: playersOn, toMap: (map, msg, except) => { const s2 = JSON.stringify(msg); for (const p of online.values()) if (p.map === map && p.id !== except && p.ws.readyState === 1) p.ws.send(s2); },
-  toPlayer: (id, msg) => { const p = online.get(id); if (p) send(p.ws, msg); },
+  toPlayer: (id, msg) => { const p = online.get(id); if (!p) return; if (msg.t === 'matk') { p.fightT = Date.now(); if (p.ghost) return ghostMobHit(p, msg); } send(p.ws, msg); },
   partyOf: id => (EX ? EX.partyOfId(id) : null), onKill: (m, ranked) => { if (EX) EX.onKill(m, ranked); if (QU) try { QU.onKill(m, ranked); } catch (e) { console.error('erro na quest', e); } }, bonus: () => (EX ? EX.bonusMul() : 1) }, simCtx);
 const sendMobs = p => send(p.ws, mobsApi.snapshot(p.map));
-EX = require('./extras.js')({ S, db, online, send, toAll, toMap, warp, saveChar, markDirty: () => markDirty(), mobsApi, DATA_DIR, cleanText: (s, n) => cleanText(s, n), norm: s => norm(s), TOWNS, simCtx });
+EX = require('./extras.js')({ S, db, online, send, toAll, toMap, warp, saveChar, markDirty: () => markDirty(), mobsApi, DATA_DIR, cleanText: (s, n) => cleanText(s, n), norm: s => norm(s), TOWNS, simCtx, ghostHurt: (p, dmg, src) => ghostHurt(p, dmg, src) });
 QU = require('./quests.js')({ S, db, online, send, toAll, toMap, warp, markDirty: () => markDirty(), mobsApi, EX });
 let lastTick = Date.now(); setInterval(() => { const n = Date.now(), dt = Math.min(200, n - lastTick); lastTick = n; try { mobsApi.tick(dt); } catch (e) { console.error('erro nos monstros', e); } }, 50);
 
@@ -171,15 +171,57 @@ function command(p, text) {
   reply('Comando desconhecido. Digite /ajuda.');
 }
 
+// ---------------------------------------------------------------- sem fuga no meio da luta
+// Quem bateu ou apanhou nos últimos 60 s está "em combate": não consegue sair pelo botão, e se a conexão cair
+// (aba fechada, internet, celular) o personagem fica no mundo, parado, até passar 1 minuto sem luta (no máximo 3 min).
+// Nesse tempo os monstros e os outros jogadores (na arena PvP) continuam batendo nele, e ele pode morrer.
+const FIGHT_LOCK = 60 * 1000, GHOST_MAX = 3 * 60 * 1000;
+const fightLeft = p => Math.max(0, FIGHT_LOCK - (Date.now() - (p.fightT || 0)));
+const DEAD_WS = { readyState: 3, send() {}, close() {} };
+const XP_TABLE = [0, 0]; for (let k = 1; k <= 400; k++) XP_TABLE[k + 1] = XP_TABLE[k] + Math.round(2445 * Math.pow(k, 1.3) * Math.min(1, k / 10));
+function makeGhost(p) { p.ghost = Date.now(); p.ws = DEAD_WS; p.queue.length = 0;
+  if (p.hp == null) { p.maxHp = p.maxHp || 100 + p.level * 15; p.hp = p.maxHp; }
+  console.log(new Date().toISOString(), 'caiu em combate (fica no mundo)', p.name); }
+function ghostMobHit(p, m) { // mesma conta do jogo: corpo a corpo usa ataque x defesa; à distância e sopro usam metade da defesa
+  const def = p.def || 0; let dmg = 0;
+  if (m.kind === 'melee') { if (Math.random() < 0.07) return; dmg = m.atk * 20 / (20 + def) * (0.85 + Math.random() * 0.3) * (m.mul || 1); }
+  else dmg = (m.dmg || 0) * 20 / (20 + def * 0.5);
+  ghostHurt(p, Math.max(1, Math.round(dmg)), m.src || 'monstro'); }
+function ghostHurt(p, dmg, src) { if (!p.ghost || p.dead || online.get(p.id) !== p) return; p.fightT = Date.now(); p.hp = (p.hp ?? 1) - dmg; if (p.hp <= 0) ghostDie(p, src); }
+function ghostDie(p, src) {
+  p.dead = true; const c = db.chars[p.id], arena = !!p.inst, pvp = EX.isPvp(p); if (pvp) EX.pvpDeath(p);
+  const from = (EX.retPos(p) || p).map, reg = MAPS[from] && MAPS[from].region, home = TOWNS.includes(from) ? from : TOWNS.includes(reg) ? reg : 'over';
+  leaveWorld(p);
+  if (!c) return; const s = c.save || {}; let lost = 0, gold = 0;
+  if (s.level) { const xp = s.xp | 0, floor = XP_TABLE[Math.max(1, Math.min(401, s.level | 0))] || 0; lost = Math.max(0, Math.min(xp - floor, Math.floor(xp * (pvp ? 0 : arena ? 0.02 : 0.08)))); s.xp = xp - lost;
+    if (!arena) { gold = Math.floor((s.gold | 0) * 0.1); s.gold = (s.gold | 0) - gold; } s.hp = 0; }
+  const sp = MAPS[home].spawn; c.map = home; c.x = sp.x; c.y = sp.y; c.ghostDied = { src: String(src || '?').slice(0, 40), lost, gold, at: Date.now() }; markDirty();
+  console.log(new Date().toISOString(), 'morreu desconectado', p.name, 'para', src);
+}
+setInterval(() => { const now = Date.now(); for (const p of [...online.values()]) if (p.ghost && (now - p.ghost > GHOST_MAX || fightLeft(p) <= 0)) leaveWorld(p); }, 1000);
+function dropConn(conn) { const p = conn.player; if (!p || p.ws !== conn.ws || online.get(p.id) !== p) return;
+  if (!p.dead && fightLeft(p) > 0) makeGhost(p); else leaveWorld(p); }
+
 // ---------------------------------------------------------------- conexões
+function reattach(conn, p) { // voltou a tempo: assume o mesmo personagem, que continuou no mundo
+  const old = p.ws; p.ws = conn.ws; p.ghost = 0; conn.player = p; p.queue.length = 0;
+  if (old && old !== conn.ws && old.readyState === 1) { send(old, { t: 'kicked', text: 'Sua conta entrou em outro lugar.' }); try { old.close(); } catch (e) {} }
+  const c = db.chars[p.id]; EX.resendInst(p);
+  send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null, hp: p.hp ?? null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
+  sendMobs(p); EX.onEnter(p); QU.onEnter(p);
+  console.log(new Date().toISOString(), 'voltou', p.name);
+}
 function enterWorld(conn, id) {
   const c = db.chars[id]; if (!c || c.owner !== conn.acc) return send(conn.ws, { t: 'err', text: 'Personagem não encontrado.' });
+  { const same = online.get(id); if (same && same.owner === conn.acc && !same.dead) return reattach(conn, same); }
+  for (const o of online.values()) if (o.owner === conn.acc && o.id !== id && fightLeft(o) > 0 && !o.dead) return send(conn.ws, { t: 'err', text: o.name + ' ainda está no mundo, em combate. Espere ' + Math.ceil(fightLeft(o) / 1000) + ' s ou entre com ' + o.name + '.' });
   for (const o of online.values()) if (o.owner === conn.acc) { send(o.ws, { t: 'kicked', text: 'Sua conta entrou em outro lugar.' }); leaveWorld(o); try { o.ws.close(); } catch (e) {} }
   if (!MAPS[c.map]) { c.map = 'over'; c.x = MAPS.over.spawn.x; c.y = MAPS.over.spawn.y; }
   const p = { id: c.id, owner: conn.acc, name: c.name, cls: c.cls, level: c.level || 1, map: c.map, x: c.x, y: c.y, dir: c.dir || 'down', ws: conn.ws, queue: [], next: 0, adm: isAdm(conn.acc), look: c.look || null, mount: c.mount || null, nameCol: c.nameCol || null };
   p.step = stepDur(p.level); const s = freeNear(p.map, p.x, p.y, p); p.x = s.x; p.y = s.y;
   online.set(p.id, p); conn.player = p;
-  send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
+  const died = c.ghostDied || null; if (died) { delete c.ghostDied; markDirty(); }
+  send(conn.ws, { t: 'enter', you: { ...pub(p), step: p.step, save: c.save || null, died }, others: [...online.values()].filter(o => o !== p && o.map === p.map).map(pub), online: online.size });
   toMap(p.map, { t: 'join', p: pub(p) }, p); sendMobs(p); EX.onEnter(p); QU.onEnter(p);
   toAll({ t: 'count', online: online.size });
   console.log(new Date().toISOString(), 'entrou', p.name, '(' + conn.acc + ')', 'online:', online.size);
@@ -222,7 +264,8 @@ function onMessage(conn, m) {
     }
     case 'delete': { const c = db.chars[m.id]; if (c && c.owner === conn.acc && !online.has(c.id)) { delete db.chars[m.id]; markDirty(); } return send(ws, { t: 'chars', chars: charList(conn.acc) }); }
     case 'play': return enterWorld(conn, String(m.id || ''));
-    case 'logout': leaveWorld(p); conn.player = null; return send(ws, { t: 'chars', chars: charList(conn.acc) });
+    case 'logout': if (p && !p.dead && fightLeft(p) > 0) return send(ws, { t: 'nologout', text: 'Você está em combate: não dá para sair agora. Espere ' + Math.ceil(fightLeft(p) / 1000) + ' s sem lutar.' });
+      leaveWorld(p); conn.player = null; return send(ws, { t: 'chars', chars: charList(conn.acc) });
   }
   if (!p) return;
   if (EX.onMessage(p, m)) return;
@@ -239,8 +282,8 @@ function onMessage(conn, m) {
       const D = MAPS[to]; return warp(p, to, D.dock.x, D.dock.y, D.enter || ('Você chega a ' + D.name + '.'));
     }
     case 'ping': return send(ws, { t: 'pong', at: m.at });
-    case 'hit': return mobsApi.onHit(p, m);
-    case 'meff': return mobsApi.onEffect(p, m);
+    case 'hit': p.fightT = Date.now(); return mobsApi.onHit(p, m);
+    case 'meff': p.fightT = Date.now(); return mobsApi.onEffect(p, m);
     case 'knock': return mobsApi.onKnock(p, m);
     case 'loot': { const it = mobsApi.onLoot(p, m); if (it) { EX.onLooted(p, it); send(ws, { t: 'gotitem', item: it, cid: m.cid }); } return; }
     case 'state': if ('dead' in m) p.dead = !!m.dead; if ('bot' in m) p.bot = !!m.bot; EX.onState(p, m); return;
@@ -301,7 +344,7 @@ wss.on('connection', (ws, req) => {
     let m; try { m = JSON.parse(raw); } catch (e) { return; } if (!m || typeof m.t !== 'string') return;
     try { onMessage(conn, m); } catch (e) { console.error('erro na mensagem', m.t, e); }
   });
-  ws.on('close', () => { leaveWorld(conn.player); perIp.set(ip, (perIp.get(ip) || 1) - 1); });
+  ws.on('close', () => { dropConn(conn); perIp.set(ip, (perIp.get(ip) || 1) - 1); });
   ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; });
 });
 setInterval(() => { for (const ws of wss.clients) { if (!ws.isAlive) { ws.terminate(); continue; } ws.isAlive = false; ws.ping(); } }, 30000);
