@@ -813,12 +813,61 @@ function iconPost(g,K,sparkle){
   g.putImageData(im,0,0);
   if(sparkle) for(const [sx,sy] of sparkle){ g.fillStyle='#ffffff'; g.fillRect(sx,sy-1,1,3); g.fillRect(sx-1,sy,3,1); g.fillStyle='rgba(255,255,255,.6)'; g.fillRect(sx-2,sy,1,1); g.fillRect(sx+2,sy,1,1); }
 }
+
+// ---- acabamento dos ícones em 64×64: volume, chanfro, linhas internas, brilho, textura e sombra projetada
+function iconPost64(g,K,sparkle,seed){
+  const N=64, im=g.getImageData(0,0,N,N), D=im.data, n=N*N;
+  for(let i=0;i<n;i++) D[i*4+3]=D[i*4+3]>=110?255:0;
+  const op=new Uint8Array(n); for(let i=0;i<n;i++) op[i]=D[i*4+3]?1:0;
+  const at=(x,y)=>x<0||y<0||x>=N||y>=N?0:op[y*N+x];
+  // distância até a borda (para o chanfro)
+  const dist=new Uint8Array(n); for(let i=0;i<n;i++) dist[i]=op[i]?99:0;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const i=y*N+x; if(!dist[i]) continue; let d=dist[i]; if(x>0) d=Math.min(d,dist[i-1]+1); if(y>0) d=Math.min(d,dist[i-N]+1); if(x===0||y===0) d=1; dist[i]=d; }
+  for(let y=N-1;y>=0;y--) for(let x=N-1;x>=0;x--){ const i=y*N+x; if(!dist[i]) continue; let d=dist[i]; if(x<N-1) d=Math.min(d,dist[i+1]+1); if(y<N-1) d=Math.min(d,dist[i+N]+1); if(x===N-1||y===N-1) d=1; dist[i]=d; }
+  const src=new Uint8ClampedArray(D), lum=i=>(src[i*4]*0.3+src[i*4+1]*0.59+src[i*4+2]*0.11)/255;
+  let bx0=N,by0=N,bx1=0,by1=0; for(let y=0;y<N;y++) for(let x=0;x<N;x++) if(op[y*N+x]){ if(x<bx0)bx0=x; if(x>bx1)bx1=x; if(y<by0)by0=y; if(y>by1)by1=y; }
+  const span=Math.max(1,(bx1-bx0)+(by1-by0));
+  const shade=(i,k)=>{ if(k>0){ D[i*4]+= (255-D[i*4])*k; D[i*4+1]+=(255-D[i*4+1])*k; D[i*4+2]+=(255-D[i*4+2])*k; } else { D[i*4]*=1+k; D[i*4+1]*=1+k; D[i*4+2]*=1+k; } };
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const i=y*N+x; if(!op[i]) continue;
+    let nx=0, ny=0; for(let j=-2;j<=2;j++) for(let k=-2;k<=2;k++){ if(!at(x+k,y+j)){ nx+=k; ny+=j; } }   // aponta para fora
+    const len=Math.hypot(nx,ny), lit=len?(-(nx+ny)/len)*0.7071:0, d=dist[i], w=Math.max(0,1-(d-1)/3.2);
+    let k=lit*w*0.44;                                                     // chanfro: borda de cima/esquerda clara, de baixo/direita escura
+    k+=0.14-((x-bx0)+(y-by0))/span*0.30;                                  // volume geral
+    k+=(hx2(x>>1,y>>1,seed)-0.5)*0.07;                                    // textura leve
+    const L=lum(i); if(L>0.6&&lit>0.25&&d<=3) k+=0.22;                    // brilho de metal/gema
+    { // detalhe por material, reconhecido pela cor
+      const r0=src[i*4]/255, g0=src[i*4+1]/255, b0=src[i*4+2]/255, mx=Math.max(r0,g0,b0), mn=Math.min(r0,g0,b0), sat=mx?(mx-mn)/mx:0;
+      let hue=0; if(mx>mn){ hue=mx===r0?((g0-b0)/(mx-mn))%6:mx===g0?(b0-r0)/(mx-mn)+2:(r0-g0)/(mx-mn)+4; hue*=60; if(hue<0) hue+=360; }
+      const diag=(x+y)-(bx0+by0)-span*0.42;
+      if(sat<0.2&&mx>0.28){ // metal: riscos de polimento e faixa de brilho na diagonal
+        if(((x-y+seed)%9+9)%9===0) k+=0.10; if(Math.abs(diag)<3) k+=0.28; else if(Math.abs(diag)<6) k+=0.10; }
+      else if(hue>=12&&hue<=48&&sat>0.25&&mx<0.75){ // madeira e couro: veios
+        k+=Math.sin((x-y)*0.55+vnI((x+y)/7,(x-y)/7,seed)*5)*0.09; if(hx2(x,y,seed+5)<0.02) k-=0.25; }
+      else if(sat>0.32){ // tecido e cristal: trama fina
+        k+=((x+y)&1?0.04:-0.04)+(((x>>1)+(y>>1))&1?0.02:-0.02); if(mx>0.7&&Math.abs(diag)<2) k+=0.2; } }
+    // linhas internas: onde duas partes de cor bem diferente se encontram, o lado mais escuro ganha um traço
+    for(const [ax,ay] of [[1,0],[0,1],[-1,0],[0,-1]]){ const X=x+ax, Y=y+ay; if(!at(X,Y)) continue; const L2=lum(Y*N+X); if(L2-L>0.16){ k-=0.30; break; } }
+    shade(i,Math.max(-0.75,Math.min(0.7,k))); }
+  // contorno escuro, contorno suave por fora e sombra projetada para baixo/direita
+  const oc=[parseInt(K.o.slice(1,3),16),parseInt(K.o.slice(3,5),16),parseInt(K.o.slice(5,7),16)];
+  const ring=new Uint8Array(n);
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const i=y*N+x; if(op[i]) continue;
+    if(at(x-1,y)||at(x+1,y)||at(x,y-1)||at(x,y+1)||at(x-1,y-1)||at(x+1,y+1)||at(x+1,y-1)||at(x-1,y+1)){ ring[i]=1; D[i*4]=oc[0]; D[i*4+1]=oc[1]; D[i*4+2]=oc[2]; D[i*4+3]=255; } }
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const i=y*N+x; if(op[i]||ring[i]) continue;
+    if(at(x-3,y-3)||at(x-2,y-3)||at(x-3,y-2)){ D[i*4]=0; D[i*4+1]=0; D[i*4+2]=0; D[i*4+3]=80; } }
+  g.putImageData(im,0,0);
+  if(sparkle) for(const [sx0,sy0] of sparkle){ const sx=sx0*2, sy=sy0*2; g.fillStyle='#ffffff'; g.fillRect(sx,sy-3,2,8); g.fillRect(sx-3,sy,8,2); g.fillStyle='rgba(255,255,255,.55)'; g.fillRect(sx-5,sy,2,2); g.fillRect(sx+5,sy,2,2); g.fillRect(sx,sy-5,2,2); g.fillRect(sx,sy+5,2,2); }
+}
+const hx2=(x,y,s)=>{ let h=(Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(s|0,982451653))|0; h=Math.imul(h^(h>>>13),1274126177); return ((h^(h>>>16))>>>0)/4294967296; };
+function vnI(x,y,s){ const xi=Math.floor(x), yi=Math.floor(y), fx=x-xi, fy=y-yi, a=hx2(xi,yi,s), b=hx2(xi+1,yi,s), c=hx2(xi,yi+1,s), d=hx2(xi+1,yi+1,s); return a+(b-a)*fx+(c-a)*fy+(a-b-c+d)*fx*fy; }
+// ícones antigos (32×32) viram 64×64 sem borrar, para todos terem o mesmo tamanho
+function icon2x(c){ if(c.width>=64) return c.toDataURL(); const b=document.createElement('canvas'); b.width=b.height=64; const g=b.getContext('2d'); g.imageSmoothingEnabled=false; g.drawImage(c,0,0,64,64); return b.toDataURL(); }
 const iconCache2={};
 function iconURL2(id){
   if(iconCache2[id]) return iconCache2[id];
   const d=ITEMS[id], rg=itemRegion(id), K=KIT[rg], h=hashStr(id), rn=mulberry32(h), v=h%6, lv=d.lvl||1, hi=lv>=60||d.sell>=5000;
   const TR=d.set?d.look:K.a[1], L=d.set?(K.motif==='stitch'?K.l[1]:K.motif==='frost'?K.c[1]:K.m[1]):(d.look||K.m[1]);
-  const c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d');
+  const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d'); g.setTransform(2,0,0,2,0,0);
   const r=(col,x,y,w,hh)=>{ g.fillStyle=col; g.fillRect(x,y,w,hh); };
   const P=(col,pts)=>{ g.fillStyle=col; g.beginPath(); g.moveTo(pts[0],pts[1]); for(let i=2;i<pts.length;i+=2) g.lineTo(pts[i],pts[i+1]); g.closePath(); g.fill(); };
   const ln=(col,x0,y0,x1,y1,w=2)=>{ g.strokeStyle=col; g.lineWidth=w; g.lineCap='round'; g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke(); };
@@ -986,7 +1035,7 @@ function iconURL2(id){
   const known=['sword','rune','dagger','axe','club','hammer','bow','wand','staff','quarter','fist','armor','robe','helmet','legs','boots','shield','book','quiver','ring','amulet','bag','potion','arrow','tail','fang','pelt','silk','wing','bone','dust','tusk','pearl','prism'];
   if(!known.includes(kind)){ // ícones desenhados à mão no formato antigo: ampliados para 32×32 com o mesmo acabamento
     g.imageSmoothingEnabled=false; g.drawImage(iconCanvasOld(id),0,0,24,24,2,2,28,28); spark=[[25,5]]; }
-  iconPost(g,K,spark);
+  g.setTransform(1,0,0,1,0,0); iconPost64(g,K,spark,h);
   return iconCache2[id]=c.toDataURL();
 }
 function iconURL(id){ return ITEMS[id]?.tome ? tomeIconURL(id) : ITEMS[id]?.chest ? chestIconURL(id) : iconURL2(id); }
