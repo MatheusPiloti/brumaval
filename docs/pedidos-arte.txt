@@ -4,7 +4,7 @@ Como usar:
 1. Copie o pedido do bicho que vai fazer (do título até a linha de traços).
 2. No ChatGPT, anexe a imagem do rato que você já gerou (modelo de estilo) e cole o pedido.
 3. Se a folha vier com o bicho diferente em cada quadro, peça de novo ou peça só um quadro bom, de lado, virado para a direita.
-4. Mande a imagem para o Claude na conversa ou salve na pasta "Brumaval Sprites" do Google Drive.
+4. Baixe só a folha (o arquivo _folha.png) e mande para o Claude na conversa ou salve na pasta "Brumaval Sprites" do Google Drive.
 
 Já pronto: Rato.
 
@@ -138,8 +138,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. queen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. queen_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: queen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -174,8 +173,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. matriarch_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. matriarch_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: matriarch_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -210,8 +208,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. usurper_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. usurper_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: usurper_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -246,8 +243,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. boss_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. boss_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: boss_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -282,8 +278,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. fairyqueen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. fairyqueen_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: fairyqueen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -318,8 +313,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. elderfaun_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. elderfaun_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: elderfaun_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -354,8 +348,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. oakking_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. oakking_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: oakking_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -390,8 +383,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. forgemaster_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. forgemaster_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: forgemaster_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -426,8 +418,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. colosso_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. colosso_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: colosso_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -462,8 +453,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. magmaheart_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. magmaheart_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: magmaheart_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -498,8 +488,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. ashwidow_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. ashwidow_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: ashwidow_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -534,8 +523,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. walrusking_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. walrusking_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: walrusking_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -570,8 +558,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. frozencaptain_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. frozencaptain_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: frozencaptain_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -606,8 +593,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. pyraxis_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. pyraxis_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: pyraxis_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -642,8 +628,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. wyrmmother_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. wyrmmother_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: wyrmmother_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -678,8 +663,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. frostqueen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. frostqueen_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: frostqueen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -714,8 +698,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. ignivar_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. ignivar_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: ignivar_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -750,8 +733,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. aurorath_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. aurorath_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: aurorath_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -786,8 +768,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. crabking_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. crabking_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: crabking_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -822,8 +803,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. piratequeen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. piratequeen_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: piratequeen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -858,8 +838,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. tidepriest_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. tidepriest_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: tidepriest_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -894,8 +873,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. trencheye_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. trencheye_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: trencheye_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -930,8 +908,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado
 Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. leviathan_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar.
-2. leviathan_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: leviathan_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -969,8 +946,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. cobra_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. cobra_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: cobra_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1005,8 +981,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. wolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. wolf_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: wolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1041,8 +1016,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. spiderling_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. spiderling_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: spiderling_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1077,8 +1051,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. spider_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. spider_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: spider_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1113,8 +1086,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. weaver_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. weaver_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: weaver_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1149,8 +1121,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. bandit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. bandit_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: bandit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1185,8 +1156,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. bear_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. bear_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: bear_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1221,8 +1191,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. direwolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. direwolf_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: direwolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1257,8 +1226,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. wisp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. wisp_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: wisp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1293,8 +1261,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. bat_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. bat_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: bat_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1329,8 +1296,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. guarddog_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. guarddog_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: guarddog_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1365,8 +1331,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. skeleton_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. skeleton_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: skeleton_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1401,8 +1366,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. archer_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. archer_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: archer_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1437,8 +1401,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. knight_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. knight_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: knight_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1473,8 +1436,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. ghoul_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. ghoul_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: ghoul_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1512,8 +1474,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. hopshroom_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. hopshroom_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: hopshroom_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1548,8 +1509,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. crystalstag_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. crystalstag_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: crystalstag_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1584,8 +1544,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. gnomebandit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. gnomebandit_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: gnomebandit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1620,8 +1579,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. pixie_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. pixie_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: pixie_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1656,8 +1614,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. glowmoth_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. glowmoth_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: glowmoth_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1692,8 +1649,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. faun_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. faun_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: faun_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1728,8 +1684,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. faunpiper_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. faunpiper_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: faunpiper_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1764,8 +1719,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. treant_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. treant_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: treant_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1800,8 +1754,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. darkdryad_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. darkdryad_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: darkdryad_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1836,8 +1789,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. shadowfairy_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. shadowfairy_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: shadowfairy_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1872,8 +1824,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. rottreant_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. rottreant_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: rottreant_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1911,8 +1862,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. hellhound_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. hellhound_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: hellhound_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1947,8 +1897,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. firescorp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. firescorp_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: firescorp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -1983,8 +1932,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. imp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. imp_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: imp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2019,8 +1967,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. pyroimp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. pyroimp_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: pyroimp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2055,8 +2002,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. overseer_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. overseer_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: overseer_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2091,8 +2037,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. salamander_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. salamander_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: salamander_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2127,8 +2072,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. cinderbat_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. cinderbat_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: cinderbat_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2163,8 +2107,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. magmael_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. magmael_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: magmael_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2199,8 +2142,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. charskel_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. charskel_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: charskel_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2235,8 +2177,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. emberwraith_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. emberwraith_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: emberwraith_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2271,8 +2212,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. ashghoul_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. ashghoul_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: ashghoul_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2307,8 +2247,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. dragonling_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. dragonling_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: dragonling_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2343,8 +2282,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. cultist_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. cultist_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: cultist_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2379,8 +2317,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. youngdragon_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. youngdragon_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: youngdragon_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2415,8 +2352,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. lavadrake_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. lavadrake_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: lavadrake_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2451,8 +2387,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. obsgolem_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. obsgolem_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: obsgolem_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2487,8 +2422,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. flamecaller_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. flamecaller_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: flamecaller_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2526,8 +2460,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. frostwolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. frostwolf_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: frostwolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2562,8 +2495,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. walrus_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. walrus_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: walrus_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2598,8 +2530,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. yeti_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. yeti_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: yeti_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2634,8 +2565,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. icewraith_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. icewraith_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: icewraith_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2670,8 +2600,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. drowned_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. drowned_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: drowned_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2706,8 +2635,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. frostserpent_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. frostserpent_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: frostserpent_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2742,8 +2670,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. icegiant_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. icegiant_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: icegiant_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2778,8 +2705,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. auroraspirit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. auroraspirit_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: auroraspirit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2817,8 +2743,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. giantcrab_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. giantcrab_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: giantcrab_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2853,8 +2778,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. eel_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. eel_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: eel_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2889,8 +2813,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. jelly_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. jelly_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: jelly_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2925,8 +2848,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. pirate_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. pirate_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: pirate_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2961,8 +2883,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. fishpriest_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. fishpriest_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: fishpriest_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -2997,8 +2918,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. shark_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. shark_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: shark_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -3033,8 +2953,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. angler_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. angler_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: angler_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -3069,8 +2988,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. abyssal_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. abyssal_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: abyssal_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
@@ -3105,8 +3023,7 @@ ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, 
 Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
 
 ENTREGA
-1. tentacle_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar.
-2. tentacle_preview.png — a mesma folha aumentada 4x (só para eu ver melhor).
+Um arquivo só: tentacle_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
 Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
 
 ------------------------------------------------------------
