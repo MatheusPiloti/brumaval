@@ -4817,18 +4817,176 @@ function drawWallEdges(m,x0,y0,x1,y1){ const px=player.x, py=player.y; ctx.save(
     if(S){ ctx.moveTo(sx+1,sy+T-1); ctx.lineTo(sx+T-1,sy+T-1); } if(N){ ctx.moveTo(sx+1,sy+1); ctx.lineTo(sx+T-1,sy+1); }
     if(E){ ctx.moveTo(sx+T-1,sy+1); ctx.lineTo(sx+T-1,sy+T-1); } if(Wd){ ctx.moveTo(sx+1,sy+1); ctx.lineTo(sx+1,sy+T-1); } ctx.stroke(); }
   ctx.restore(); }
+// ============================================================ chão pintado por pedaços (16×16 quadrados), sem repetição e com bordas orgânicas
+// Paletas em docs/arte.md. Colisão, caminhos e monstros continuam pelo quadrado; só o desenho muda.
+const CHK=16, CPX=CHK*T, chunkCache=new Map();
+const gH=(x,y,s)=>{ let h=(Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(s,982451653))|0; h=Math.imul(h^(h>>>13),1274126177); return ((h^(h>>>16))>>>0)/4294967296; };
+function vn(x,y,s){ const xi=Math.floor(x), yi=Math.floor(y), fx=x-xi, fy=y-yi, a=gH(xi,yi,s), b=gH(xi+1,yi,s), c=gH(xi,yi+1,s), d=gH(xi+1,yi+1,s), u=fx*fx*(3-2*fx), v=fy*fy*(3-2*fy); return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v; }
+const fbm=(x,y,s)=>vn(x,y,s)*0.62+vn(x*2.03,y*2.03,s+7)*0.28+vn(x*4.1,y*4.1,s+13)*0.10;
+const hexMemo={}, hexRGB=h=>hexMemo[h]||(hexMemo[h]=[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]);
+const palOf=a=>a.map(hexRGB);
+const cpick=(pal,v)=>pal[Math.max(0,Math.min(pal.length-1,Math.floor(v*pal.length)))];
+// ---- paletas (docs/arte.md)
+const PAL={
+  grass:palOf(['#2f5f2a','#3f7a34','#4f8f3c','#62a548']), dirt:palOf(['#5e4430','#6f5234','#8b6a43','#a47f52']), sand:palOf(['#b99a62','#c9ad74','#d8bf86','#e6cf9a']),
+  wDeep:hexRGB('#1d4a74'), wMid:hexRGB('#2b6596'), wShal:hexRGB('#4f93bd'), foam:hexRGB('#dff3f6'),
+  swamp:palOf(['#2e3a24','#3a4a2a','#46582f','#526638']), swampW:palOf(['#2a3a2c','#30443a','#3a5040']),
+  stone:palOf(['#6f6a60','#7f796d','#8f897b','#9d978a']), mortar:hexRGB('#4e4a42'),
+  wood:palOf(['#56391f','#664527','#76512e','#845d35']),
+  cave:palOf(['#2e2621','#3a312a','#463c33','#52463c']), flag:palOf(['#3c3a37','#4a4744','#56524e','#605c57']), dirtD:palOf(['#2a1d14','#33241a','#3e2c1f','#48331f']),
+  web:palOf(['#24211d','#2c2925','#34302b','#3c3731']),
+  ash:palOf(['#3e322c','#4e4038','#5e5048','#6e5e54']), ashp:palOf(['#5a4e48','#6a5e56','#7a6e66','#8a7e74']), basalt:palOf(['#201c1b','#2a2625','#34302e','#3e3836']),
+  lava:palOf(['#7a1a08','#c0380a','#ff6a1a','#ffb02a','#ffe07a']), crust:hexRGB('#1e1412'),
+  moss:palOf(['#245a3e','#2c6646','#3a7f52','#4f9a62','#67b273']), fstone:palOf(['#5e6864','#6a7470','#7e8a84','#8e9a94']), rot:palOf(['#221e26','#2c2630','#362e3c','#40364a']),
+  snow:palOf(['#b6c6d6','#c8d6e2','#d8e4ee','#e8f0f6','#f8fbfd']), snowp:palOf(['#968a76','#a89c88','#bcb19c','#cfc6b4']), ice:palOf(['#7ab4d8','#8cc2e2','#9ccbe6','#b4d8ee','#c4e2f2']),
+  sea:palOf(['#98845a','#a89466','#b8a478','#c8b88a']), nacre:palOf(['#bdb2ca','#cfc6da','#ddd6e6','#ebe6f2']), abyss:palOf(['#141e26','#1c2832','#26343f','#2e3e4a']),
+  wIce:[hexRGB('#1d4a6e'),hexRGB('#2f6e96'),hexRGB('#5a9cc4')], wFae:[hexRGB('#16485a'),hexRGB('#1c5868'),hexRGB('#2d7a86')],
+};
+// ---- material de cada quadrado (o que está embaixo de árvores e paredes também conta)
+const MATOF={}, BUILT=new Set(['stone','wood','flag','basalt','fstone','nacre']), LIQ=new Set(['water','lava','abyss']), LEAFY=new Set(['grass','moss','snow','swamp']);
+for(const [mat,list] of Object.entries({grass:[G,FLOW,HOLE], dirt:[PATH,DOWN], sand:[SAND], swamp:[SWAMP,NHOLE], water:[WATER,BRIDGE,BOAT], stone:[STONE], wood:[WOOD,DOOR],
+  cave:[CAVE,BONES,UP], flag:[CFL,CARPET,SUP,SDOWN,GATE], dirtD:[DIRT,SHROOM], web:[WEBF,EGGS], ash:[ASH,EMBER,ENTR,CRACK], lava:[LAVA], ashp:[ASHPATH], basalt:[BASALT],
+  moss:[MOSS,FFLOW,FSHROOM,RING], fstone:[FSTONE], rot:[ROTF], snow:[SNOW,DRIFT,IENT], snowp:[SNOWP], ice:[ICEF], sea:[SANDF,KELP,BUBBLE,SENT], nacre:[NACRE], abyss:[ABYSS]})) for(const t of list) MATOF[t]=mat;
+const matAt=(m,x,y)=>{ let t=tileAt(m,x,y); if(TALL.has(t)) t=BASE_OF[t]; return MATOF[t]||'cave'; };
+// quadrados com desenho próprio por cima do chão (escadas, portas, buracos, ponte, barco...)
+const OVER_SOLID=new Set([DOWN,UP,SUP,SDOWN,GATE,DOOR,BRIDGE,BOAT,CARPET]), OVER_SOFT=new Set([HOLE,NHOLE,ENTR,IENT,SENT,RING,BUBBLE]);
+
+// ---- textura de cada material num pixel do mundo (x,y); devolve [r,g,b]
+function texel(mat,x,y,M){
+  switch(mat){
+    case 'grass': { const v=fbm(x/46,y/46,1)*0.8+gH(x>>1,y>>1,3)*0.2; let c=cpick(PAL.grass,v); const b=gH(x,(y+2)>>2,5); if(b<0.03) c=PAL.grass[Math.min(3,PAL.grass.indexOf(c)+1)]; else if(b>0.985) c=PAL.grass[0]; return c; }
+    case 'dirt': { const v=fbm(x/30,y/30,11)*0.7+gH(x>>1,y>>1,12)*0.3; let c=cpick(PAL.dirt,v); const p=gH(x>>1,y>>1,14); if(p<0.02) c=PAL.dirt[3]; else if(p<0.035) c=PAL.dirt[0]; return c; }
+    case 'sand': { const v=fbm(x/34,y/34,21)*0.6+0.25*(0.5+0.5*Math.sin(x*0.09+y*0.31+fbm(x/20,y/20,22)*5))+gH(x>>1,y>>1,23)*0.15; return cpick(PAL.sand,v); }
+    case 'swamp': { const f=fbm(x/36,y/36,31); if(f>0.68) return f<0.70?PAL.swamp[0]:cpick(PAL.swampW,vn(x/6,y/3,32)); let c=cpick(PAL.swamp,f*0.75+gH(x>>1,y>>1,33)*0.25); if(gH(x,y>>2,34)<0.03) c=PAL.swamp[3]; return c; }
+    case 'stone': return stones(x,y,PAL.stone,PAL.mortar,11,41);
+    case 'fstone': return stones(x,y,PAL.fstone,hexRGB('#3e5a44'),13,45);
+    case 'nacre': return cobble(x,y,PAL.nacre,hexRGB('#9a90aa'),16,16,47);
+    case 'basalt': return cobble(x,y,PAL.basalt,hexRGB('#141110'),16,12,49);
+    case 'flag': return cobble(x,y,PAL.flag,hexRGB('#2a2826'),16,16,51);
+    case 'wood': { const row=Math.floor(y/8), off=Math.floor(gH(row,0,61)*32), lx=(x+off)%32, ly=y%8; if(ly===0) return hexRGB('#3a2614'); if(lx===0) return hexRGB('#45301a');
+      const grain=0.5+0.5*Math.sin((x+off)*0.35+Math.sin(y*0.9+row)*2); return cpick(PAL.wood, 0.25+gH(Math.floor((x+off)/32),row,62)*0.45+grain*0.2-(ly===7?0.25:0)); }
+    case 'cave': { const v=fbm(x/26,y/26,71)*0.7+gH(x>>1,y>>1,72)*0.3; let c=cpick(PAL.cave,v); const p=gH(x>>1,y>>1,73); if(p<0.018) c=PAL.cave[3]; return c; }
+    case 'dirtD': return cpick(PAL.dirtD, fbm(x/24,y/24,81)*0.7+gH(x>>1,y>>1,82)*0.3);
+    case 'web': { let c=cpick(PAL.web, fbm(x/28,y/28,91)*0.75+gH(x>>1,y>>1,92)*0.25); return c; }
+    case 'ash': { const v=fbm(x/34,y/34,101)*0.7+gH(x>>1,y>>1,102)*0.3; let c=cpick(PAL.ash,v); const p=gH(x,y,103); if(p<0.004) c=hexRGB('#c0502a'); else if(p<0.02) c=PAL.ash[0]; return c; }
+    case 'ashp': return cpick(PAL.ashp, fbm(x/22,y/22,111)*0.6+gH(x>>1,y>>1,112)*0.4);
+    case 'lava': { const w=fbm(x/22,y/22,121), fl=0.5+0.5*Math.sin(x*0.05+y*0.12+w*7); let v=w*0.55+fl*0.35+vn(x/5,y/5,122)*0.1; if(Math.abs(fl-0.5)<0.035&&w>0.45) v=0.98; return cpick(PAL.lava, v); }
+    case 'moss': { const v=fbm(x/40,y/40,131)*0.72+gH(x>>1,y>>1,132)*0.28; let c=cpick(PAL.moss,v); if(gH(x,y>>2,133)<0.03) c=PAL.moss[4]; if(gH(x,y,134)<0.0025) c=hexRGB('#c8f0ff'); return c; }
+    case 'rot': return cpick(PAL.rot, fbm(x/30,y/30,141)*0.7+gH(x>>1,y>>1,142)*0.3);
+    case 'snow': { const v=fbm(x/52,y/52,151)*0.8+gH(x>>1,y>>1,152)*0.2; let c=cpick(PAL.snow,0.2+v*0.8); if(gH(x,y,153)<0.003) c=hexRGB('#ffffff'); return c; }
+    case 'snowp': { const f=fbm(x/26,y/26,161); if(f>0.62) return cpick(PAL.snow,0.5+gH(x>>1,y>>1,162)*0.5); return cpick(PAL.snowp, f*0.7+gH(x>>1,y>>1,163)*0.3); }
+    case 'ice': { const r=Math.abs(vn(x/14,y/14,171)-0.5); let c=cpick(PAL.ice, 0.35+fbm(x/40,y/40,172)*0.6); if(r<0.02) c=hexRGB('#e8f6fc'); if(((x+y)%23===0)&&vn(x/30,y/30,173)>0.6) c=hexRGB('#f4fbff'); return c; }
+    case 'sea': { const v=fbm(x/34,y/34,181)*0.6+0.25*(0.5+0.5*Math.sin(x*0.07+y*0.27+fbm(x/18,y/18,182)*4))+gH(x>>1,y>>1,183)*0.15; let c=cpick(PAL.sea,v); if(gH(x>>1,y>>1,184)<0.006) c=hexRGB('#f0e8e0'); return c; }
+    case 'abyss': return cpick(PAL.abyss, fbm(x/30,y/30,191)*0.75+gH(x>>1,y>>1,192)*0.25);
+    case 'water': { const reg=M.region||M.id; const W=reg==='ice'?PAL.wIce:reg==='fae'?PAL.wFae:[PAL.wDeep,PAL.wMid,PAL.wShal]; return W[1]; }
+  }
+  return [60,50,44];
+}
+// pedras de calçamento em coordenadas do mundo: tamanhos e tons variados, rejunte escuro, luz em cima/esquerda
+// pedras irregulares (calçamento de verdade): cada pedra é a célula mais próxima de um ponto sorteado; rejunte onde duas células quase empatam
+function stones(x,y,pal,mort,cell,s){ const gx=Math.floor(x/cell), gy=Math.floor(y/cell); let d1=1e9,d2=1e9,id=0,ox=0,oy=0;
+  for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++){ const X=gx+i, Y=gy+j, px=(X+0.15+0.7*gH(X,Y,s))*cell, py=(Y+0.15+0.7*gH(X,Y,s+1))*cell, d=Math.hypot(x-px,y-py);
+    if(d<d1){ d2=d1; d1=d; id=gH(X,Y,s+2); ox=x-px; oy=y-py; } else if(d<d2) d2=d; }
+  if(d2-d1<1.5) return mort; let v=0.2+id*0.55+(fbm(x/14,y/14,s+3)-0.5)*0.25-(ox+oy)/cell*0.28; if(d2-d1<3) v+= (ox+oy<0?0.18:-0.2); if(gH(x,y,s+4)<0.01) v-=0.3; return cpick(pal,v); }
+function cobble(x,y,pal,mort,w,h,s){ const row=Math.floor(y/h), off=Math.floor(gH(row,0,s)*w), cx=Math.floor((x+off)/w), lx=(x+off)-cx*w, ly=y-row*h;
+  if(lx===0||ly===0) return mort; const base=gH(cx,row,s+1); let v=0.15+base*0.6+(fbm(x/18,y/18,s+2)-0.5)*0.3;
+  if(ly===1||lx===1) v+=0.25; else if(ly===h-1||lx===w-1) v-=0.22; if(gH(x,y,s+3)<0.01) v-=0.3; return cpick(pal,v); }
+const cmix=(a,b,k)=>[a[0]+(b[0]-a[0])*k, a[1]+(b[1]-a[1])*k, a[2]+(b[2]-a[2])*k];
+const cmul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k];
+
+function* chunkGen(M, cx, cy){
+  const cv2=document.createElement('canvas'); cv2.width=CPX; cv2.height=CPX; const g=cv2.getContext('2d'); const img=g.createImageData(CPX,CPX), D=img.data;
+  const X0=cx*CPX, Y0=cy*CPX, region=M.region||M.id;
+  const Wpal=region==='ice'?PAL.wIce:region==='fae'?PAL.wFae:[PAL.wDeep,PAL.wMid,PAL.wShal];
+  // material de cada quadrado do pedaço, com 1 quadrado de margem (a borda ondulada e a profundidade da água olham no máximo 24 px ao lado)
+  const GW=CHK+2, grid=new Array(GW*GW), uni=new Uint8Array(CHK*CHK);
+  for(let j=0;j<GW;j++) for(let i=0;i<GW;i++) grid[j*GW+i]=matAt(M, cx*CHK+i-1, cy*CHK+j-1);
+  for(let j=0;j<CHK;j++) for(let i=0;i<CHK;i++){ const m0=grid[(j+1)*GW+i+1]; let u=1; for(let dj=0;dj<3&&u;dj++) for(let di=0;di<3;di++) if(grid[(j+dj)*GW+i+di]!==m0){ u=0; break; } uni[j*CHK+i]=u; }
+  const mt=(x,y)=>grid[(Math.floor((y-Y0)/T)+1)*GW+Math.floor((x-X0)/T)+1];
+  for(let py=0;py<CPX;py++) for(let px=0;px<CPX;px++){
+    const x=X0+px, y=Y0+py, k=(py>>5)*CHK+(px>>5), i4=(py*CPX+px)*4; let mat=grid[((py>>5)+1)*GW+(px>>5)+1], c;
+    if(uni[k]){ // quadrado cercado do mesmo chão: só a textura
+      if(mat==='water'){ c=Wpal[0]; if(vn(x/7,y/2.6,503)>0.8) c=cmix(c,PAL.foam,0.25); } else c=texel(mat,x,y,M);
+      D[i4]=c[0]; D[i4+1]=c[1]; D[i4+2]=c[2]; D[i4+3]=255; continue; }
+    let wx=x, wy=y;
+    if(!BUILT.has(mat)){ // borda orgânica: olha um pouco ao lado, guiado por ruído
+      wx=x+(vn(x/13,y/13,501)-0.5)*16; wy=y+(vn(x/13,y/13,502)-0.5)*16; const m2=mt(wx,wy); if(!BUILT.has(m2)) mat=m2; else { wx=x; wy=y; } }
+    const nE=mt(wx+3,wy), nW=mt(wx-3,wy), nS=mt(wx,wy+3), nN=mt(wx,wy-3);
+    const edge3=nE!==mat||nW!==mat||nS!==mat||nN!==mat;
+    if(mat==='water'){ // fundo: mais claro na margem, mais escuro no meio
+      let d=1; for(const r of [5,10,16]){ if(mt(wx+r,wy)!=='water'||mt(wx-r,wy)!=='water'||mt(wx,wy+r)!=='water'||mt(wx,wy-r)!=='water'){ d=r/16; break; } }
+      c=d<0.4?Wpal[2]:d<0.7?Wpal[1]:Wpal[0]; if(vn(x/7,y/2.6,503)>0.8) c=cmix(c,PAL.foam,0.25);
+      if(edge3) c=cmix(c,PAL.foam,0.75); }
+    else { c=texel(mat,x,y,M);
+      if(mat==='lava'){ if(edge3) c=PAL.crust; else if(mt(wx+6,wy)!=='lava'||mt(wx-6,wy)!=='lava'||mt(wx,wy+6)!=='lava'||mt(wx,wy-6)!=='lava') c=cmix(c,PAL.lava[1],0.5); }
+      else if(mat!=='abyss'&&edge3){ const other=nE!==mat?nE:nW!==mat?nW:nS!==mat?nS:nN;
+        if(LIQ.has(other)) c=other==='lava'?cmix(c,PAL.crust,0.6):cmul(c,0.78);   // margem molhada ou queimada
+        else if(BUILT.has(mat)&&!BUILT.has(other)) c=cmul(c,0.8);                   // beirada da construção
+        else if(LEAFY.has(mat)&&!LEAFY.has(other)) c=cmul(c,0.8); } }              // grama faz um contorno escuro sobre terra e areia
+    D[i4]=c[0]; D[i4+1]=c[1]; D[i4+2]=c[2]; D[i4+3]=255;
+    if(px===CPX-1&&(py&15)===15) yield;
+  }
+  g.putImageData(img,0,0);
+  // decoração dos quadrados especiais e com enfeites
+  for(let ty=0;ty<CHK;ty++) for(let tx=0;tx<CHK;tx++){ const X=cx*CHK+tx, Y=cy*CHK+ty; if(X<0||Y<0||X>=M.W||Y>=M.H) continue; const t=M.t[Y*M.W+X];
+    const sx=tx*T, sy=ty*T, v=hash2(X,Y)&3;
+    if(OVER_SOLID.has(t)) g.drawImage(tileImgs[t][v],sx,sy);
+    else if(OVER_SOFT.has(t)){ const tmp=softTile(t,v); g.drawImage(tmp,sx,sy); }
+    else decoTile(g,t,sx,sy,X,Y); }
+  return cv2;
+}
+// quadrados especiais "macios" (buracos, entradas): bordas desfocadas para casar com o chão novo
+const softCache={};
+function softTile(t,v){ const k=t+'_'+v; if(softCache[k]) return softCache[k]; const c=mk(32,32), g=c.getContext('2d'); g.drawImage(tileImgs[t][v],0,0);
+  g.globalCompositeOperation='destination-in'; const gr=g.createRadialGradient(16,17,8,16,17,17); gr.addColorStop(0,'rgba(0,0,0,1)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(0,0,32,32); return softCache[k]=c; }
+// enfeites espalhados (sem grade): flores, cogumelos, ossos, algas, brasas, rachaduras, teias, cristais
+function decoTile(g,t,sx,sy,X,Y){ const rn=mulberry32(hash2(X*3+1,Y*7+5)); const R2=(a,b)=>a+rn()*(b-a);
+  const px=(col,x,y,w=1,h=1)=>{ g.fillStyle=col; g.fillRect(Math.round(x),Math.round(y),w,h); };
+  switch(t){
+    case FLOW: case FFLOW: { const cols=t===FLOW?['#e8d26a','#e07a8a','#f2efe6','#9ab8f0']:['#ff9af0','#9ae0ff','#fff0a0','#c8a0ff'], n=3+(rn()*3|0);
+      for(let i=0;i<n;i++){ const x=sx+R2(3,28), y=sy+R2(4,28), col=cols[(rn()*cols.length)|0]; px(t===FLOW?'#2f5f2a':'#245a3e',x,y+1,1,2); px(col,x-1,y,3,1); px(col,x,y-1,1,3); px('#fff8e0',x,y); } break; }
+    case FSHROOM: case SHROOM: { const glow=t===SHROOM?'#7af0c0':['#9ae0ff','#ff9af0','#c8a0ff'][(rn()*3)|0]; for(let i=0;i<2+(rn()*2|0);i++){ const x=sx+R2(4,26), y=sy+R2(8,26);
+      g.fillStyle='rgba(255,255,255,.08)'; g.beginPath(); g.arc(x+2,y+1,5,0,7); g.fill(); px('#e8e0d0',x+1,y+2,2,3); px(glow,x,y,4,2); px('#ffffff',x+1,y,1,1); } break; }
+    case BONES: { const x=sx+R2(6,18), y=sy+R2(8,20); px('#d8d0bc',x,y,9,2); px('#d8d0bc',x-1,y-1,2,4); px('#d8d0bc',x+8,y-1,2,4); if(rn()<0.6){ const a=sx+R2(6,22), b=sy+R2(4,24); px('#cfc6ae',a,b,5,4); px('#3a312a',a+1,b+1,1,1); px('#3a312a',a+3,b+1,1,1); } break; }
+    case KELP: { g.lineCap='round'; for(let i=0;i<3;i++){ const x=sx+R2(4,28); g.strokeStyle=['#2e6a40','#3a7a4a','#24603c'][i]; g.lineWidth=2; g.beginPath(); g.moveTo(x,sy+31); g.quadraticCurveTo(x-R2(2,6),sy+20,x+R2(-2,2),sy+R2(6,14)); g.stroke(); } break; }
+    case DRIFT: { for(let i=0;i<2;i++){ const x=sx+R2(4,24), y=sy+R2(10,26); g.fillStyle='#f8fbfd'; g.beginPath(); g.ellipse(x,y,R2(5,8),R2(2,3),0,0,7); g.fill(); g.fillStyle='#c8d6e2'; g.fillRect(x-4,y+2,8,1); }
+      const x=sx+R2(8,24), y=sy+R2(10,22); g.fillStyle='#9ad0f0'; g.beginPath(); g.moveTo(x,y+7); g.lineTo(x+2,y-2); g.lineTo(x+4,y+7); g.fill(); px('#e8f6fc',x+2,y,1,4); break; }
+    case EMBER: { for(let i=0;i<4;i++){ const x=sx+R2(3,28), y=sy+R2(3,28); g.fillStyle='rgba(255,120,40,.25)'; g.beginPath(); g.arc(x,y,3,0,7); g.fill(); px(['#ff5a1a','#ffb02a','#ffe07a'][i%3],x,y,2,2); } break; }
+    case CRACK: { g.strokeStyle='#1e1412'; g.lineWidth=2; g.beginPath(); let x=sx+R2(2,30), y=sy+R2(2,30); g.moveTo(x,y); for(let i=0;i<4;i++){ x+=R2(-9,9); y+=R2(-9,9); g.lineTo(x,y); } g.stroke(); g.strokeStyle='#ff7a2a'; g.lineWidth=1; g.stroke(); break; }
+    case WEBF: case EGGS: { g.strokeStyle='rgba(230,226,214,.28)'; g.lineWidth=1; g.beginPath(); const cx=sx+R2(8,24), cy=sy+R2(8,24); for(let a=0;a<6;a++){ g.moveTo(cx,cy); g.lineTo(cx+Math.cos(a*1.05)*R2(10,18),cy+Math.sin(a*1.05)*R2(10,18)); } g.stroke();
+      if(t===EGGS) for(const [ox,oy] of [[-3,-1],[2,1],[-1,3]]){ g.fillStyle='#e8e0c8'; g.beginPath(); g.ellipse(cx+ox,cy+oy,2.6,3.2,0,0,7); g.fill(); px('#ffffff',cx+ox-1,cy+oy-2); } break; }
+  }
+}
+function renderChunk(M,cx,cy){ const it=chunkGen(M,cx,cy); let r; do r=it.next(); while(!r.done); return r.value; }
+// pedaços prontos ficam guardados (os 60 mais recentes); os que faltam são feitos aos poucos, alguns milissegundos por quadro,
+// primeiro os que estão na tela e depois os vizinhos, para o chão já estar pronto quando o jogador chegar
+const chunkJobs=new Map();
+function chunkReady(m,k){ const e=chunkCache.get(k); if(e&&e.t===m.t){ chunkCache.delete(k); chunkCache.set(k,e); return e.c; } return null; }
+function workChunks(m,want,ms){ const t0=performance.now();
+  for(const [k,cx,cy] of want){ if(chunkReady(m,k)) continue; let j=chunkJobs.get(k); if(!j||j.t!==m.t){ j={it:chunkGen(m,cx,cy),t:m.t}; chunkJobs.set(k,j); }
+    while(performance.now()-t0<ms){ const r=j.it.next(); if(r.done){ chunkJobs.delete(k); chunkCache.set(k,{c:r.value,t:m.t}); while(chunkCache.size>60) chunkCache.delete(chunkCache.keys().next().value); break; } }
+    if(performance.now()-t0>=ms) return; } }
+function drawGround(m,x0,y0,x1,y1){
+  const c0=Math.floor(x0/CHK), c1=Math.floor(x1/CHK), r0=Math.floor(y0/CHK), r1=Math.floor(y1/CHK), vis=[], ring=[];
+  for(let cy=r0-1;cy<=r1+1;cy++) for(let cx=c0-1;cx<=c1+1;cx++){ if(cx<0||cy<0||cx*CHK>=m.W||cy*CHK>=m.H) continue; (cy<r0||cy>r1||cx<c0||cx>c1?ring:vis).push([m.id+':'+cx+':'+cy,cx,cy]); }
+  for(const k of chunkJobs.keys()) if(!k.startsWith(m.id+':')) chunkJobs.delete(k);
+  const missing=vis.some(([k])=>!chunkReady(m,k)); workChunks(m, missing?vis:ring, missing?14:5);
+  for(let cy=r0;cy<=r1;cy++) for(let cx=c0;cx<=c1;cx++){ const c=chunkReady(m,m.id+':'+cx+':'+cy);
+    if(c){ ctx.drawImage(c, cx*CPX-cam.x, cy*CPX-cam.y); continue; }
+    for(let y=Math.max(y0,cy*CHK);y<=Math.min(y1,cy*CHK+CHK-1);y++) for(let x=Math.max(x0,cx*CHK);x<=Math.min(x1,cx*CHK+CHK-1);x++){ let t=tileAt(m,x,y); if(TALL.has(t)) t=BASE_OF[t]; const arr=tileImgs[t]; if(arr) ctx.drawImage(arr[hash2(x,y)&3], x*T-cam.x, y*T-cam.y); } }
+  // água e lava vivas por cima (leve): brilhos que andam e lava que pulsa
+  const wt=now/1000;
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ const t=tileAt(m,x,y); if(t!==WATER&&t!==LAVA) continue; const sx=x*T-cam.x, sy=y*T-cam.y, h=hash2(x,y);
+    if(t===WATER){ ctx.fillStyle='rgba(223,243,246,.32)'; for(let k=0;k<2;k++){ const ox=((h>>(k*5))%32 + wt*(8+k*5))%34-2, oy=((h>>(k*7+3))%26)+3; ctx.fillRect(sx+ox, sy+oy, 5, 1); } }
+    else { const a=0.10+0.10*Math.sin(wt*2+(h%7)); ctx.fillStyle=`rgba(255,200,80,${a})`; ctx.fillRect(sx,sy,32,32); } } }
+
 function render(){
   const m=cur; ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
   const pr=rpos(player);
   const shx=0, shy=0;
   cam.x=Math.round(pr.x*T-cv.width/2+T/2+shx); cam.y=Math.round(pr.y*T-cv.height/2+T/2+shy);
   const x0=Math.floor(cam.x/T)-1, y0=Math.floor(cam.y/T)-1, x1=x0+VW+2, y1=y0+VH+3;
-  const wf=(now/700)|0;
-  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
-    let t=tileAt(m,x,y); if(TALL.has(t)) t=BASE_OF[t];
-    const arr=tileImgs[t]; const v = (t===WATER||t===LAVA) ? ((wf+x+y)&1)+((hash2(x,y)&1)<<1) : hash2(x,y)&3;
-    ctx.drawImage(arr[v], x*T-cam.x, y*T-cam.y);
-  }
+  drawGround(m,x0,y0,x1,y1);
   for(const d of decals){ if(d.map!==m.id) continue; ctx.globalAlpha=clamp(1-d.t/20000,0,0.8); ctx.fillStyle=d.col; ctx.beginPath(); ctx.ellipse(d.x-cam.x,d.y-cam.y,d.r,d.r*0.6,0,0,7); ctx.fill(); }
   ctx.globalAlpha=1;
   for(const fd of fields){ if(fd.map!==m.id) continue; const sx=fd.x*T-cam.x, sy=fd.y*T-cam.y; if(fd.t<fd.warn){ const k=fd.t/fd.warn; ctx.fillStyle=`rgba(${FIELD_KIND[fd.kind].warn},${0.15+0.4*k})`; ctx.beginPath(); ctx.ellipse(sx+16,sy+20,5+9*k,3+6*k,0,0,7); ctx.fill(); } else { const k=Math.min(1,(fd.warn+fd.life-fd.t)/400); if(fd.kind==='thorn') drawThorns(sx,sy,k); else if(fd.kind==='fairy') drawSparkles(sx,sy,k); else if(fd.kind==='tentacle') drawSlam(sx,sy,k); else drawFlame(sx,sy,k); } }
@@ -6060,7 +6218,7 @@ renderParty();
   joy.addEventListener('contextmenu',e=>e.preventDefault());
   setInterval(()=>{ const h=!running||!touch.matches; if(joy.hidden!==h){ joy.hidden=h; if(h&&jid!==null) end({pointerId:jid}); } },500);
 })();
-window.__game = {Net, netSend, openBossPortal, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {renderChunk:(M,x,y)=>renderChunk(M,x,y), Net, netSend, openBossPortal, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
