@@ -4180,14 +4180,28 @@ function drawWisp(c,x,y,col,ph){ const fy=y+12+Math.sin(ph*Math.PI*2)*3; c.fillS
 function drawTorch(sx,sy){ rect(ctx,'#4a3020',sx+15,sy+14,3,8); const f=Math.sin(now/90+sx)*1.5; ctx.fillStyle='#ff9a2a'; ctx.beginPath(); ctx.ellipse(sx+16.5,sy+11,3,5+f,0,0,7); ctx.fill(); ctx.fillStyle='#ffe08a'; ctx.beginPath(); ctx.ellipse(sx+16.5,sy+12,1.5,2.5,0,0,7); ctx.fill(); }
 // ============================================================ chefes redesenhados (arte 112×112, 6 quadros, contorno e luz automáticos)
 const BW=112, BAX=56, BAY=100, BFR=6;
-function spritePost(g,w,h,oc){
+function spritePost(g,w,h,oc){ // contorno + volume (luz de cima/esquerda), chanfro, linhas entre as partes e brilho de metal
   const im=g.getImageData(0,0,w,h), D=im.data, N=w*h, op=new Uint8Array(N);
   for(let i=0;i<N;i++){ if(D[i*4+3]>=110){ D[i*4+3]=255; op[i]=1; } else D[i*4+3]=0; }
   const at=(x,y)=>x<0||y<0||x>=w||y>=h?0:op[y*w+x];
-  const mix=(i,t,k)=>{ D[i*4]+=(t-D[i*4])*k; D[i*4+1]+=(t-D[i*4+1])*k; D[i*4+2]+=(t-D[i*4+2])*k; };
-  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x; if(!op[i]) continue; if(!at(x-1,y)||!at(x,y-1)) mix(i,255,.2); else if(!at(x+1,y)||!at(x,y+1)) mix(i,0,.25); }
+  const src=new Uint8ClampedArray(D), lum=i=>(src[i*4]*0.3+src[i*4+1]*0.59+src[i*4+2]*0.11)/255;
+  let bx0=w,by0=h,bx1=0,by1=0; for(let y=0;y<h;y++) for(let x=0;x<w;x++) if(op[y*w+x]){ if(x<bx0)bx0=x; if(x>bx1)bx1=x; if(y<by0)by0=y; if(y>by1)by1=y; }
+  const span=Math.max(1,(bx1-bx0)+(by1-by0));
+  const shadeI=(i,k)=>{ if(k>0){ D[i*4]+=(255-D[i*4])*k; D[i*4+1]+=(255-D[i*4+1])*k; D[i*4+2]+=(255-D[i*4+2])*k; } else { D[i*4]*=1+k; D[i*4+1]*=1+k; D[i*4+2]*=1+k; } };
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x; if(!op[i]) continue;
+    let k=0; const eL=!at(x-1,y)||!at(x,y-1), eD=!at(x+1,y)||!at(x,y+1);
+    if(eL) k+=0.2; else if(eD) k-=0.25; else { const e2L=!at(x-2,y)||!at(x,y-2), e2D=!at(x+2,y)||!at(x,y+2); if(e2L) k+=0.07; else if(e2D) k-=0.09; }
+    k+=0.07-((x-bx0)+(y-by0))/span*0.16;
+    const L=lum(i), r0=src[i*4], g0=src[i*4+1], b0=src[i*4+2], mx=Math.max(r0,g0,b0), mn=Math.min(r0,g0,b0), sat=mx?(mx-mn)/mx:0;
+    if(sat<0.18&&L>0.5&&(eL||(!at(x-2,y)||!at(x,y-2)))) k+=0.18;                     // brilho de metal
+    for(const [ax,ay] of [[1,0],[0,1]]){ const X=x+ax, Y=y+ay; if(!at(X,Y)) continue; const L2=lum(Y*w+X); if(L2-L>0.2){ k-=0.22; break; } }
+    if(k) shadeI(i,Math.max(-0.6,Math.min(0.5,k))); }
   const o=[parseInt(oc.slice(1,3),16),parseInt(oc.slice(3,5),16),parseInt(oc.slice(5,7),16)];
-  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x; if(op[i]) continue; if(at(x-1,y)||at(x+1,y)||at(x,y-1)||at(x,y+1)){ D[i*4]=o[0]; D[i*4+1]=o[1]; D[i*4+2]=o[2]; D[i*4+3]=255; } }
+  // contorno colorido: cada pedaço da borda puxa um tom bem escuro da cor vizinha (mais suave que preto puro)
+  const C2=new Uint8ClampedArray(D);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x; if(op[i]) continue; let n=0, R=0, G=0, B=0;
+    for(const [ax,ay] of [[1,0],[-1,0],[0,1],[0,-1]]){ const X=x+ax, Y=y+ay; if(at(X,Y)){ const j=(Y*w+X)*4; R+=C2[j]; G+=C2[j+1]; B+=C2[j+2]; n++; } }
+    if(!n) continue; const k=0.12; D[i*4]=o[0]*(1-k)+R/n*k*0.55; D[i*4+1]=o[1]*(1-k)+G/n*k*0.55; D[i*4+2]=o[2]*(1-k)+B/n*k*0.55; D[i*4+3]=255; }
   g.putImageData(im,0,0);
 }
 function bossKit(g){
@@ -4781,6 +4795,7 @@ function heroFrame(o, view, f, walking){
 // desenha com os pés no fundo do quadrado (como as criaturas)
 function drawHero(c,x,y,o,ph,walking){ const d=o.dir||'down', side=d==='left'||d==='right', f=Math.floor((((ph||0)%1)+1)%1*BFR);
   const {dir,...look}=o; shadow(c,x,y,9);
+  if(d!=='up'&&((now/1000+x*0.031+y*0.017)%4.3)<0.14) look.blink=true;
   const img=heroFrame(look, side?'side':d==='up'?'back':'front', f, walking);
   c.save(); c.translate(x+16,y+30); if(d==='left') c.scale(-1,1); c.drawImage(img,-HEROX,-HEROY); c.restore(); }
 // montado: perfil sentado, virado para o mesmo lado do animal; o quadril fica sobre o lombo
@@ -4830,7 +4845,7 @@ function paintHero(g,o,view,t,walking){
     if(face==='side'){ P(hair,[24.6,yy+3,24.4,yy-3,27,yy-HR+0.4,32,yy-HR-1,37,yy-HR+0.6,39.8,yy-3,36,yy-4.6,33,yy-2.4,30,yy-3.4,28,yy+4]); el(hL,31,yy-HR+1.2,3,1,-0.2);
       if(hs==='bun') ci(hair,25,yy-HR+1,3.4); if(hs==='spiky') for(const [x,a] of [[27,-2.4],[31,-2],[35,-1.6]]) K.spike(x,yy-HR+1,a,4,hair,1.6); return; }
     P(hair,[24.2,yy+2,24,yy-3,26.5,yy-HR,32,yy-HR-1.4,37.5,yy-HR,40,yy-3,39.8,yy+2,38,yy-2.4,35,yy-3.8,32,yy-2,29,yy-3.8,26,yy-2.4]);
-    el(hL,29.5,yy-HR+1,3,0.9,-0.2);
+    el(hL,29.5,yy-HR+1,3,0.9,-0.2); g.globalAlpha=0.75; qc(hL,26.2,yy-4.2,32,yy-HR-0.6,37.8,yy-4.2,0.9); g.globalAlpha=1; for(const [x0,x1] of [[28,27],[31.4,31],[35,36]]) qc(hD,x0,yy-HR+0.4,x0-0.6,yy-4,x1,yy-2.2,0.5); ln(hL,26.4,yy-4.6,28.4,yy-HR+0.8,0.5);
     if(hs==='spiky') for(const [x,a] of [[26.5,-2.5],[30,-1.9],[34,-1.3],[37.5,-0.7]]) K.spike(x,yy-HR+1,a,4.2,hair,1.6);
     if(hs==='long'||hs==='braid'){ r(hair,23,yy-2,2.4,10); r(hair,38.6,yy-2,2.4,10); }
     if(hs==='braid'){ for(let k=0;k<4;k++) el(hair,40.5,yy+8+k*3.2,2,1.8); ci('#d8b04a',40.5,yy+20.5,1.2); }
@@ -4838,10 +4853,10 @@ function paintHero(g,o,view,t,walking){
     if(hs==='bun') ci(hair,32,yy-HR-1,3.4); };
   const face=(side)=>{ const yy=B(HC);
     if(side){ el(sk,32,yy,HR-0.2,HR+0.4); P(sk,[38.5,yy-0.5,41.4,yy+2,38.6,yy+2.6]); r(skD,30,yy+HR-1.6,8,1.4); ci(sk,29.2,yy+1,1.9); ci(skD,29.2,yy+1,0.8);
-      r('#ffffff',34.6,yy-0.6,2.6,3); r(eyeC,36,yy+0.2,1.4,2); r(hair||skD,34.4,yy-2.4,3.6,1); r(skD,36,yy+4.6,2,0.9); return; }
+      if(o.blink) r(shade(sk,-45),34.6,yy+1.2,2.8,0.8); else { r('#f8f4ec',34.6,yy-0.6,2.6,3); r(o.eye?eyeC:'#6a4a2e',35.8,yy-0.2,1.6,2.6); r('#1a0e08',36.2,yy+0.4,1,1.4); r('#ffffff',35.8,yy-0.2,0.7,0.7); } r(hair||skD,34.4,yy-2.4,3.6,1); r(skD,36,yy+4.6,2,0.9); return; }
     el(sk,32,yy,HR,HR+0.6); ci(sk,24.3,yy+1.4,1.7); ci(sk,39.7,yy+1.4,1.7); el(skD,32,yy+HR-0.4,5,1.2);
-    r('#ffffff',27.4,yy-0.4,3.2,3.2); r('#ffffff',33.4,yy-0.4,3.2,3.2); r(eyeC,28.6,yy+0.4,2,2.4); r(eyeC,34.6,yy+0.4,2,2.4); r('#ffffff',28.6,yy+0.4,0.8,0.8); r('#ffffff',34.6,yy+0.4,0.8,0.8);
-    r(hair||skD,27,yy-2.4,3.8,1); r(hair||skD,33.2,yy-2.4,3.8,1); r(skD,31,yy+4.2,2.4,1); el('rgba(255,120,110,.25)',26.6,yy+3.2,1.6,0.9); el('rgba(255,120,110,.25)',37.4,yy+3.2,1.6,0.9);
+    { const iris=o.eye?eyeC:'#6a4a2e'; for(const ex of [27.3,33.3]){ if(o.blink){ r(shade(sk,-45),ex,yy+1,3.4,0.8); continue; } r('#f8f4ec',ex,yy-0.6,3.4,3.4); r(iris,ex+1.2,yy-0.4,2.2,3.2); r(shade(iris,40),ex+1.2,yy+1.6,2.2,1); r('#1a0e08',ex+1.6,yy+0.2,1.2,1.4); r('#ffffff',ex+1.2,yy-0.4,0.9,0.9); r(shade(sk,-35),ex,yy-1,3.4,0.5); } }
+    r(hD||skD,27,yy-2.6,3.8,1); r(hD||skD,33.2,yy-2.6,3.8,1); r(skD,31.6,yy+1.4,1,1.8); r(skL,31.2,yy+1.2,0.6,1); r(shade(sk,-45),30.8,yy+4.4,2.8,0.8); r(skL,31,yy+5.2,2.4,0.5); el('rgba(255,120,110,.25)',26.6,yy+3.2,1.6,0.9); el('rgba(255,120,110,.25)',37.4,yy+3.2,1.6,0.9);
     if(o.beard){ P(o.beard,[25,yy+2,39,yy+2,38,yy+7,32,yy+10.5,26,yy+7]); r(skD,30.4,yy+3.6,3.4,1.2); } };
   const torso=(back)=>{ const top=B(30.5), wa=B(44);
     P(body,[24.5,top,39.5,top,41,wa,23,wa]); r(bD,37,top+1,3.6,wa-top-1); r(bL,25,top+1,3,8);
@@ -4850,10 +4865,27 @@ function paintHero(g,o,view,t,walking){
     if(o.chestTrim){ ln(o.chestTrim,24.5,top+0.6,32,top+5,1); ln(o.chestTrim,39.5,top+0.6,32,top+5,1); }
     r(belt,23,wa-3.2,18,2.6); if(!back){ r('#d8b04a',30.6,wa-3.4,2.8,3); r('#8a6a22',31.4,wa-2.6,1.2,1.4); }
     if(trim) r(trim,23,wa-0.6,18,1.4);
-    if(o.pauldron){ el(o.pauldron,24,top+1.6,4.4,2.8); el(o.pauldron,40,top+1.6,4.4,2.8); el(shade(o.pauldron,40),23,top+0.8,2,1); } };
+    matTorso(top,wa,back,24.5,39.5);
+    if(o.pauldron){ for(const s of [-1,1]){ const cx=32+s*8; el(shade(o.pauldron,-35),cx,top+2,4.8,3.2); el(o.pauldron,cx,top+1.6,4.4,2.8); ln(shade(o.pauldron,-35),cx-3.6,top+2.6,cx+3.6,top+2.6,0.6); el(shade(o.pauldron,40),cx-s*1.2,top+0.8,1.6,0.8); } } };
+  // detalhes conforme o material da armadura (o.mat): placas, malha, couro, escamas, tecido, casca; pelo nas bordas
+  const matTorso=(top,wa,back,xl,xr)=>{ const m=o.mat; if(!m||robe) return; const cx=(xl+xr)/2;
+    if(m==='plate'){ if(!back){ ln(bL,cx-0.6,top+5,cx-0.6,wa-4,0.7); qc(bD,xl+1.4,top+8.4,cx-3,top+10.4,cx-0.6,top+8.6,0.7); qc(bD,xr-1.4,top+8.4,cx+3,top+10.4,cx+0.6,top+8.6,0.7); }
+      for(const yy of [wa-6.6,wa-5]) ln(bD,xl+0.6,yy,xr-0.6,yy,0.6); ci(bL,xl+1.6,top+2.6,0.6); ci(bL,xr-1.6,top+2.6,0.6); }
+    else if(m==='chain'){ for(let yy=top+1;yy<wa-3.4;yy+=1.6) for(let xx=xl+1+((yy-top)/1.6%2?0.8:0);xx<xr-0.6;xx+=1.6){ r(bD,xx,yy,0.8,0.8); r(bL,xx-0.4,yy-0.4,0.5,0.5); } }
+    else if(m==='leather'){ if(!back) for(let yy=top+4.6;yy<wa-5;yy+=1.8){ ln(bL,cx-1.4,yy,cx+1.4,yy+1.8,0.5); ln(bL,cx+1.4,yy,cx-1.4,yy+1.8,0.5); }
+      for(let yy=top+2;yy<wa-3.6;yy+=1.6){ r(bL,xl+1.6,yy,0.5,0.7); r(bL,xr-2.1,yy,0.5,0.7); } }
+    else if(m==='scale'){ for(let yy=top+2,row=0;yy<wa-3.6;yy+=1.8,row++) for(let xx=xl+1.4+(row%2?1:0);xx<xr-1;xx+=2){ g.strokeStyle=bD; g.lineWidth=0.5; g.beginPath(); g.arc(xx,yy,1,0,Math.PI); g.stroke(); } }
+    else if(m==='bark'){ for(const xx of [xl+2.6,cx-2,cx+2,xr-2.6]) qc(bD,xx,top+1,xx+0.6,(top+wa)/2,xx,wa-3.6,0.6); }
+    else if(m==='cloth'&&!back){ ln(bL,xl+1,top+0.6,cx+3,wa-4,1.2); ln(bD,xr-1,top+0.6,cx+1,top+6,1); }
+    if(o.fur){ for(let xx=xl;xx<=xr;xx+=1.6) ci(xx%3.2<1.6?'#f4f0e8':'#d8d0c4',xx,top+0.6,1.2); } };
+
   const legsFront=()=>{ if(robe){ P(robe,[23.5,B(42),40.5,B(42),44,56,20,56]); for(const x of [27,32,37]) ln(rD,x,B(45),x+(x-32)*0.25,55.5,1); if(o.robeTrim) r(o.robeTrim,20,54.4,24,1.6); el(boots,27,56.4,3,1.2); el(boots,37,56.4,3,1.2); return; }
     const l1=Math.round(sw*1.6), l2=-l1;
-    for(const [x,dl] of [[25.5,l1],[33.5,l2]]){ P(legs,[x,B(43),x+5,B(43),x+5,53+dl,x,53+dl]); r(lD,x+3.6,B(44),1.4,9+dl); r(boots,x-0.6,52+dl,6.2,4.6); r(btL,x-0.2,52+dl,5,1); } };
+    for(const [x,dl] of [[25.5,l1],[33.5,l2]]){ P(legs,[x,B(43),x+5,B(43),x+5,53+dl,x,53+dl]); r(lD,x+3.6,B(44),1.4,9+dl);
+      if(o.mat==='plate'||o.mat==='scale'){ ci(lD,x+2.5,B(48),1.9); ci(shade(legs,25),x+2.5,B(47.8),1.4); ci('#ffffff',x+2,B(47.3),0.4); }
+      else if(o.mat==='chain'){ for(let yy=B(44);yy<51+dl;yy+=1.6) for(let xx=x+0.6+((yy|0)%2?0.8:0);xx<x+4.4;xx+=1.6) r(lD,xx,yy,0.7,0.7); }
+      else if(o.mat==='leather'){ for(let yy=B(44.4);yy<51+dl;yy+=1.6) r(shade(legs,30),x+0.6,yy,0.5,0.7); }
+      r(shade(boots,-30),x-0.8,55.6+dl,6.6,1.2); r(boots,x-0.6,52+dl,6.2,4.6); r(btL,x-0.2,52+dl,5,1); r(shade(boots,-35),x-0.6,53.4+dl,6.2,0.5); } };
   const armsFront=()=>{ for(const [x,dir2,ph2] of [[19.5,-1,sw],[40.5,1,-sw]]){ const top=B(31), hy=B(41.5)+ph2*1.4;
     P(arm,[x,top,x+4,top,x+4+dir2*0.4,hy-1,x-0.4*dir2,hy-1]); r(dir2<0?aD:aD,dir2<0?x:x+2.6,top+1,1.4,hy-top-2); el(arm,x+2,top+0.6,3,2.2); ci(sk,x+2,hy,2.3); ci(skL,x+1.4,hy-0.6,0.7); if(o.cuffs) r(o.cuffs,x-0.2,hy-3,4.4,1.4); } };
   const shieldFront=()=>{ if(!o.shield) return; const sc=o.shield, sD=shade(sc,-40), y0=B(32)+sw*1.2; P(sD,[12.5,y0-0.6,23.5,y0-0.6,23.5,y0+11,18,y0+16.5,12.5,y0+11]); P(sc,[13.5,y0,22.5,y0,22.5,y0+10.4,18,y0+15,13.5,y0+10.4]); r(shade(sc,45),14.5,y0+1,1.4,8); ci('#d8b04a',18,y0+6,1.6); ln(sD,18,y0+0.5,18,y0+14.5,0.8); };
@@ -4926,7 +4958,8 @@ function drawPlayer(c,x,y){
   const o0={dir:player.dir, skin:'#e0b48a', hair:L.bald?null:(L.hair||'#4a2e1a'), hood:L.hood, wizhat:L.hat, band:L.band, body:I(e.armor)?.look||'#6a6a5a',
     helm:I(e.helmet)?.look, shield:I(e.shield)?.ok==='shield'?I(e.shield).look:null, weapon:I(e.weapon)?.look, legs:I(e.legs)?.look||'#3e3428', wk:I(e.weapon)?.icon==='quarter'?'staff':I(e.weapon)?.wk, boots:I(e.boots)?.look};
   const o={...o0, hs:L.bald?'bald':CLASS_HS[player.cls]||'short'}; { const A=I(e.armor), Hm=I(e.helmet);
-    if(A){ if(/Manto|Veste/.test(A.name)){ o.robe=A.look; o.robeTrim=shade(A.look,55); } if(/Placas|Couraça|Obsidiana|Guardião|Cota|Escamas|Abissal/.test(A.name)) o.pauldron=shade(A.look,18); if(A.name==='Gi de Treino'){ o.belt='#1a1a1a'; o.body='#e8e0cc'; } if(/Ieti/.test(A.name)){ o.trim='#f4f4f4'; o.cuffs='#f4f4f4'; } }
+    if(A){ o.mat=/Malha|Cota/.test(A.name)?'chain':/Casca/.test(A.name)?'bark':/Escamas|Abissal|Dracônic/.test(A.name)?'scale':/Gi |Gi$|Túnica|Noviço|Jade|Sol Nascente/.test(A.name)?'cloth':/Couro|Colete|Batedor|Falcoeiro|Tormentas|Ieti/.test(A.name)?'leather':/Manto/.test(A.name)?null:'plate'; o.fur=/Ieti/.test(A.name);
+      if(/Manto|Veste/.test(A.name)){ o.robe=A.look; o.robeTrim=shade(A.look,55); } if(/Placas|Couraça|Obsidiana|Guardião|Cota|Escamas|Abissal/.test(A.name)) o.pauldron=shade(A.look,18); if(A.name==='Gi de Treino'){ o.belt='#1a1a1a'; o.body='#e8e0cc'; } if(/Ieti/.test(A.name)){ o.trim='#f4f4f4'; o.cuffs='#f4f4f4'; } }
     if(Hm){ if(/Capuz|Gorro/.test(Hm.name)){ o.hood=Hm.look; o.helm=null; if(/Gorro/.test(Hm.name)) o.hoodTrim='#f4f4f4'; } else if(/Coroa de Folhas/.test(Hm.name)){ o.band=Hm.look; o.helm=null; } else if(/Coroa/.test(Hm.name)){ o.crown=true; o.helm=null; } } }
   { const OF=cosOn('outfit'); if(OF) Object.assign(o,{helm:null,hood:null,wizhat:null,band:null,robe:null,pauldron:null},OF.look); }
   if(cosOn('mount')) drawRiderHero(c,x,y,o,player.phase,player.face||1); else drawHero(c,x,y,o,player.phase,player.moving); drawAuras(c,x,y,true);
