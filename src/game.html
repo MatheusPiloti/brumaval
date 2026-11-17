@@ -4696,7 +4696,7 @@ function creatureFrame(type,f){ const k=type+'|'+f; if(creatureCache[k]) return 
 // ============================================================ criaturas desenhadas como imagem (arquivos em art/sprites, gerados por art/tools/fazer_sprite.py)
 // _side: andando x6, ataque x4, morte x4 (de lado, virado para a direita); _fb: andando de frente x6, de costas x6, ataque de frente x4, de costas x4
 // q = tamanho do quadro (64 monstros, 112 chefes); os pés ficam em y=58 (ou 100 nos chefes). Quem não tem imagem continua desenhado por código.
-const IMG_ART=/*ART:BEGIN*/{"hero_guerreiro":{"hero":1,"q":64},"queen":{"q":112,"side":1},"rat":{"q":64,"side":1}}/*ART:END*/;
+const IMG_ART=/*ART:BEGIN*/{"hero_cacador":{"hero":1,"q":64},"hero_feiticeiro":{"hero":1,"q":64},"hero_guerreiro":{"hero":1,"q":64},"hero_monge":{"hero":1,"q":64},"hero_xama":{"hero":1,"q":64},"queen":{"q":112,"side":1},"rat":{"q":64,"side":1}}/*ART:END*/;
 const ART_BASE=(typeof window!=='undefined'&&window.ART_BASE)||'art/sprites/', artImg={};
 function artSheet(t,kind){ const A=IMG_ART[t]; if(!A||!A[kind]) return null; const k=t+'_'+kind; let im=artImg[k]; if(!im){ im=new Image(); im.src=ART_BASE+k+'.png'; artImg[k]=im; } return im.complete&&im.naturalWidth?im:null; }
 const imgArtReady=t=>!!artSheet(t,'side');
