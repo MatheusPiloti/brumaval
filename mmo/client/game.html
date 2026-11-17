@@ -6319,11 +6319,16 @@ const TOKEN_KEY='brumaval-online-token', CHAR_KEY='brumaval-online-char';
 function netUrl(){ const s=(window.BRUMAVAL_ONLINE||{}).server; if(s) return s.replace(/^http/,'ws').replace(/\/$/,'')+'/ws'; return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws'; }
 function netSend(m){ if(Net.ws&&Net.ws.readyState===1){ Net.ws.send(JSON.stringify(m)); return true; } return false; }
 function netConnect(){ return new Promise((ok,fail)=>{ let done=false; const ws=new WebSocket(netUrl()); Net.ws=ws;
-  ws.onopen=()=>{ done=true; Net.retry=0; ok(ws); }; ws.onerror=()=>{ if(!done){ done=true; fail(new Error('Não foi possível conectar ao servidor.')); } };
-  ws.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch(_){ return; } try{ netOn(m); }catch(err){ console.error(err); } }; ws.onclose=()=>netClosed(ws); }); }
+  setTimeout(()=>{ if(!done){ done=true; ws.onclose=null; try{ ws.close(); }catch(e){} fail(new Error('O servidor não respondeu.')); } },10000);
+  ws.onopen=()=>{ done=true; if(!Net.inWorld) Net.retry=0; Net.lastMsg=Date.now(); ok(ws); }; ws.onerror=()=>{ if(!done){ done=true; fail(new Error('Não foi possível conectar ao servidor.')); } };
+  ws.onmessage=e=>{ Net.lastMsg=Date.now(); let m; try{ m=JSON.parse(e.data); }catch(_){ return; } try{ netOn(m); }catch(err){ console.error(err); } }; ws.onclose=()=>netClosed(ws); }); }
 const sget=k=>{ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }, sset=(k,v)=>{ try{ v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v); }catch(e){} };
-function netClosed(ws){ if(ws!==Net.ws||Net.bye) return;
-  if(Net.inWorld&&Net.retry<8){ Net.retry++; if(Net.retry===1) log('Conexão perdida. Reconectando…','dmg'); setTimeout(async()=>{ try{ await netConnect(); netSend({t:'resume',token:Net.token,char:Net.charId}); }catch(e){ netClosed(Net.ws); } }, Math.min(5000,600*Net.retry)); return; }
+// conexão caiu (internet, celular dormindo, aba congelada): tenta voltar por uns 3 minutos; ao voltar para a aba
+// ou a internet voltar, tenta na hora (netNudge)
+function netRetry(){ Net.reconnT=null; (async()=>{ try{ await netConnect(); netSend({t:'resume',token:Net.token,char:Net.charId}); }catch(e){ netClosed(Net.ws); } })(); }
+function netNudge(){ if(Net.reconnT){ clearTimeout(Net.reconnT); netRetry(); } }
+function netClosed(ws){ if(ws!==Net.ws||Net.bye||Net.reconnT) return; // já tem tentativa marcada (erro e fechamento chegam juntos)
+  if(Net.inWorld&&Net.retry<40){ Net.retry++; if(Net.retry===1) log('Conexão perdida. Reconectando…','dmg'); Net.reconnT=setTimeout(netRetry, Math.min(5000,600*Net.retry)); return; }
   if(Net.inWorld) leaveOnlineWorld('A conexão com o servidor caiu.'); else onlineStart('A conexão com o servidor caiu.'); }
 
 // ---- progresso: o personagem inteiro é guardado no servidor (no máximo a cada 8 s, e na hora ao sair)
@@ -6440,14 +6445,32 @@ function enterOnline(m){ const y=m.you; Net.charId=y.id; Net.online=m.online||0;
 function leaveOnlineWorld(note){ Net.inWorld=false; running=false; Net.others.clear(); speech=[]; $('chatBar').hidden=true; onlineStart(note); }
 function onlineBadge(){ const el=$('acct'); if(!el) return; el.hidden=false; el.textContent='online · '+Net.online+(Net.online===1?' jogador':' jogadores')+(Net.ping!=null?' · '+Net.ping+' ms':'');
   const bl=(Net.bonusUntil||0)-Date.now(); if(bl>0) el.textContent+=' · XP e saque x2 ('+Math.ceil(bl/60000)+' min)'; }
-setInterval(()=>{ if(Net.inWorld) netSend({t:'ping',at:Date.now()}); },5000);
 addEventListener('pagehide',()=>{ if(Net.inWorld) netSave(true); });
 // fechar a aba em combate: avisa que o personagem continua no mundo (o servidor não deixa fugir da luta)
 const inCombat=()=>running&&!player.dead&&(now-(player.lastHit??-1e9)<60000||now-(player.pvpT??-1e9)<60000||(target&&!target.dead&&cheb(player,target)<=8));
 addEventListener('beforeunload',e=>{ if(Net.inWorld&&inCombat()){ e.preventDefault(); e.returnValue='Você está em combate: se sair agora, seu personagem fica no jogo e pode morrer.'; } });
 // aba em segundo plano (Alt+Tab, minimizado, outra aba): o navegador pode parar de desenhar, mas o jogo continua andando
-// (curas automáticas, poções, caça automática): este relógio alcança o tempo perdido pelo menos uma vez por segundo
-setInterval(()=>{ const t=performance.now(); if(simT&&t-simT>900){ try{ simTo(t); }catch(e){ console.error(e); } } },1000);
+// (curas automáticas, poções, caça automática). Depois de alguns minutos escondida, o navegador só roda os timers da
+// página uma vez por minuto; por isso o relógio também vem de um Worker, que não sofre esse corte.
+let pingT=0, hpT=0, wl=null, wlFail=0;
+function bgTick(){ const t=performance.now(); if(!simT||t-simT>200){ try{ simTo(t); }catch(e){ console.error(e); } }
+  const n=Date.now();
+  if(Net.inWorld&&n-pingT>=5000){ pingT=n; netSend({t:'ping',at:n}); }
+  if(n-hpT>=1000){ hpT=n; try{ sendHp(); }catch(e){ console.error(e); } }
+  netWatch(); wakeTick();
+  if(DIAG){ DIAG.n++; document.documentElement.dataset.diag=JSON.stringify({n:DIAG.n,lag:Math.round(performance.now()-simT),game:Math.round(now/1000),ws:Net.ws&&Net.ws.readyState,inW:Net.inWorld,retry:Net.retry,quiet:Date.now()-(Net.lastMsg||0),hid:document.hidden,hp:running?Math.round(player.hp):null}); } }
+const DIAG=/[?&#]diag\b/.test(location.href)?{n:0}:null; // ?diag: escreve o estado do relógio e da conexão no <html> (testes)
+// conexão "presa" (o navegador acha que está aberta, mas nada chega há 15 s): fecha e reconecta
+function netWatch(lim=15000){ const w=Net.ws; if(!Net.inWorld||Net.bye||!w||w.readyState!==1) return;
+  if(Date.now()-(Net.lastMsg||Date.now())>lim){ w.onclose=null; w.onmessage=null; try{ w.close(); }catch(e){} netClosed(w); } }
+// caça automática ligada e aba na frente: não deixa a tela do celular apagar
+function wakeTick(){ const want=ONLINE&&bot.on&&running&&!document.hidden;
+  if(want&&!wl&&navigator.wakeLock&&Date.now()-wlFail>30000){ wl='p'; navigator.wakeLock.request('screen').then(l=>{ wl=l; l.addEventListener('release',()=>{ if(wl===l) wl=null; }); }).catch(()=>{ wl=null; wlFail=Date.now(); }); }
+  else if(!want&&wl&&wl!=='p'){ const l=wl; wl=null; l.release().catch(()=>{}); } }
+setInterval(bgTick,1000);
+try{ const w=new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),250)'],{type:'text/javascript'}))); w.onmessage=()=>{ if(document.hidden) bgTick(); }; }catch(e){}
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; netWatch(); netNudge(); if(Net.inWorld) netSend({t:'ping',at:Date.now()}); });
+addEventListener('online',netNudge);
 function sendChat(){ const i=$('chatIn'), t=i.value.trim(); if(!t){ i.blur(); return; } if(!netSend({t:'say',text:t,ch:$('chatCh').value})) log('Sem conexão com o servidor.','sys'); i.value=''; i.blur(); }
 $('chatBar').addEventListener('submit',e=>{ e.preventDefault(); sendChat(); });
 $('chatIn').addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.target.value=''; e.target.blur(); } e.stopPropagation(); });
@@ -6561,7 +6584,7 @@ $('partyui').addEventListener('keydown',e=>e.stopPropagation());
 // vida para o painel do grupo (só quando está em grupo)
 let hpSent='';
 // vida e defesa: painel do grupo, barra dos adversários na Arena de Sangue e o personagem que fica no mundo se a conexão cair em combate
-setInterval(()=>{ if(!Net.inWorld||!running) return; const st=stats(), k=Math.round(player.hp)+'/'+st.maxHp+'/'+st.def; if(k===hpSent) return; hpSent=k; netSend({t:'state',hp:Math.round(player.hp),maxHp:st.maxHp,def:st.def}); },1000);
+function sendHp(){ if(!Net.inWorld||!running) return; const st=stats(), k=Math.round(player.hp)+'/'+st.maxHp+'/'+st.def; if(k===hpSent) return; hpSent=k; netSend({t:'state',hp:Math.round(player.hp),maxHp:st.maxHp,def:st.def}); }
 
 // ---- denúncia
 function openReport(){ if(!Net.inWorld) return;
