@@ -5036,9 +5036,9 @@ const palOf=a=>a.map(hexRGB);
 const cpick=(pal,v)=>pal[Math.max(0,Math.min(pal.length-1,Math.floor(v*pal.length)))];
 // ---- paletas (docs/arte.md)
 const PAL={
-  grass:palOf(['#2f5f2a','#3f7a34','#4f8f3c','#62a548']), dirt:palOf(['#5e4430','#6f5234','#8b6a43','#a47f52']), sand:palOf(['#b99a62','#c9ad74','#d8bf86','#e6cf9a']),
-  wDeep:hexRGB('#1d4a74'), wMid:hexRGB('#2b6596'), wShal:hexRGB('#4f93bd'), foam:hexRGB('#dff3f6'),
-  swamp:palOf(['#2e3a24','#3a4a2a','#46582f','#526638']), swampW:palOf(['#2a3a2c','#30443a','#3a5040']),
+  grass:palOf(['#1c521c','#2a6e22','#3e8c2a','#58a834','#7cc444','#a2dc5a']), dirt:palOf(['#5a3a22','#6c4a2c','#82603a','#9a764a']), sand:palOf(['#c49a5c','#d6b070','#e6c486','#f2d6a0']),
+  wDeep:hexRGB('#1b78a6'), wMid:hexRGB('#26a0c8'), wShal:hexRGB('#58cce0'), foam:hexRGB('#e4fcff'),
+  swamp:palOf(['#142c18','#1c3c1e','#264e24','#30602c','#3e7234']), swampW:palOf(['#24463a','#2c5646','#366452']),
   stone:palOf(['#6f6a60','#7f796d','#8f897b','#9d978a']), mortar:hexRGB('#4e4a42'),
   wood:palOf(['#56391f','#664527','#76512e','#845d35']),
   cave:palOf(['#2e2621','#3a312a','#463c33','#52463c']), flag:palOf(['#3c3a37','#4a4744','#56524e','#605c57']), dirtD:palOf(['#2a1d14','#33241a','#3e2c1f','#48331f']),
@@ -5062,10 +5062,10 @@ const OVER_SOLID=new Set([DOWN,UP,SUP,SDOWN,GATE,DOOR,BRIDGE,BOAT,CARPET]), OVER
 // ---- textura de cada material num pixel do mundo (x,y); devolve [r,g,b]
 function texel(mat,x,y,M){
   switch(mat){
-    case 'grass': { const v=fbm(x/46,y/46,1)*0.8+gH(x>>1,y>>1,3)*0.2; let c=cpick(PAL.grass,v); const b=gH(x,(y+2)>>2,5); if(b<0.03) c=PAL.grass[Math.min(3,PAL.grass.indexOf(c)+1)]; else if(b>0.985) c=PAL.grass[0]; return c; }
+    case 'grass': return leafy(x,y,PAL.grass,1);
     case 'dirt': { const v=fbm(x/30,y/30,11)*0.7+gH(x>>1,y>>1,12)*0.3; let c=cpick(PAL.dirt,v); const p=gH(x>>1,y>>1,14); if(p<0.02) c=PAL.dirt[3]; else if(p<0.035) c=PAL.dirt[0]; return c; }
     case 'sand': { const v=fbm(x/34,y/34,21)*0.6+0.25*(0.5+0.5*Math.sin(x*0.09+y*0.31+fbm(x/20,y/20,22)*5))+gH(x>>1,y>>1,23)*0.15; return cpick(PAL.sand,v); }
-    case 'swamp': { const f=fbm(x/36,y/36,31); if(f>0.68) return f<0.70?PAL.swamp[0]:cpick(PAL.swampW,vn(x/6,y/3,32)); let c=cpick(PAL.swamp,f*0.75+gH(x>>1,y>>1,33)*0.25); if(gH(x,y>>2,34)<0.03) c=PAL.swamp[3]; return c; }
+    case 'swamp': { const f=fbm(x/36,y/36,31); if(f>0.68) return f<0.70?PAL.swamp[0]:cpick(PAL.swampW,vn(x/6,y/3,32)); return leafy(x,y,PAL.swamp,33); }
     case 'stone': return stones(x,y,PAL.stone,PAL.mortar,11,41);
     case 'fstone': return stones(x,y,PAL.fstone,hexRGB('#3e5a44'),13,45);
     case 'nacre': return cobble(x,y,PAL.nacre,hexRGB('#9a90aa'),16,16,47);
@@ -5079,7 +5079,7 @@ function texel(mat,x,y,M){
     case 'ash': { const v=fbm(x/34,y/34,101)*0.7+gH(x>>1,y>>1,102)*0.3; let c=cpick(PAL.ash,v); const p=gH(x,y,103); if(p<0.004) c=hexRGB('#c0502a'); else if(p<0.02) c=PAL.ash[0]; return c; }
     case 'ashp': return cpick(PAL.ashp, fbm(x/22,y/22,111)*0.6+gH(x>>1,y>>1,112)*0.4);
     case 'lava': { const w=fbm(x/22,y/22,121), fl=0.5+0.5*Math.sin(x*0.05+y*0.12+w*7); let v=w*0.55+fl*0.35+vn(x/5,y/5,122)*0.1; if(Math.abs(fl-0.5)<0.035&&w>0.45) v=0.98; return cpick(PAL.lava, v); }
-    case 'moss': { const v=fbm(x/40,y/40,131)*0.72+gH(x>>1,y>>1,132)*0.28; let c=cpick(PAL.moss,v); if(gH(x,y>>2,133)<0.03) c=PAL.moss[4]; if(gH(x,y,134)<0.0025) c=hexRGB('#c8f0ff'); return c; }
+    case 'moss': { const c=leafy(x,y,PAL.moss,131); return gH(x,y,134)<0.0025?hexRGB('#c8f0ff'):c; }
     case 'rot': return cpick(PAL.rot, fbm(x/30,y/30,141)*0.7+gH(x>>1,y>>1,142)*0.3);
     case 'snow': { const v=fbm(x/52,y/52,151)*0.8+gH(x>>1,y>>1,152)*0.2; let c=cpick(PAL.snow,0.2+v*0.8); if(gH(x,y,153)<0.003) c=hexRGB('#ffffff'); return c; }
     case 'snowp': { const f=fbm(x/26,y/26,161); if(f>0.62) return cpick(PAL.snow,0.5+gH(x>>1,y>>1,162)*0.5); return cpick(PAL.snowp, f*0.7+gH(x>>1,y>>1,163)*0.3); }
@@ -5096,6 +5096,13 @@ function stones(x,y,pal,mort,cell,s){ const gx=Math.floor(x/cell), gy=Math.floor
   for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++){ const X=gx+i, Y=gy+j, px=(X+0.15+0.7*gH(X,Y,s))*cell, py=(Y+0.15+0.7*gH(X,Y,s+1))*cell, d=Math.hypot(x-px,y-py);
     if(d<d1){ d2=d1; d1=d; id=gH(X,Y,s+2); ox=x-px; oy=y-py; } else if(d<d2) d2=d; }
   if(d2-d1<1.5) return mort; let v=0.2+id*0.55+(fbm(x/14,y/14,s+3)-0.5)*0.25-(ox+oy)/cell*0.28; if(d2-d1<3) v+= (ox+oy<0?0.18:-0.2); if(gH(x,y,s+4)<0.01) v-=0.3; return cpick(pal,v); }
+// grama de tufinhos: cada tufo tem o topo claro e a base escura; manchas grandes mais claras e mais escuras
+function leafy(x,y,pal,s){ const macro=fbm(x/70,y/70,s), cell=5, gx=Math.floor(x/cell), gy=Math.floor(y/cell); let best=null, by=-1e9;
+  for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++){ const X=gx+i, Y=gy+j, h=gH(X,Y,s), px=(X+0.5+0.9*(h-0.5))*cell, py=(Y+0.5+0.9*(gH(X,Y,s+1)-0.5))*cell, r=3.2+gH(X,Y,s+2)*1.6;
+    const dx=x-px, dy=(y-py)*1.25; if(dx*dx+dy*dy<r*r&&py>by){ by=py; best=[px,py,r,h]; } }
+  if(!best) return cpick(pal,0.08+(macro-0.5)*0.5);
+  const [px,py,r,h]=best, k=(y-(py-r))/(2*r); let t=0.86-k*0.62+(h-0.5)*0.26+(macro-0.5)*0.9-Math.abs(x-px)/r*0.12;
+  if(k<0.2&&Math.abs(x-px)<1.2) t+=0.18; return cpick(pal,t); }
 function cobble(x,y,pal,mort,w,h,s){ const row=Math.floor(y/h), off=Math.floor(gH(row,0,s)*w), cx=Math.floor((x+off)/w), lx=(x+off)-cx*w, ly=y-row*h;
   if(lx===0||ly===0) return mort; const base=gH(cx,row,s+1); let v=0.15+base*0.6+(fbm(x/18,y/18,s+2)-0.5)*0.3;
   if(ly===1||lx===1) v+=0.25; else if(ly===h-1||lx===w-1) v-=0.22; if(gH(x,y,s+3)<0.01) v-=0.3; return cpick(pal,v); }
@@ -5151,6 +5158,14 @@ function softTile(t,v){ const k=t+'_'+v; if(softCache[k]) return softCache[k]; c
 function decoTile(g,t,sx,sy,X,Y){ const rn=mulberry32(hash2(X*3+1,Y*7+5)); const R2=(a,b)=>a+rn()*(b-a);
   const px=(col,x,y,w=1,h=1)=>{ g.fillStyle=col; g.fillRect(Math.round(x),Math.round(y),w,h); };
   switch(t){
+    case G: { // vegetação espalhada: capim alto, samambaia, flores, pedrinhas
+      const k=rn(); if(k<0.22){ for(let i=0;i<5+(rn()*4|0);i++){ const x=sx+R2(6,26), y=sy+R2(10,28), h=R2(4,8), col=['#1c521c','#2a6e22','#58a834','#7cc444'][(rn()*4)|0]; g.strokeStyle=col; g.lineWidth=1.4; g.lineCap='round'; g.beginPath(); g.moveTo(x,y); g.quadraticCurveTo(x+R2(-3,3),y-h*0.6,x+R2(-4,4),y-h); g.stroke(); } }
+      else if(k<0.30){ const x=sx+R2(8,24), y=sy+R2(12,24); for(let a=-2.4;a<=-0.6;a+=0.45){ g.strokeStyle='#245e1e'; g.lineWidth=2.2; g.beginPath(); g.moveTo(x,y); g.quadraticCurveTo(x+Math.cos(a)*6,y+Math.sin(a)*6-2,x+Math.cos(a)*11,y+Math.sin(a)*9); g.stroke(); g.strokeStyle='#5aa834'; g.lineWidth=0.9; g.stroke(); } }
+      else if(k<0.37){ const col=['#ffffff','#ffe06a','#ff8aa0','#c8a0ff'][(rn()*4)|0]; for(let i=0;i<2+(rn()*3|0);i++){ const x=sx+R2(4,28), y=sy+R2(4,28); px('#2a6e22',x,y+1,1,2); px(col,x-1,y,3,1); px(col,x,y-1,1,3); px('#ffd23a',x,y); } }
+      else if(k<0.40){ const x=sx+R2(8,22), y=sy+R2(12,24); g.fillStyle='rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(x+1,y+3,6,2.4,0,0,7); g.fill(); g.fillStyle='#8a8e96'; g.beginPath(); g.ellipse(x,y,5.4,4,0,0,7); g.fill(); g.fillStyle='#b4b8c0'; g.beginPath(); g.ellipse(x-1.4,y-1.4,3,2,0,0,7); g.fill(); }
+      break; }
+    case WATER: { const k=rn(); if(k<0.07){ const x=sx+R2(8,24), y=sy+R2(8,24), r=R2(4,6); g.fillStyle='#1e6a2a'; g.beginPath(); g.ellipse(x,y+1,r,r*0.7,0,0.3,Math.PI*2-0.1); g.lineTo(x,y+1); g.fill(); g.fillStyle='#4aa83a'; g.beginPath(); g.ellipse(x,y,r,r*0.7,0,0.3,Math.PI*2-0.1); g.lineTo(x,y); g.fill(); g.strokeStyle='#2e7a2a'; g.lineWidth=0.8; g.beginPath(); g.moveTo(x,y); g.lineTo(x-r*0.7,y-r*0.3); g.stroke(); if(rn()<0.4){ px('#ff9ab8',x+1,y-2,3,2); px('#ffffff',x+2,y-2); } } break; }
+    case SAND: { const k=rn(); if(k<0.10){ const x=sx+R2(6,26), y=sy+R2(6,26); px('#f6efe0',x,y,3,2); px('#d8b88a',x+1,y+1,1,1); } else if(k<0.18){ for(let i=0;i<4;i++){ const x=sx+R2(8,24), y=sy+R2(14,26); g.strokeStyle='#5a9a34'; g.lineWidth=1.2; g.beginPath(); g.moveTo(x,y); g.lineTo(x+R2(-3,3),y-R2(4,7)); g.stroke(); } } break; }
     case FLOW: case FFLOW: { const cols=t===FLOW?['#e8d26a','#e07a8a','#f2efe6','#9ab8f0']:['#ff9af0','#9ae0ff','#fff0a0','#c8a0ff'], n=3+(rn()*3|0);
       for(let i=0;i<n;i++){ const x=sx+R2(3,28), y=sy+R2(4,28), col=cols[(rn()*cols.length)|0]; px(t===FLOW?'#2f5f2a':'#245a3e',x,y+1,1,2); px(col,x-1,y,3,1); px(col,x,y-1,1,3); px('#fff8e0',x,y); } break; }
     case FSHROOM: case SHROOM: { const glow=t===SHROOM?'#7af0c0':['#9ae0ff','#ff9af0','#c8a0ff'][(rn()*3)|0]; for(let i=0;i<2+(rn()*2|0);i++){ const x=sx+R2(4,26), y=sy+R2(8,26);
