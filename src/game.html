@@ -4831,7 +4831,7 @@ function drawHero(c,x,y,o,ph,walking){ if(o.cls&&!o.outfit&&heroArtDraw(c,x,y,o,
   const img=heroFrame(look, side?'side':d==='up'?'back':'front', f, walking);
   c.save(); c.translate(x+16,y+30); if(d==='left') c.scale(-1,1); c.drawImage(img,-HEROX,-HEROY); c.restore(); }
 // montado: perfil sentado, virado para o mesmo lado do animal; o quadril fica sobre o lombo
-function drawRiderHero(c,x,y,o,ph,face){ const {dir,...look}=o, f=Math.floor((((ph||0)%1)+1)%1*BFR), img=heroFrame(look,'ride',f,false);
+function drawRiderHero(c,x,y,o,ph,face){ if(o.cls&&!o.outfit){ const sh=artSheet('hero_'+o.cls,'hero'); if(sh){ /*riderArt*/ const bob=Math.round(Math.sin((((ph||0)%1)+1)%1*Math.PI*2)); drawImgFrame(c,sh,64,2,0,x,y+3+bob,face<0?-1:1); return; } } const {dir,...look}=o, f=Math.floor((((ph||0)%1)+1)%1*BFR), img=heroFrame(look,'ride',f,false);
   c.save(); c.translate(x+16,y+19); if(face<0) c.scale(-1,1); c.drawImage(img,-HEROX,-(44+8)); c.restore(); }
 
 function paintHero(g,o,view,t,walking){
