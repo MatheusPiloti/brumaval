@@ -5222,6 +5222,8 @@ function drawShadows(m,x0,y0,x1,y1){ if(m.dark) return; const G=gradeOf(m); if(!
   if(shadowCv.width!==cv.width||shadowCv.height!==cv.height){ shadowCv.width=cv.width; shadowCv.height=cv.height; }
   shctx.setTransform(1,0,0,1,0,0); shctx.clearRect(0,0,cv.width,cv.height);
   for(let y=y0-2;y<=y1;y++) for(let x=x0-2;x<=x1;x++){ const t=tileAt(m,x,y); if(!TALL.has(t)) continue;
+    if(BIGT[t]){ const B2=bigTreeImg(t,hash2(x,y)%3), sx=x*T-cam.x, base=y*T-cam.y+30; if(!silCache['big'+t+'_'+hash2(x,y)%3]){ const c=mk(BTW,BTH), g2=c.getContext('2d'); g2.drawImage(B2,0,0); g2.globalCompositeOperation='source-in'; g2.fillStyle='#000'; g2.fillRect(0,0,BTW,BTH); silCache['big'+t+'_'+hash2(x,y)%3]=c; }
+      shctx.setTransform(1,0,-0.55,-0.32,sx+16-BTX+0.55*BTY,base+0.32*BTY); shctx.drawImage(silCache['big'+t+'_'+hash2(x,y)%3],0,0); continue; }
     if((ROOF[t]||WALLS.has(t))&&tileAt(m,x,y+1)===t) continue;                         // meio do telhado: a sombra sai só da última fileira
     const sx=x*T-cam.x, base=y*T-cam.y+32, img=silOf(t,hash2(x,y)%3);
     // ponto da imagem (u,v) -> chão: quanto mais alto (48-v), mais longe para a direita e para baixo
@@ -5265,7 +5267,7 @@ function drawGrade(m){ const G=gradeOf(m);
 // ============================================================ ambiente vivo (etapa 4, docs/arte.md)
 // árvores, arbustos e corais balançam com o vento (a base fica parada, a copa mexe)
 const SWAY={[TREE]:.035,[PINE]:.03,[BUSH]:.022,[GTREE]:.035,[IPINE]:.025,[DTREE]:.015,[CORAL]:.05};
-function drawTall(t,x,y){ const img=tallImgs[t][hash2(x,y)%3], sx=x*T-cam.x, sy=y*T-cam.y, a=SWAY[t];
+function drawTall(t,x,y){ if(BIGT[t]){ drawBigTree(t,x,y); return; } const img=tallImgs[t][hash2(x,y)%3], sx=x*T-cam.x, sy=y*T-cam.y, a=SWAY[t];
   if(WALLS.has(t)&&tileAt(cur,x,y-1)===t){ ctx.drawImage(img,0,6,32,42,sx,sy-10,32,42); return; }
   if(!a){ ctx.drawImage(img,sx,sy-16); return; }
   const tt=now/1000, gust=0.55+0.45*Math.sin(tt*0.37+x*0.05), k=a*Math.sin(tt*1.7+x*0.37+y*0.23)*gust;
@@ -5394,13 +5396,61 @@ function wallCapOf(t){ if(wallCapMemo[t]) return wallCapMemo[t]; const g=tallImg
   const sh=(x,y,k)=>{ const d=g.getImageData(x,y,1,1).data; return `rgb(${d[0]*k|0},${d[1]*k|0},${d[2]*k|0})`; };
   return wallCapMemo[t]={base:px(16,11), light:sh(16,11,1.18), dark:sh(16,11,0.72), speck:(ROOF[t]&&ROOF[t][1])||sh(16,11,0.88)}; }
 function drawWallTop(m,t,x,y){ if(tileAt(m,x,y+1)!==t) return false; const sx=x*T-cam.x, sy=y*T-cam.y;
-  if(!WALLS.has(t)){ const roof=ROOF[t]; if(!roof) return false; ctx.fillStyle=roof[0]; ctx.fillRect(sx, sy-12, T, T); ctx.fillStyle=roof[1]; ctx.fillRect(sx+((hash2(x,y)&7)*3), sy-6+((hash2(y,x)&7)*2), 4, 2); return true; }
+  if(!WALLS.has(t)){ if(BIGT[t]) return false; const roof=ROOF[t]; if(!roof) return false; ctx.fillStyle=roof[0]; ctx.fillRect(sx, sy-12, T, T); ctx.fillStyle=roof[1]; ctx.fillRect(sx+((hash2(x,y)&7)*3), sy-6+((hash2(y,x)&7)*2), 4, 2); return true; }
   const C=wallCapOf(t), h=hash2(x,y); ctx.fillStyle=C.base; ctx.fillRect(sx, sy-12, T, 34);
   ctx.fillStyle=C.speck; for(let i=0;i<3;i++){ const k=h>>(i*7); ctx.fillRect(sx+4+(k&15)+(i*5)%8, sy-8+((k>>4)&7)*4, 3, 2); }
   if(!WALLS.has(tileAt(m,x-1,y))){ ctx.fillStyle=C.light; ctx.fillRect(sx, sy-12, 2, 34); }
   if(!WALLS.has(tileAt(m,x+1,y))){ ctx.fillStyle=C.dark; ctx.fillRect(sx+T-2, sy-12, 2, 34); }
   if(tileAt(m,x,y-1)!==t){ ctx.fillStyle=C.light; ctx.fillRect(sx, sy-12, T, 2); }
   return true; }
+
+// ============================================================ árvores grandes (copa de cachos de folhas, vários quadrados de largura)
+const BIGT={[TREE]:'broad',[GTREE]:'fae',[PINE]:'pine',[IPINE]:'snowpine',[BUSH]:'bush'}, BTW=96, BTH=112, BTX=48, BTY=104, bigTreeCache={};
+const TREE_PAL={ broad:['#123a14','#1c5a1c','#2a7a22','#46962c','#6cb83a','#9ad44e'], fae:['#0e3a32','#145a46','#1e7a56','#2e9a62','#52ba72','#8ee098'],
+  pine:['#0e2e1a','#164228','#1e5832','#2a6e3c','#3e884a'], snowpine:['#14303a','#1c4448','#265a56','#326e62','#e8f2f8'], bush:['#163e16','#205a1e','#2e7426','#46902e','#68ae3a','#90cc4c'] };
+function bigTreeImg(t,v){ const k=t+'_'+v; if(bigTreeCache[k]) return bigTreeCache[k]; const kind=BIGT[t], c=mk(BTW,BTH), g=c.getContext('2d'), rn=mulberry32(t*977+v*131+7), pal=TREE_PAL[kind];
+  const hexc=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)], PC=pal.map(hexc);
+  const trunk=(w,top)=>{ g.fillStyle='#3a2414'; g.beginPath(); g.moveTo(BTX-w,BTY); g.quadraticCurveTo(BTX-w*0.6,top+20,BTX-w*0.4,top); g.lineTo(BTX+w*0.4,top); g.quadraticCurveTo(BTX+w*0.6,top+20,BTX+w,BTY); g.closePath(); g.fill();
+    g.fillStyle='#5a3a20'; g.beginPath(); g.moveTo(BTX-w*0.7,BTY-1); g.quadraticCurveTo(BTX-w*0.45,top+20,BTX-w*0.3,top); g.lineTo(BTX+w*0.05,top); g.lineTo(BTX,BTY-1); g.closePath(); g.fill();
+    g.strokeStyle='#2a180c'; g.lineWidth=0.8; for(let i=0;i<4;i++){ const x=BTX-w*0.5+i*w*0.33; g.beginPath(); g.moveTo(x,BTY-2); g.quadraticCurveTo(x+(rn()-0.5)*3,(BTY+top)/2,x*0.8+BTX*0.2,top+4); g.stroke(); }
+    g.fillStyle='#3a2414'; for(const s of [-1,1]){ g.beginPath(); g.moveTo(BTX+s*w*0.6,BTY-3); g.quadraticCurveTo(BTX+s*w*1.5,BTY-1,BTX+s*w*1.9,BTY); g.lineTo(BTX+s*w*0.8,BTY); g.closePath(); g.fill(); } };
+  if(kind==='pine'||kind==='snowpine'){ trunk(4,BTY-26);
+    const im=g.getImageData(0,0,BTW,BTH), D=im.data, tiers=4;
+    for(let y=0;y<BTH;y++) for(let x=0;x<BTW;x++){ let inside=false, tierK=0, ty=0;
+      for(let i=0;i<tiers;i++){ const top=6+i*16, bot=top+30, half=10+i*7.5; if(y<top||y>bot) continue; const f=(y-top)/(bot-top), w=half*f+2, jag=((x*7+i*13)%5)<2?2:0;
+        if(Math.abs(x-BTX)<=w-(y>bot-3?jag:0)){ inside=true; tierK=f; ty=i; } }
+      if(!inside) continue; const sideL=(BTX-x)/40, needle=((x+y*2)%4===0)?0.12:((x*3+y)%7===0?-0.12:0);
+      let tt=0.5+sideL*0.55-tierK*0.42+needle+(rn()-0.5)*0.12; const ci=Math.max(0,Math.min(PC.length-(kind==='snowpine'?2:1),Math.floor(tt*(PC.length-(kind==='snowpine'?1:0)))));
+      let col=PC[ci]; if(kind==='snowpine'&&tierK<0.28&&((x+ty)%3)) col=PC[PC.length-1];
+      const i4=(y*BTW+x)*4; D[i4]=col[0]; D[i4+1]=col[1]; D[i4+2]=col[2]; D[i4+3]=255; }
+    g.putImageData(im,0,0); spritePost(g,BTW,BTH,'#08140c'); return bigTreeCache[k]=c; }
+  const bush=kind==='bush', CY=bush?BTY-16:44, R=bush?17:30;
+  if(!bush){ trunk(6,CY+10); g.strokeStyle='#4a2e18'; g.lineCap='round'; for(const [a,l] of [[-2.4,22],[-0.7,22],[-1.6,18],[-2.0,14],[-1.1,15]]){ g.lineWidth=3; g.beginPath(); g.moveTo(BTX,CY+22); g.quadraticCurveTo(BTX+Math.cos(a)*l*0.5,CY+22+Math.sin(a)*l*0.4,BTX+Math.cos(a)*l,CY+14+Math.sin(a)*l*0.8); g.stroke(); } }
+  // copa: união de bolhas com borda recortada; cada pixel é um cacho de folhas (topo claro, base escura), com luz vinda de cima/esquerda
+  const blobs=[[BTX,CY,R*0.72]]; for(let i=0;i<(bush?6:11);i++){ const a=rn()*Math.PI*2, d=R*(0.35+rn()*0.45); blobs.push([BTX+Math.cos(a)*d*1.15,CY+Math.sin(a)*d*0.8,R*(0.34+rn()*0.22)]); }
+  const im=g.getImageData(0,0,BTW,BTH), D=im.data, seed=t*31+v;
+  for(let y=0;y<BTH;y++) for(let x=0;x<BTW;x++){ let inn=-1e9; for(const [bx,by,br] of blobs){ const d=br-Math.hypot(x-bx,(y-by)*1.1); if(d>inn) inn=d; }
+    const edgeN=(Math.sin(Math.atan2(y-CY,x-BTX)*9+v)*1.4)+((x*13+y*7)%5===0?1:0); if(inn+edgeN*0.6<0) continue;
+    if(!bush&&inn<5&&y>CY+R*0.35&&gH(x>>2,y>>2,seed)<0.35) continue;                   // buracos embaixo deixam ver os galhos
+    const cell=6, gx=Math.floor(x/cell), gy=Math.floor(y/cell); let best=null, byy=-1e9;
+    for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++){ const X=gx+i, Y=gy+j, h=gH(X,Y,seed), px=(X+0.5+0.9*(h-0.5))*cell, py=(Y+0.5+0.9*(gH(X,Y,seed+1)-0.5))*cell, r=3.8+gH(X,Y,seed+2)*1.8, dx=x-px, dy=(y-py)*1.2;
+      if(dx*dx+dy*dy<r*r&&py>byy){ byy=py; best=[px,py,r,h]; } }
+    const light=((BTX-x)*0.7+(CY-y))/(R*2.2);
+    let tt; if(!best) tt=0.02+light*0.25; else { const [px,py,r,h]=best, kk=(y-(py-r))/(2*r); tt=0.74-kk*0.78+(h-0.5)*0.24+light*0.6+Math.min(0,inn-6)*0.025; if(kk<0.22&&Math.abs(x-px)<1.6) tt+=0.26; }
+    const ci=Math.max(0,Math.min(PC.length-1,Math.floor(tt*PC.length))), col=PC[ci], i4=(y*BTW+x)*4; D[i4]=col[0]; D[i4+1]=col[1]; D[i4+2]=col[2]; D[i4+3]=255; }
+  g.putImageData(im,0,0);
+  if(kind==='fae') for(let i=0;i<7;i++){ const a=rn()*7, d=rn()*R*0.8, x=BTX+Math.cos(a)*d, y=CY+Math.sin(a)*d*0.8; g.fillStyle=['#ffd0f0','#c8f0ff','#fff0a0'][i%3]; g.fillRect(x|0,y|0,2,2); g.fillStyle='#ffffff'; g.fillRect(x|0,y|0,1,1); }
+  if(kind==='broad'&&v===2) for(let i=0;i<6;i++){ const a=rn()*7, d=rn()*R*0.7; g.fillStyle='#d83a2a'; g.beginPath(); g.arc(BTX+Math.cos(a)*d,CY+Math.sin(a)*d*0.8,1.8,0,7); g.fill(); g.fillStyle='#ff9a8a'; g.fillRect((BTX+Math.cos(a)*d-1)|0,(CY+Math.sin(a)*d*0.8-1)|0,1,1); }
+  if(bush&&v===1) for(let i=0;i<5;i++){ const a=rn()*7, d=rn()*R*0.7; g.fillStyle='#e8405a'; g.fillRect((BTX+Math.cos(a)*d)|0,(CY+Math.sin(a)*d*0.8)|0,2,2); }
+  spritePost(g,BTW,BTH,'#08140c'); return bigTreeCache[k]=c; }
+// árvore grande na tela: base no pé do quadrado, balança com o vento e abre um círculo transparente quando o jogador está atrás dela
+const xrCv=mk(BTW,BTH), xrG=xrCv.getContext('2d');
+function drawBigTree(t,x,y){ const img=bigTreeImg(t,hash2(x,y)%3), sx=x*T-cam.x, sy=y*T-cam.y, ax=sx+16, ay=sy+30, a=SWAY[t]||0.03;
+  const tt=now/1000, gust=0.55+0.45*Math.sin(tt*0.37+x*0.05), k=a*Math.sin(tt*1.7+x*0.37+y*0.23)*gust*0.7;
+  let src=img; const pr=rpos(player), px=pr.x*T-cam.x+16, py=pr.y*T-cam.y+14;
+  if(!player.dead&&pr.y<y&&Math.abs(px-ax)<44&&py>ay-BTY&&py<ay-6&&BIGT[t]!=='bush'){ xrG.globalCompositeOperation='source-over'; xrG.clearRect(0,0,BTW,BTH); xrG.drawImage(img,0,0);
+    xrG.globalCompositeOperation='destination-out'; const lx=px-(ax-BTX), ly=py-(ay-BTY), gr=xrG.createRadialGradient(lx,ly,10,lx,ly,26); gr.addColorStop(0,'rgba(0,0,0,.85)'); gr.addColorStop(1,'rgba(0,0,0,0)'); xrG.fillStyle=gr; xrG.fillRect(0,0,BTW,BTH); src=xrCv; }
+  ctx.setTransform(1,0,k,1,-k*ay,0); ctx.drawImage(src,ax-BTX,ay-BTY); ctx.setTransform(1,0,0,1,0,0); }
 function render(){
   const m=cur; ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
   const pr=rpos(player);
