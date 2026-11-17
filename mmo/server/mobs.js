@@ -140,9 +140,10 @@ module.exports = function createMobs(S, io, ctx) {
       const players = io.players(m.map), topP = players.find(p => p.id === top), pen = topP && topP.bot ? BOT_LOOT : 1; // caça automática: fator do saque (1 = sem penalidade)
       const luck = (1 + Math.min(60, Math.max(0, (topP && topP.luck) || 0)) / 100) * B; // atributo "sorte" (amuleto exclusivo do Caçador) e bônus de reinício
       for (const [id, ch, a, b] of d.loot) if (R() < ch * pen * luck) items.push(S.ITEMS[id].slot ? S.makeItem(id, S.rollRarity(lv, d.boss), lv) : { id, n: Math.max(1, Math.round(ri(a, b) * (id === 'gold' ? pen * B : 1))) });
-      const extra = d.boss ? (pen < 1 ? 2 : 3) : (R() < (0.04 + lv * 0.006) * pen * luck ? 1 : 0);
       if (topP) S.player.cls = topP.cls || 'guerreiro';
-      for (let i = 0; i < extra; i++) { const id = S.randomGearId(lv, S.monRegion(m.type)); if (id) items.push(S.makeItem(id, S.rollRarity(lv, d.boss), lv)); }
+      // chefe: 3 equipamentos diferentes, o primeiro pelo menos Épico; monstro comum: 3% a 8% de chance de 1 equipamento (raridade baixa na maioria)
+      if (d.boss) S.bossGear(lv, S.monRegion(m.type), pen < 1 ? 2 : 3, items);
+      else if (R() < S.gearChance(lv) * pen * luck) { const id = S.randomGearId(lv, S.monRegion(m.type)); if (id) items.push(S.makeItem(id, S.rollRarity(lv, false), lv)); }
       if (!d.boss && S.ITEMS.chest1 && R() < (0.008 + lv * 0.00008) * pen * luck) items.push({ id: 'chest1', n: 1, r: 0, a: [] }); // baú: raro em qualquer monstro
     }
     // experiência: cada um pelo dano que deu; quem está em grupo divide a parte do grupo com os membros por perto (+10% por membro extra)

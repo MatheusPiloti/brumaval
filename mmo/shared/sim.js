@@ -665,10 +665,19 @@ const AFF = {
 const AFF_SLOT = {weapon:['atk','crit','critdmg','atkspd','lifesteal'], weaponMag:['mag','crit','critdmg','atkspd','mp'],
   armor:['def','hp','mp','regen','mag'], shield:['def','hp','crit','mag','regen'], helmet:['def','hp','mp','mag','crit'],
   boots:['speed','def','hp','regen'], legs:['def','hp','regen','speed'], ring:['atk','mag','crit','critdmg','hp','mp','lifesteal'], amulet:['hp','mp','crit','critdmg','mag','atk','lifesteal','regen']};
+// raridade: monstro comum quase sempre solta Comum/Incomum (lendário é bem raro); chefe nunca solta Comum/Incomum e tem boa chance de Épico e Lendário
 function rollRarity(lvl, boss){
-  const luck=1+lvl/20, w=[60,25,10*luck,4*luck,1*luck]; if(boss){ w[0]=0; w[1]=0; }
+  const L=Math.min(1,Math.max(0,lvl)/120);
+  const w=boss ? [0,0,55-15*L,35+5*L,10+10*L] : [70-10*L,22+2*L,6.5+5*L,1.3+2.4*L,0.2+0.6*L];
   let r=R()*w.reduce((a,b)=>a+b); for(let i=0;i<5;i++){ if((r-=w[i])<0) return i; } return 0;
 }
+// equipamentos extras do chefe: sem repetir item, e o primeiro é pelo menos Épico
+function bossGear(lv, reg, n, items){ const used=new Set(items.map(i=>i.id));
+  for(let i=0;i<n;i++){ let id=null; for(let k=0;k<8;k++){ const c=randomGearId(lv, reg); if(c&&!used.has(c)){ id=c; break; } }
+    if(!id){ const pool=Object.keys(ITEMS).filter(x=>{ const d=ITEMS[x]; return d.slot&&d.slot!=='bag'&&!d.excl&&!used.has(x)&&(d.lvl||1)<=lv+2&&(d.lvl||1)>=lv-40; }); if(pool.length) id=pool[Math.floor(R()*pool.length)]; }
+    if(!id) continue; used.add(id);
+    items.push(makeItem(id, i===0?Math.max(3,rollRarity(lv,true)):rollRarity(lv,true), lv)); } }
+const gearChance=lv=>Math.min(0.08, 0.03+lv*0.0005); // monstro comum: 3% a 8% de soltar um equipamento extra
 function makeItem(id, r=0, il=1){
   const d=ITEMS[id], it={id, n:1, r, a:[]};
   if(!d.slot || r===0 || d.noRarity){ it.r=0; return it; }
@@ -1971,4 +1980,4 @@ function fixLinkChokes(){
 fixLinkChokes();
 ;({T, MAPS, TOWN, MON, ITEMS, CLASSES, BLOCKS, LINKS_T, SAFE, TALL, tileAt, passPlayer:(m,x,y)=>!BLOCKS.has(tileAt(m,x,y)), passMon:(m,x,y)=>{const t=tileAt(m,x,y); return !BLOCKS.has(t)&&!LINKS_T.has(t)&&!(m.town&&SAFE.has(t));},
   cornerBlocked:(m,x,y,dx,dy)=>dx&&dy&&BLOCKS.has(tileAt(m,x+dx,y))&&BLOCKS.has(tileAt(m,x,y+dy)), findPath, los, cheb, setupWorld, get spawns(){ return spawns; }, get npcs(){ return npcs; },
-  makeItem, rollRarity, randomGearId, monRegion, roll, player, mulberry32, hash2, R, ri})
+  makeItem, rollRarity, bossGear, gearChance, randomGearId, monRegion, roll, player, mulberry32, hash2, R, ri})

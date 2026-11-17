@@ -20,7 +20,7 @@ function extract(root) {
   const out = '// GERADO por mmo/tools/extract.py a partir de mmo/client/game.html. Não edite à mão.\n' + parts.join('\n') + `
 ;({T, MAPS, TOWN, MON, ITEMS, CLASSES, BLOCKS, LINKS_T, SAFE, TALL, tileAt, passPlayer:(m,x,y)=>!BLOCKS.has(tileAt(m,x,y)), passMon:(m,x,y)=>{const t=tileAt(m,x,y); return !BLOCKS.has(t)&&!LINKS_T.has(t)&&!(m.town&&SAFE.has(t));},
   cornerBlocked:(m,x,y,dx,dy)=>dx&&dy&&BLOCKS.has(tileAt(m,x+dx,y))&&BLOCKS.has(tileAt(m,x,y+dy)), findPath, los, cheb, setupWorld, get spawns(){ return spawns; }, get npcs(){ return npcs; },
-  makeItem, rollRarity, randomGearId, monRegion, roll, player, mulberry32, hash2, R, ri})
+  makeItem, rollRarity, bossGear, gearChance, randomGearId, monRegion, roll, player, mulberry32, hash2, R, ri})
 `;
   fs.mkdirSync(path.join(root, 'mmo/shared'), { recursive: true });
   fs.writeFileSync(path.join(root, 'mmo/shared/sim.js'), out, 'utf8');

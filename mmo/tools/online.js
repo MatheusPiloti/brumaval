@@ -151,7 +151,7 @@ function netOnMob(m){
     case 'md': dropNetMob(m.id); return true;
     case 'kill': { const o=netMobs.get(m.id), d=MON[m.type]; if(!d) return true; sess.kills++; bestiaryKill(m.type);
       if(m.xp) gainXp(Math.max(1,Math.round(m.xp*XP_RATE*(bot.on?AUTO_PENALTY:1))), o||player);
-      if(m.top) log('Você derrotou: '+d.name+'. Saque: '+(m.items?m.items.join(', '):'nada')+'.','loot'); else log('Você ajudou a derrotar: '+d.name+'.','loot');
+      if(m.top) log('Você derrotou: '+d.name+(m.temp?'. (Criatura invocada pelo chefe: não deixa saque.)':'. Saque: '+(m.items?m.items.join(', '):'nada')+'.'),'loot'); else log('Você ajudou a derrotar: '+d.name+'.','loot');
       if(m.type==='wolf'&&quests.wolves.state===1){ quests.wolves.count++; uiDirty=true; if(quests.wolves.count===8) log('Missão: você derrotou 8 lobos. Volte ao Capitão Bento.','npc'); }
       if(m.boss){ player.bossKills[m.type]=(player.bossKills[m.type]||0)+1; uiDirty=true; log('Chefe derrotado: '+d.name+'!','lvl');
         if(m.top){ const it=[]; tomeDrop({def:d,sp:{}},it); for(const x of it){ if(addItem(x)) log('Um '+itemName(x)+' caiu para você!','r3'); } } }
