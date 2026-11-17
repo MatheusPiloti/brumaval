@@ -4856,7 +4856,7 @@ function drawShadows(m,x0,y0,x1,y1){ if(m.dark) return; const G=gradeOf(m); if(!
   if(shadowCv.width!==cv.width||shadowCv.height!==cv.height){ shadowCv.width=cv.width; shadowCv.height=cv.height; }
   shctx.setTransform(1,0,0,1,0,0); shctx.clearRect(0,0,cv.width,cv.height);
   for(let y=y0-2;y<=y1;y++) for(let x=x0-2;x<=x1;x++){ const t=tileAt(m,x,y); if(!TALL.has(t)) continue;
-    if(ROOF[t]&&tileAt(m,x,y+1)===t) continue;                         // meio do telhado: a sombra sai só da última fileira
+    if((ROOF[t]||WALLS.has(t))&&tileAt(m,x,y+1)===t) continue;                         // meio do telhado: a sombra sai só da última fileira
     const sx=x*T-cam.x, base=y*T-cam.y+32, img=silOf(t,hash2(x,y)%3);
     // ponto da imagem (u,v) -> chão: quanto mais alto (48-v), mais longe para a direita e para baixo
     shctx.setTransform(1,0,-0.55,-0.32,sx+0.55*48,base+0.32*48-6); shctx.drawImage(img,0,0); }
@@ -4900,6 +4900,7 @@ function drawGrade(m){ const G=gradeOf(m);
 // árvores, arbustos e corais balançam com o vento (a base fica parada, a copa mexe)
 const SWAY={[TREE]:.035,[PINE]:.03,[BUSH]:.022,[GTREE]:.035,[IPINE]:.025,[DTREE]:.015,[CORAL]:.05};
 function drawTall(t,x,y){ const img=tallImgs[t][hash2(x,y)%3], sx=x*T-cam.x, sy=y*T-cam.y, a=SWAY[t];
+  if(WALLS.has(t)&&tileAt(cur,x,y-1)===t){ ctx.drawImage(img,0,6,32,42,sx,sy-10,32,42); return; }
   if(!a){ ctx.drawImage(img,sx,sy-16); return; }
   const tt=now/1000, gust=0.55+0.45*Math.sin(tt*0.37+x*0.05), k=a*Math.sin(tt*1.7+x*0.37+y*0.23)*gust;
   ctx.setTransform(1,0,k,1,-k*(sy+32),0); ctx.drawImage(img,sx,sy-16); ctx.setTransform(1,0,0,1,0,0); }
@@ -5019,6 +5020,21 @@ function drawRoofs(m){ const HS=housesOf(m); if(!HS.H.length) return; const pr=r
     for(const d of h.doors) if(d.y===h.b){ const sx=d.x*T-cam.x, sy=d.y*T-cam.y, S=roofStyle(m); ctx.globalAlpha=Math.max(h.alpha,0.25);
       ctx.drawImage(tileImgs[DOOR][0],sx,sy-12); ctx.fillStyle=S.trim; ctx.fillRect(sx-4,sy-18,40,4); ctx.fillStyle=S.ridge; ctx.fillRect(sx-4,sy-20,40,2);
       ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(sx-2,sy-14,36,2); ctx.globalAlpha=1; } } }
+
+// ============================================================ paredes contínuas
+// Numa parede que desce (uma em cima da outra), só o último bloco mostra a frente; os de cima mostram o topo, sem emenda.
+const WALLS=new Set([WALL,CWL,RWALL,NWALL,BWALL,MWALL,IWALL,REEFW,HULL,LOGW,HEDGE,CRYW,CWALL]), wallCapMemo={};
+function wallCapOf(t){ if(wallCapMemo[t]) return wallCapMemo[t]; const g=tallImgs[t][0].getContext('2d'), px=(x,y)=>{ const d=g.getImageData(x,y,1,1).data; return `rgb(${d[0]},${d[1]},${d[2]})`; };
+  const sh=(x,y,k)=>{ const d=g.getImageData(x,y,1,1).data; return `rgb(${d[0]*k|0},${d[1]*k|0},${d[2]*k|0})`; };
+  return wallCapMemo[t]={base:px(16,11), light:sh(16,11,1.18), dark:sh(16,11,0.72), speck:(ROOF[t]&&ROOF[t][1])||sh(16,11,0.88)}; }
+function drawWallTop(m,t,x,y){ if(tileAt(m,x,y+1)!==t) return false; const sx=x*T-cam.x, sy=y*T-cam.y;
+  if(!WALLS.has(t)){ const roof=ROOF[t]; if(!roof) return false; ctx.fillStyle=roof[0]; ctx.fillRect(sx, sy-12, T, T); ctx.fillStyle=roof[1]; ctx.fillRect(sx+((hash2(x,y)&7)*3), sy-6+((hash2(y,x)&7)*2), 4, 2); return true; }
+  const C=wallCapOf(t), h=hash2(x,y); ctx.fillStyle=C.base; ctx.fillRect(sx, sy-12, T, 34);
+  ctx.fillStyle=C.speck; for(let i=0;i<3;i++){ const k=h>>(i*7); ctx.fillRect(sx+4+(k&15)+(i*5)%8, sy-8+((k>>4)&7)*4, 3, 2); }
+  if(!WALLS.has(tileAt(m,x-1,y))){ ctx.fillStyle=C.light; ctx.fillRect(sx, sy-12, 2, 34); }
+  if(!WALLS.has(tileAt(m,x+1,y))){ ctx.fillStyle=C.dark; ctx.fillRect(sx+T-2, sy-12, 2, 34); }
+  if(tileAt(m,x,y-1)!==t){ ctx.fillStyle=C.light; ctx.fillRect(sx, sy-12, T, 2); }
+  return true; }
 function render(){
   const m=cur; ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
   const pr=rpos(player);
@@ -5044,7 +5060,7 @@ function render(){
   for(const n of npcs) if(n.map===m.id) ents.push(n);
   const rows=new Map(); for(const e of ents){ const r=rpos(e); const ry=Math.round(r.y); (rows.get(ry)||rows.set(ry,[]).get(ry)).push([e,r]); }
   for(let y=y0;y<=y1;y++){
-    for(let x=x0;x<=x1;x++){ const t=tileAt(m,x,y); if(TALL.has(t)){ const roof=ROOF[t]; if(roof && tileAt(m,x,y+1)===t){ ctx.fillStyle=roof[0]; ctx.fillRect(x*T-cam.x, y*T-cam.y-12, T, T); ctx.fillStyle=roof[1]; ctx.fillRect(x*T-cam.x+((hash2(x,y)&7)*3), y*T-cam.y-6+((hash2(y,x)&7)*2), 4, 2); continue; }
+    for(let x=x0;x<=x1;x++){ const t=tileAt(m,x,y); if(TALL.has(t)){ if(drawWallTop(m,t,x,y)) continue;
       drawTall(t,x,y); drawFacade(m,x,y); if(m.torch&&m.torch.has(y*m.W+x)) drawTorch(x*T-cam.x, y*T-cam.y); } }
     const row=rows.get(y); if(!row) continue; row.sort((a,b)=>a[1].x-b[1].x);
     for(const [e,r] of row){ const sx=Math.round(r.x*T-cam.x), sy=Math.round(r.y*T-cam.y);
