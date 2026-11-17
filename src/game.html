@@ -4837,6 +4837,64 @@ function drawGround(m,x0,y0,x1,y1){
     if(t===WATER){ ctx.fillStyle='rgba(223,243,246,.32)'; for(let k=0;k<2;k++){ const ox=((h>>(k*5))%32 + wt*(8+k*5))%34-2, oy=((h>>(k*7+3))%26)+3; ctx.fillRect(sx+ox, sy+oy, 5, 1); } }
     else { const a=0.10+0.10*Math.sin(wt*2+(h%7)); ctx.fillStyle=`rgba(255,200,80,${a})`; ctx.fillRect(sx,sy,32,32); } } }
 
+
+// ============================================================ luz e sombra (etapa 3, docs/arte.md)
+// sombras: silhueta de cada objeto alto (árvore, parede, pedra) projetada para baixo e para a direita, numa camada só (sem escurecer em dobro)
+const shadowCv=mk(cv.width,cv.height), shctx=shadowCv.getContext('2d'), silCache={};
+function silOf(t,v){ const k=t+'_'+v; if(silCache[k]) return silCache[k]; const src=tallImgs[t][v], c=mk(src.width,src.height), g=c.getContext('2d');
+  g.drawImage(src,0,0); g.globalCompositeOperation='source-in'; g.fillStyle='#000'; g.fillRect(0,0,c.width,c.height); return silCache[k]=c; }
+// cor e força da sombra e da luz de cada região
+const GRADE={
+  over:{sh:'rgba(30,40,70,',sa:.38, soft:'rgba(255,226,160,.16)', vig:.20},
+  fae: {sh:'rgba(10,40,50,', sa:.40, soft:'rgba(110,255,210,.14)', vig:.30},
+  ash: {sh:'rgba(20,6,4,',   sa:.42, soft:'rgba(255,110,50,.20)',  vig:.42},
+  ice: {sh:'rgba(40,70,120,',sa:.30, soft:'rgba(190,225,255,.10)', vig:.16},
+  sea: {sh:'rgba(5,30,45,',  sa:.25, soft:'rgba(80,220,230,.14)',  vig:.42},
+  dark:{vig:.45}, };
+const gradeOf=m=>m.dark?GRADE.dark:(GRADE[m.region||m.id]||GRADE.over);
+function drawShadows(m,x0,y0,x1,y1){ if(m.dark) return; const G=gradeOf(m); if(!G.sh) return;
+  if(shadowCv.width!==cv.width||shadowCv.height!==cv.height){ shadowCv.width=cv.width; shadowCv.height=cv.height; }
+  shctx.setTransform(1,0,0,1,0,0); shctx.clearRect(0,0,cv.width,cv.height);
+  for(let y=y0-2;y<=y1;y++) for(let x=x0-2;x<=x1;x++){ const t=tileAt(m,x,y); if(!TALL.has(t)) continue;
+    if(ROOF[t]&&tileAt(m,x,y+1)===t) continue;                         // meio do telhado: a sombra sai só da última fileira
+    const sx=x*T-cam.x, base=y*T-cam.y+32, img=silOf(t,hash2(x,y)%3);
+    // ponto da imagem (u,v) -> chão: quanto mais alto (48-v), mais longe para a direita e para baixo
+    shctx.setTransform(1,0,-0.55,-0.32,sx+0.55*48,base+0.32*48-6); shctx.drawImage(img,0,0); }
+  // pessoas e monstros também fazem sombra (oval achatada para o lado da sombra)
+  shctx.setTransform(1,0,0,1,0,0); shctx.fillStyle='#000';
+  const ents=[player,...monsters.filter(o=>o.map===m.id),...npcs.filter(o=>o.map===m.id)];
+  for(const e of ents){ if(e.dead) continue; const r=rpos(e), ex=r.x*T-cam.x, ey=r.y*T-cam.y; if(ex<-64||ey<-64||ex>cv.width+64||ey>cv.height+64) continue;
+    const big=e.def?.boss?1.8:1; shctx.beginPath(); shctx.ellipse(ex+21*big, ey+29, 11*big, 4*big, -0.35, 0, 7); shctx.fill(); }
+  shctx.globalCompositeOperation='source-in'; shctx.fillStyle=G.sh+'1)'; shctx.fillRect(0,0,cv.width,cv.height); shctx.globalCompositeOperation='source-over';
+  ctx.save(); ctx.globalAlpha=G.sa; ctx.drawImage(shadowCv,0,0); ctx.restore();
+}
+// luzes coloridas: lava, cristais, cogumelos, brasas, tochas. Cada mapa guarda a sua lista (refeita se o mapa mudar)
+const glowCache={};
+function glowImg(col){ if(glowCache[col]) return glowCache[col]; const c=mk(128,128), g=c.getContext('2d'), gr=g.createRadialGradient(64,64,0,64,64,64);
+  gr.addColorStop(0,col+'0.9)'); gr.addColorStop(0.35,col+'0.35)'); gr.addColorStop(1,col+'0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return glowCache[col]=c; }
+const LIGHT_OF={}; // tile -> [cor, raio em px, intensidade]
+for(const [t,v] of [[LAVA,['rgba(255,120,40,',70,.55]],[EMBER,['rgba(255,140,50,',40,.5]],[MWALL,['rgba(255,90,30,',46,.5]],[CRACK,['rgba(255,110,40,',34,.4]],
+  [CRYST,['rgba(150,220,255,',60,.6]],[CRYW,['rgba(150,220,255,',50,.5]],[FSHROOM,['rgba(255,150,240,',38,.5]],[SHROOM,['rgba(120,255,200,',40,.55]],[RING,['rgba(200,255,180,',56,.45]],
+  [BUBBLE,['rgba(170,240,255,',36,.4]],[DRIFT,['rgba(200,235,255,',30,.25]]]) LIGHT_OF[t]=v;
+const lightCache=new Map();
+function lightsOf(m){ let e=lightCache.get(m.id); if(e&&e.t===m.t) return e.L; const L=[];
+  for(let y=0;y<m.H;y++) for(let x=0;x<m.W;x++){ const t=m.t[y*m.W+x], d=LIGHT_OF[t]; if(!d) continue;
+    if(t===LAVA){ // lava: só a beirada brilha para fora (e um ponto a cada poucos quadrados no meio)
+      const edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>tileAt(m,x+a,y+b)!==LAVA); if(!edge&&(hash2(x,y)%5)) continue; }
+    L.push({x,y,col:d[0],r:d[1],a:d[2],ph:hash2(x,y)%628/100}); }
+  if(m.torch) for(const i of m.torch) L.push({x:i%m.W,y:(i/m.W|0)+0.4,col:'rgba(255,170,80,',r:80,a:.55,ph:i%7,torch:1});
+  lightCache.set(m.id,{t:m.t,L}); return L; }
+function drawLights(m){ const L=lightsOf(m), tt=now/1000; ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(const l of L){ const x=l.x*T-cam.x+16, y=l.y*T-cam.y+16, r=l.r*(1+0.06*Math.sin(tt*(l.torch?9:2)+l.ph)); if(x<-r||y<-r||x>cv.width+r||y>cv.height+r) continue;
+    ctx.globalAlpha=l.a*(m.dark?0.75:0.55); ctx.drawImage(glowImg(l.col), x-r, y-r, r*2, r*2); }
+  ctx.restore(); }
+// filtro de cor da região + cantos escurecidos (vinheta)
+let vigCv=null;
+function drawGrade(m){ const G=gradeOf(m);
+  if(G.soft){ ctx.save(); ctx.globalCompositeOperation='soft-light'; ctx.fillStyle=G.soft; ctx.fillRect(0,0,cv.width,cv.height); ctx.restore(); }
+  if(!vigCv||vigCv.width!==cv.width||vigCv.height!==cv.height){ vigCv=mk(cv.width,cv.height); const g=vigCv.getContext('2d'), w=cv.width, h=cv.height;
+    const gr=g.createRadialGradient(w/2,h/2,Math.min(w,h)*0.42,w/2,h/2,Math.hypot(w,h)*0.55); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,1)'); g.fillStyle=gr; g.fillRect(0,0,w,h); }
+  ctx.save(); ctx.globalAlpha=G.vig; ctx.drawImage(vigCv,0,0); ctx.restore(); }
 function render(){
   const m=cur; ctx.fillStyle='#000'; ctx.fillRect(0,0,cv.width,cv.height);
   const pr=rpos(player);
@@ -4844,6 +4902,7 @@ function render(){
   cam.x=Math.round(pr.x*T-cv.width/2+T/2+shx); cam.y=Math.round(pr.y*T-cv.height/2+T/2+shy);
   const x0=Math.floor(cam.x/T)-1, y0=Math.floor(cam.y/T)-1, x1=x0+VW+2, y1=y0+VH+3;
   drawGround(m,x0,y0,x1,y1);
+  drawShadows(m,x0,y0,x1,y1);
   for(const d of decals){ if(d.map!==m.id) continue; ctx.globalAlpha=clamp(1-d.t/20000,0,0.8); ctx.fillStyle=d.col; ctx.beginPath(); ctx.ellipse(d.x-cam.x,d.y-cam.y,d.r,d.r*0.6,0,0,7); ctx.fill(); }
   ctx.globalAlpha=1;
   for(const fd of fields){ if(fd.map!==m.id) continue; const sx=fd.x*T-cam.x, sy=fd.y*T-cam.y; if(fd.t<fd.warn){ const k=fd.t/fd.warn; ctx.fillStyle=`rgba(${FIELD_KIND[fd.kind].warn},${0.15+0.4*k})`; ctx.beginPath(); ctx.ellipse(sx+16,sy+20,5+9*k,3+6*k,0,0,7); ctx.fill(); } else { const k=Math.min(1,(fd.warn+fd.life-fd.t)/400); if(fd.kind==='thorn') drawThorns(sx,sy,k); else if(fd.kind==='fairy') drawSparkles(sx,sy,k); else if(fd.kind==='tentacle') drawSlam(sx,sy,k); else drawFlame(sx,sy,k); } }
@@ -4868,6 +4927,7 @@ function render(){
       if(e===player) drawPlayer(ctx,sx,sy); else if(e.kind==='mon') drawMonster(ctx,e,sx,sy); else drawNpc(ctx,e,sx,sy); }
   }
   drawVfx(ctx,false);
+  if(!m.dark) drawLights(m);
   for(const p of projectiles){ if(p.map!==m.id) continue; if(p.fx) drawProj(ctx,p); else drawProjOld(ctx,p); }
   for(const p of particles){ if(p.map!==m.id) continue; ctx.globalAlpha=clamp(1-p.t/p.life,0,1); ctx.fillStyle=p.color; ctx.fillRect(Math.round(p.x-cam.x),Math.round(p.y-cam.y),p.size,p.size); }
   ctx.globalAlpha=1;
@@ -4881,12 +4941,14 @@ function render(){
     for(const fd of fields) if(fd.map===m.id&&fd.t>=fd.warn) hole(fd.x*T-cam.x+16,fd.y*T-cam.y+16,55);
     for(const l of m.lights||[]){ const lx=l.x*T-cam.x+16, ly=l.y*T-cam.y+16; if(lx>-120&&ly>-120&&lx<cv.width+120&&ly<cv.height+120) hole(lx,ly,l.r+Math.sin(now/120+l.x)*3); }
     ctx.drawImage(dark,0,0);
+    drawLights(m);
     drawWallEdges(m,x0,y0,x1,y1);
     if(m.boss&&m.glow){ const bx=m.boss.x*T-cam.x+16, by=m.boss.y*T-cam.y+16; const g=ctx.createRadialGradient(bx,by,10,bx,by,140); g.addColorStop(0,m.glow+'.22)'); g.addColorStop(1,m.glow+'0)'); ctx.fillStyle=g; ctx.fillRect(bx-140,by-140,280,280); }
   }
   if(m.region==='ice'&&!m.dark){ ctx.fillStyle='rgba(255,255,255,.85)'; for(let i=0;i<70;i++){ const sx=((hash2(i,7)%1000)/1000*cv.width+now*0.012*(1+i%3))%cv.width, sy=((hash2(i,3)%1000)/1000*cv.height+now*0.035*(1+(i%4)*0.3))%cv.height; const z=i%5?2:3; ctx.fillRect(sx|0,sy|0,z,z); } }
   if(m.tint){ ctx.fillStyle=m.tint; ctx.fillRect(0,0,cv.width,cv.height); ctx.strokeStyle='rgba(210,245,255,.45)'; ctx.lineWidth=1; for(let i=0;i<24;i++){ const sx=((hash2(i,11)%1000)/1000*cv.width+Math.sin(now/700+i)*6)%cv.width, sy=cv.height-((hash2(i,5)%1000)/1000*cv.height+now*0.03*(1+i%3))%cv.height; ctx.beginPath(); ctx.arc(sx,sy,1.5+i%3,0,7); ctx.stroke(); } }
   if(player.inkT>0){ const pr2=rpos(player), px=pr2.x*T-cam.x+16, py=pr2.y*T-cam.y+16, a=Math.min(1,player.inkT/1200)*0.88; const gr=ctx.createRadialGradient(px,py,40,px,py,200); gr.addColorStop(0,'rgba(12,6,14,0)'); gr.addColorStop(1,'rgba(12,6,14,'+a+')'); ctx.fillStyle=gr; ctx.fillRect(0,0,cv.width,cv.height); }
+  drawGrade(m);
   // barras e nomes por cima
   ctx.textAlign='center'; ctx.font='500 10px "Pixelify Sans", monospace';
   for(const [e] of [...rows.values()].flat()){
