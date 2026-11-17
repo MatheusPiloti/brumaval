@@ -30,8 +30,23 @@ Pixel art em quadrados de 32 px, com 1 pixel do jogo = 1 pixel da arte, no mesmo
 
 ## Etapas do upgrade
 
-1. Bíblia de arte (este arquivo).
-2. Terreno: texturas contínuas e bordas orgânicas em todos os mapas.
-3. Luz e sombra: sombras projetadas, luzes coloridas e um filtro de cor por região.
-4. Ambiente vivo: partículas, água animada e plantas balançando.
-5. Construções e objetos: casas com telhado, masmorras com detalhes e decoração de cada ilha.
+1. ✅ Bíblia de arte (este arquivo).
+2. ✅ Terreno: texturas contínuas e bordas orgânicas em todos os mapas (`drawGround`, pedaços de 16×16 quadrados feitos aos poucos).
+3. ✅ Luz e sombra: sombras projetadas, luzes coloridas e um filtro de cor por região (`drawShadows`, `drawLights`, `drawGrade`).
+4. ✅ Ambiente vivo: partículas, água animada e plantas balançando (`drawAmbient`, `drawTall`).
+5. ✅ Construções: casas com telhado no estilo de cada ilha, que some quando o jogador chega perto, janelas, lanternas e chaminés (`drawRoofs`, `drawFacade`).
+
+## Placar final (nota de 1 a 5)
+
+| Item | Antes | Depois |
+|---|---|---|
+| Chão sem repetição | 1 | 4 |
+| Bordas entre terrenos | 1 | 4 |
+| Água e lava | 2 | 4 |
+| Luz e sombra | 1 | 4 |
+| Movimento do ambiente | 1 | 4 |
+| Cidades e casas | 1 | 4 |
+| Identidade de cada ilha | 2 | 4 |
+| Desempenho (quadros por segundo andando) | 60 | 60 |
+
+Próximos passos possíveis: paredes do fundo do mar e das masmorras com mais detalhes, objetos soltos nas cidades (barris, bancas de feira), interiores das casas com móveis.
