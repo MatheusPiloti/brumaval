@@ -3336,7 +3336,18 @@ function projPos(p){ const k=clamp(p.t/p.dur,0,1); let x=p.x0+(p.x1-p.x0)*k, y=p
 const rgba=(hex,a)=>{ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`; };
 function glowDot(c,x,y,r,col,a=1){ const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,rgba(col,a)); g.addColorStop(1,rgba(col,0)); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); }
 function jag(c,x0,y0,x1,y1,n,amp,seed){ const rn=mulberry32(seed); c.beginPath(); c.moveTo(x0,y0); for(let i=1;i<n;i++){ const k=i/n; c.lineTo(x0+(x1-x0)*k+(rn()-.5)*amp, y0+(y1-y0)*k+(rn()-.5)*amp*0.6); } c.lineTo(x1,y1); c.stroke(); }
-function drawProj(c,p){ const {x:x0,y:y0}=projPos(p), x=x0-cam.x, y=y0-cam.y, ang=Math.atan2(p.y1-p.y0,p.x1-p.x0), E=EL[PROJ_EL[p.fx]]||EL.arcane;
+// efeitos de magia desenhados como imagem (art/sprites/fx_*.png, feitos por art/tools/efeitos.py): impactos com 6 quadros (64x64, apoiados no chão)
+// e projéteis com 4 quadros (48x24, voando para a direita; o jogo gira para a direção do alvo). Sem imagem, continua o efeito por código.
+const FX_SHEETS={imp1:['fire','ice','energy','holy','arcane','shadow'], imp2:['water','poison','nature','earth','wind','heal']}, FX_ROW={};
+for(const [sh,list] of Object.entries(FX_SHEETS)) list.forEach((el,i)=>FX_ROW[el]=[sh,i]);
+const PROJ_ROW={fire:0,ice:1,arcane:2,ghost:2,shadow:3,nature:4,energy:5,water:6,poison:7};
+function fxImg(name){ const k='fx_'+name; let im=artImg[k]; if(!im){ im=new Image(); im.src=ART_BASE+k+'.png'; artImg[k]=im; } return im.complete&&im.naturalWidth?im:null; }
+function drawFxImpact(c,el,sx,sy,k){ const R=FX_ROW[el]; if(!R) return false; const im=fxImg(R[0]); if(!im) return false;
+  const fr=Math.min(5,Math.floor(k*6)); c.drawImage(im,fr*64,R[1]*64,64,64,sx+16-32,sy+30-62,64,64); return true; }
+function drawFxProj(c,p){ const row=PROJ_ROW[p.fx]; if(row==null) return false; const im=fxImg('proj'); if(!im) return false;
+  const {x:x0,y:y0}=projPos(p), ang=Math.atan2(p.y1-p.y0,p.x1-p.x0), fr=Math.floor(now/80)%4;
+  c.save(); c.translate(x0-cam.x,y0-cam.y); c.rotate(ang); c.drawImage(im,fr*48,row*24,48,24,-38,-12,48,24); c.restore(); return true; }
+function drawProj(c,p){ if(drawFxProj(c,p)) return; const {x:x0,y:y0}=projPos(p), x=x0-cam.x, y=y0-cam.y, ang=Math.atan2(p.y1-p.y0,p.x1-p.x0), E=EL[PROJ_EL[p.fx]]||EL.arcane;
   c.save(); c.globalCompositeOperation='lighter';
   switch(p.fx){
     case 'fire': glowDot(c,x,y,16,E[0],.55); glowDot(c,x,y,9,E[1],.9); glowDot(c,x,y,4,E[2],1); break;
@@ -3354,8 +3365,8 @@ const vfxDraw={
   rune(c,f,sx,sy,k,E){ const r=f.r*T, a=k<0.2?k/0.2:1-(k-0.2)/0.8; c.globalAlpha=a*0.85; c.translate(sx+16,sy+18); c.scale(1,0.55); c.rotate(now/900); c.strokeStyle=E[1]; c.lineWidth=2; c.beginPath(); c.arc(0,0,r,0,7); c.stroke(); c.lineWidth=1; c.strokeStyle=E[2]; c.beginPath(); c.arc(0,0,r*0.78,0,7); c.stroke();
     for(let i=0;i<8;i++){ const q=i/8*Math.PI*2; c.fillStyle=E[i%2?1:2]; c.save(); c.rotate(q); c.fillRect(r*0.8,-2,r*0.18,4); c.restore(); } c.globalCompositeOperation='lighter'; c.globalAlpha=a*0.3; c.fillStyle=E[0]; c.beginPath(); c.arc(0,0,r,0,7); c.fill(); },
   ring(c,f,sx,sy,k,E){ const r=(0.3+0.7*k)*f.r*T; c.globalAlpha=1-k; c.translate(sx+16,sy+18); c.scale(1,0.6); c.strokeStyle=E[2]; c.lineWidth=3*(1-k)+1; c.beginPath(); c.arc(0,0,r,0,7); c.stroke(); c.strokeStyle=E[1]; c.lineWidth=6*(1-k); c.globalAlpha=(1-k)*0.5; c.beginPath(); c.arc(0,0,r-3,0,7); c.stroke(); },
-  tile(c,f,sx,sy,k,E){ tileFx[f.el]?tileFx[f.el](c,f,sx,sy,k,E):tileFx.phys(c,f,sx,sy,k,E); },
-  column(c,f,sx,sy,k,E){ const a=Math.sin(k*Math.PI); c.globalCompositeOperation='lighter'; const g=c.createLinearGradient(0,sy-70,0,sy+28); g.addColorStop(0,rgba(E[1],0)); g.addColorStop(0.6,rgba(E[1],0.3*a)); g.addColorStop(1,rgba(E[2],0.45*a)); c.fillStyle=g; c.fillRect(sx+16-9*a,sy-70,18*a,98);
+  tile(c,f,sx,sy,k,E){ if(drawFxImpact(c,f.el,sx,sy,k)) return; tileFx[f.el]?tileFx[f.el](c,f,sx,sy,k,E):tileFx.phys(c,f,sx,sy,k,E); },
+  column(c,f,sx,sy,k,E){ if(f.el==='heal'&&drawFxImpact(c,'heal',sx,sy,k)) return; const a=Math.sin(k*Math.PI); c.globalCompositeOperation='lighter'; const g=c.createLinearGradient(0,sy-70,0,sy+28); g.addColorStop(0,rgba(E[1],0)); g.addColorStop(0.6,rgba(E[1],0.3*a)); g.addColorStop(1,rgba(E[2],0.45*a)); c.fillStyle=g; c.fillRect(sx+16-9*a,sy-70,18*a,98);
     const rn=mulberry32(f.seed); for(let i=0;i<8;i++){ const px=sx+6+rn()*20, py=sy+26-((k*1.3+rn())%1)*80; c.fillStyle=rgba(E[2],a); c.fillRect(px-2,py-0.5,5,1.5); c.fillRect(px,py-2.5,1.5,5); } },
   slash(c,f,sx,sy,k,E){ const a=f.ang||0; c.translate(sx+16,sy+14); c.rotate(a); c.globalCompositeOperation='lighter'; const sw=-1.2+2.4*Math.min(1,k*2.2); c.globalAlpha=1-k; c.lineCap='round';
     c.strokeStyle=E[1]; c.lineWidth=7*(1-k)+1; c.beginPath(); c.arc(-6,0,16,-1.2,sw); c.stroke(); c.strokeStyle=E[2]; c.lineWidth=2; c.beginPath(); c.arc(-6,0,16,sw-0.6,sw); c.stroke(); },
@@ -3785,6 +3796,7 @@ function towerRanking(){ const out=[]; const me={name:player.name, cls:player.cl
 
 // ============================================================ visual: roupas, montarias (ouro) e auras, cor do nome e das magias (Fragmentos)
 const COS_CAT={outfit:'Roupas',mount:'Montarias',aura:'Auras',name:'Cor do nome',tint:'Cor das magias',title:'Título'};
+const COS_OFF=new Set(['outfit','mount']); // roupas e montarias desligadas enquanto a arte nova é feita (quem comprou continua dono)
 const COS=[
   {k:'o_explorer',cat:'outfit',n:'Traje de Explorador',gold:5000,lvl:5,look:{body:'#7a6a42',legs:'#3e3424',boots:'#2a1e12',band:'#c8a050',belt:'#4a2e14',cuffs:'#c8a050',chestTrim:'#c8a050'},col:'#7a6a42'},
   {k:'o_sailor',cat:'outfit',n:'Roupa de Marinheiro',gold:10000,lvl:10,look:{body:'#e8ecf2',legs:'#2a4a7a',boots:'#1a1a22',band:'#2a4a7a',chestTrim:'#2a4a7a',trim:'#2a4a7a',belt:'#2a2a3a'},col:'#e8ecf2'},
@@ -3816,7 +3828,7 @@ const COS=[
 const COSK=Object.fromEntries(COS.map(c=>[c.k,c]));
 function cosData(){ const c=player.cos||(player.cos={}); c.owned??=[]; return c; }
 const cosOwned=()=>cosData().owned;
-const cosOn=cat=>{ const k=player.cos?.[cat]; return k?COSK[k]:null; };
+const cosOn=cat=>{ if(COS_OFF.has(cat)) return null; const k=player.cos?.[cat]; return k?COSK[k]:null; };
 function titleName(){ const k=player.tower?.title; return TITLES.find(t=>t.k===k)?.n||null; }
 const mountSpeed=()=>cosOn('mount')&&!inTower()?0.9:1;
 function drawCosAura(c,x,y){ const A=cosOn('aura'); if(!A) return; const E=EL[A.el]; c.save(); c.globalCompositeOperation='lighter';
@@ -3848,20 +3860,21 @@ function runLookPreview(){ cancelAnimationFrame(prevRaf); const loop=()=>{ const
   } finally { for(const k of Object.keys(C)) delete C[k]; Object.assign(C,saved); D.title=st; player.dir=sv; }
   const t=document.getElementById('lookPrevTxt'); if(t) t.textContent=prevTry?'Provando: '+(COSK[prevTry.k]?.n||TITLES.find(x=>x.k===prevTry.k)?.n||'nada'):'Seu visual agora';
   prevRaf=requestAnimationFrame(loop); }; prevRaf=requestAnimationFrame(loop); }
-function openTailor(n){ const own=cosOwned();
+function openTailor(n){ if(COS_OFF.has('outfit')&&COS_OFF.has('mount')){ openDialog(n,n.name,`<p>"Estou costurando roupas novas e preparando montarias novas, todas com arte nova. Volte daqui a pouco!"</p><p class="hint">Quem já comprou continua dono: elas voltam quando a arte ficar pronta.</p><div class="row"><button data-act="wardrobe">Visual</button><button data-act="close">Fechar</button></div>`,(act)=>{ if(act==='wardrobe') return openWardrobe(); closeDialog(); }); return; }
+  const own=cosOwned();
   const row=c=>`<div class="it" style="grid-template-columns:28px minmax(0,1fr) auto"><span class="sw" style="background:${c.col}"></span><div class="meta"><b>${c.n}</b><small>${c.cat==='mount'?'+10% de velocidade ao andar (fora da torre) · ':''}nível ${c.lvl}</small></div><div class="btns"><button data-act="try" data-k="${c.k}" aria-pressed="${prevTry?.k===c.k}">Provar</button>${own.includes(c.k)?'<span class="good">Seu</span>':`<button class="primary" data-act="buy" data-k="${c.k}" ${player.gold<c.gold||player.level<c.lvl?'disabled':''}>${fmtN(c.gold)} ouro</button>`}</div></div>`;
   openDialog(n,n.name,`<div class="lookwrap">${lookPrevHTML()}<div class="lookside"><p>"Roupa nova e uma boa montaria: é assim que se chega com estilo. Prove à vontade."</p><h4>Roupas</h4><div class="list">${COS.filter(c=>c.cat==='outfit'&&!c.quest).map(row).join('')}</div><h4>Montarias</h4><div class="list">${COS.filter(c=>c.cat==='mount'&&!c.quest).map(row).join('')}</div></div></div><p class="hint">Depois de comprar, troque quando quiser em <b>Visual</b> (botão no topo).</p><div class="row"><button data-act="wardrobe">Abrir Visual</button><button data-act="close">Até logo</button></div>`,(act,ds)=>{
     if(act==='try'){ const c=COSK[ds.k]; prevTry=prevTry?.k===c.k?null:{cat:c.cat,k:c.k}; const keep=prevTry; openTailor(n); prevTry=keep; return; }
     if(act==='buy'){ const c=COSK[ds.k]; if(c&&player.gold>=c.gold&&player.level>=c.lvl&&!own.includes(c.k)){ player.gold-=c.gold; own.push(c.k); cosData()[c.cat]=c.k; prevTry=null; log('Você comprou '+c.n+' e já está usando.','lvl'); uiDirty=true; save(); } return openTailor(n); }
     if(act==='wardrobe'){ prevTry=null; return openWardrobe(); } prevTry=null; closeDialog(); });
   runLookPreview(); }
-let wardTab='outfit';
+let wardTab='aura';
 function openWardrobe(){ const C=cosData(), own=C.owned, D=towerData();
   const all = wardTab==='title' ? TITLES.map(t=>({...t, have:D.titles.includes(t.k), how:t.q||'andar '+t.need+' da torre'})) : COS.filter(c=>c.cat===wardTab).map(c=>({...c, have:own.includes(c.k), how:c.quest?c.quest:c.gold?fmtN(c.gold)+' ouro · alfaiate':c.frags+' Fragmentos · portal da torre'}));
   const curK = wardTab==='title' ? D.title : C[wardTab]||null;
   const none={k:'',n:wardTab==='outfit'?'Equipamento (padrão)':wardTab==='title'?'Sem título':'Nenhum',have:true};
   const card=o=>`<div class="cos${(o.k||null)===curK?' on':''}">${o.col?`<span class="sw" style="background:${o.col}"></span>`:''}<b>${o.n}</b>${o.have?`<button type="button" data-act="wear" data-k="${o.k}" aria-pressed="${(o.k||null)===curK}">${(o.k||null)===curK?'Usando':'Usar'}</button>`:`<button type="button" data-act="try" data-k="${o.k}" title="${esc(o.how)}" aria-pressed="${prevTry?.k===o.k}">Provar</button>`}${o.have?'':`<small>${esc(o.how)}</small>`}</div>`;
-  openDialog(player,'Visual',`<div class="tabs">${Object.entries(COS_CAT).map(([k,l])=>`<button type="button" data-act="wtab" data-t="${k}" aria-pressed="${wardTab===k}">${l}</button>`).join('')}</div>
+  openDialog(player,'Visual',`<div class="tabs">${Object.entries(COS_CAT).filter(([k])=>!COS_OFF.has(k)).map(([k,l])=>`<button type="button" data-act="wtab" data-t="${k}" aria-pressed="${wardTab===k}">${l}</button>`).join('')}</div>
     <div class="lookwrap">${lookPrevHTML()}<div class="lookside"><div class="cosg">${[none,...all].map(card).join('')}</div></div></div>
     <div class="row"><button data-act="close">Fechar</button></div>`,(act,ds)=>{
       if(act==='wtab'){ wardTab=ds.t; prevTry=null; return openWardrobe(); }
@@ -6917,7 +6930,7 @@ renderParty();
   joy.addEventListener('contextmenu',e=>e.preventDefault());
   setInterval(()=>{ const h=!running||!touch.matches; if(joy.hidden!==h){ joy.hidden=h; if(h&&jid!==null) end({pointerId:jid}); } },500);
 })();
-window.__game = {drawNpc:(c,n,x,y)=>drawNpc(c,n,x,y), renderChunk:(M,x,y)=>renderChunk(M,x,y), Net, netSend, openBossPortal, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
+window.__game = {fx:(kind,x,y,o)=>fx(kind,x,y,o), drawNpc:(c,n,x,y)=>drawNpc(c,n,x,y), renderChunk:(M,x,y)=>renderChunk(M,x,y), Net, netSend, openBossPortal, get speech(){return speech}, drawHero:(c,x,y,o,ph,w)=>drawHero(c,x,y,o,ph,w), drawRiderHero:(c,x,y,o,ph,f)=>drawRiderHero(c,x,y,o,ph,f), drawCreatureArt:(c,m,x,y)=>drawCreatureArt(c,m,x,y), hitMonster:(m,d)=>hitMonster(m,d,false), get TW(){return TW}, startTower, towerNext, exitTower, openTower, openTailor, openForge, openWardrobe, towerData, COS, COSK, eco, applyMods, towerMult, reviveCost, blessCost, inTower, SP_NEW, spellHow, openSpellbook, openTrainer, get vfx(){return vfx}, fx, spellIconCanvas, spellIconOld, TOME_ID, tomeDrop, learnSpell, cast, player, get cur(){return cur}, monsters, totalXp, canUse, MAPS, cast, setTarget, changeMap, hurtPlayer, randomGearId, monRegion, creatureFrame, CREATURE_ART, bossArtFrame, BOSS_ART, MONS:MON, iconURL, iconURLOld, itemRegion, openGallery, get galOpen(){return galOpen}, slotAction, openSlotPicker, BAR_DEF, spawnTentacles, krakenSlam, ICED, SEAD, climateTick, inTownRect, fanLanes, classSpells, SETS, setAmmo, ammoId, useItem2:it=>useItem(it), takeItem, bladeKind, statLines, skillMul, skillNeed, mainSkill, weaponSkill, train, bestStage, openBestiary, openShop, npcs, autoAttack, findPath, passPlayer, localChars, isAdmin, openAdm, get localSlot(){return localSlot}, toggleBot, get bot(){return bot}, get sess(){return sess}, openAfk, mapPath, townOf, potCount, encFog, decFog, save, applySave, serialize, route, KEYS, keyLabel, containers, allItems, countItem, equipItem, useItem, moveInto, swapBackpack, toggleWin, get openWins(){return openWins}, renderBattle, FAED, ASHD, get fields(){return fields}, dropItem, spawns, DUNGEONS, summon, makeItem, addItem, CLASSES, ITEMS, walkTo, talk:id=>talk(npcs.find(n=>n.id===id)), quests, stats, get target(){return target}, get corpses(){return corpses}, interact};
 requestAnimationFrame(frame);
 })();
 </script>
