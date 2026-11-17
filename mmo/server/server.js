@@ -330,6 +330,10 @@ const server = http.createServer((req, res) => {
     if (!pageCache || process.env.DEV) pageCache = page();
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff' }); return res.end(pageCache);
   }
+  if (/^\/art\/sprites\/[a-z0-9_]+\.png$/.test(url)) { // imagens das criaturas (só .png com nome simples, só dessa pasta)
+    return fs.readFile(path.join(ROOT, 'art', 'sprites', path.basename(url)), (e, buf) => { if (e) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=600', 'x-content-type-options': 'nosniff' }); res.end(buf); });
+  }
   if (url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ ok: true, online: online.size })); }
   res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }); res.end('Não encontrado');
 });
