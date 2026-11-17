@@ -161,7 +161,7 @@ function netOnMob(m){
     case 'corpserm': { const k=corpses.find(x=>x.net&&x.cid===m.id); if(k){ corpses=corpses.filter(x=>x!==k); if(lootWin===k){ lootWin=null; uiDirty=true; } } return true; }
     case 'gotitem': { const it=m.item; if(addItem(it)){ if(bot.on){ sessLoot(it); if((it.r||0)>=2) log('Caça automática pegou '+itemName(it)+' ('+RAR[it.r]+').','r'+it.r); } else log('Você pegou '+(it.n>1?it.n+' ':'')+itemName(it)+(it.r?' ('+RAR[it.r]+')':'')+'.', it.r?'r'+it.r:'loot'); }
       else { if(bot.on) bot.fullAt=now; corpses.push({map:cur.id,x:player.x,y:player.y,pile:true,items:[it],t:0,life:120000}); log('A mochila está cheia: '+itemName(it)+' ficou no chão.','sys'); } return true; }
-    case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def;
+    case 'matk': { if(player.dead) return true; const o=netMobs.get(m.id), src=m.src||'monstro', def=()=>stats().def; if(o) o.atkAt=now;
       if(m.kind==='melee'){ const r=roll(m.atk, def()); if(r.miss){ floatAt(player,'errou','#bbb'); return true; } hurtPlayer(Math.round(r.d*(m.mul||1)), src);
         if(m.grab&&R()<0.3&&!player.dead){ player.slowT=Math.max(player.slowT||0,2200); floatAt(player,'AGARRADO!','#d07ac0'); uiDirty=true; }
         const pz=m.poison; if(pz&&R()<pz.ch&&!player.dead){ player.poison={ticks:pz.ticks,dmg:pz.dmg,t:2000,fire:pz.fire}; log(pz.fire?'Você está pegando fogo!':'Você foi envenenado.','dmg'); uiDirty=true; } return true; }
