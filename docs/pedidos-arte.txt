@@ -9,17 +9,17 @@ Como usar:
 2. Pedido 2: na mesma conversa, anexe a folha de lado que acabou de ficar pronta e cole o pedido 2.
 3. Se a folha vier com a criatura diferente em cada quadro, peça de novo.
 4. Baixe só a folha (um arquivo) e mande para o Claude na conversa ou salve na pasta "Brumaval Sprites" do Google Drive.
-5. O pedido 2 pode ser feito depois: até lá o jogo usa a vista de lado em todas as direções.
 
-Já prontos de lado: Rato e Presa-de-Lua, a Matriarca (falta o pedido 2 dos dois).
+JÁ NO JOGO (pedido 1, de lado — NÃO precisa pedir de novo; deles só falta o pedido 2):
+  Rato, Rainha da Seda, Presa-de-Lua, a Matriarca, Lorde Varek, o Usurpador, Rei das Criptas, Cobra, Lobo, Aranhiço, Aranha Gigante, Aranha Tecelã, Bandido, Urso Pardo, Lobo Sombrio, Fogo-Fátuo, Morcego, Mastim de Guerra, Esqueleto, Arqueiro Renegado, Cavaleiro Caído, Carniçal.
 
 ÍNDICE
 
 CHEFES
-  01. Rainha da Seda (nível 11)
-  02. Presa-de-Lua, a Matriarca (nível 16)
-  03. Lorde Varek, o Usurpador (nível 21)
-  04. Rei das Criptas (nível 26)
+  01. Rainha da Seda (nível 11)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  02. Presa-de-Lua, a Matriarca (nível 16)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  03. Lorde Varek, o Usurpador (nível 21)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  04. Rei das Criptas (nível 26)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
   05. Rainha Fada Lirael (nível 32)
   06. Silvano, o Fauno Ancião (nível 38)
   07. Morgrath, o Carvalho Corrompido (nível 48)
@@ -41,22 +41,22 @@ CHEFES
   23. Kraken das Profundezas (nível 126)
 
 MONSTROS DE PEDRALUZ
-  24. Rato (nível 1)
-  25. Cobra (nível 2)
-  26. Lobo (nível 3)
-  27. Aranhiço (nível 4)
-  28. Aranha Gigante (nível 4)
-  29. Aranha Tecelã (nível 6)
-  30. Bandido (nível 6)
-  31. Urso Pardo (nível 7)
-  32. Lobo Sombrio (nível 8)
-  33. Fogo-Fátuo (nível 8)
-  34. Morcego (nível 8)
-  35. Mastim de Guerra (nível 10)
-  36. Esqueleto (nível 10)
-  37. Arqueiro Renegado (nível 11)
-  38. Cavaleiro Caído (nível 13)
-  39. Carniçal (nível 13)
+  24. Rato (nível 1)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  25. Cobra (nível 2)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  26. Lobo (nível 3)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  27. Aranhiço (nível 4)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  28. Aranha Gigante (nível 4)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  29. Aranha Tecelã (nível 6)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  30. Bandido (nível 6)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  31. Urso Pardo (nível 7)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  32. Lobo Sombrio (nível 8)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  33. Fogo-Fátuo (nível 8)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  34. Morcego (nível 8)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  35. Mastim de Guerra (nível 10)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  36. Esqueleto (nível 10)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  37. Arqueiro Renegado (nível 11)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  38. Cavaleiro Caído (nível 13)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
+  39. Carniçal (nível 13)  [PEDIDO 1 JÁ NO JOGO — falta só o 2]
 
 MONSTROS DE LUNÁRIA
   40. Cogumelo Saltitante (nível 22)
@@ -114,40 +114,7 @@ MONSTROS DE CORALINA
 
 ████████ CHEFES ████████
 
-=== 01. RAINHA DA SEDA — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um CHEFE para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Rainha da Seda" — nível 11, um chefe: precisa parecer imponente e especial. Região: Pedraluz (campos e cavernas).
-Aranha-rainha enorme, abdômen roxo-escuro com marcas que brilham, uma coroa de quitina na cabeça, 8 patas longas e finas, presas curvas.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #3a2448, #6a3a8a, #d0a0ff.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 112 x 112 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 56).
-- As patas/pés encostam no chão na linha y = 100 (12 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 70 a 84 pixels de largura e até 90 de altura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: queen_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 01. RAINHA DA SEDA — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 01. RAINHA DA SEDA — PEDIDO 2 (frente e costas) ===
 
@@ -175,40 +142,7 @@ Um arquivo só: queen_frente_costas.png — a folha de 672 x 448 px no tamanho e
 
 ------------------------------------------------------------
 
-=== 02. PRESA-DE-LUA, A MATRIARCA — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um CHEFE para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Presa-de-Lua, a Matriarca" — nível 16, um chefe: precisa parecer imponente e especial. Região: Pedraluz (campos e cavernas).
-Loba gigante de pelo prateado e branco-azulado, uma cicatriz no focinho, olhos azuis brilhantes e uma lua crescente desenhada na testa.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #c8ccd8, #8a90a8, #9ad8ff.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 112 x 112 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 56).
-- As patas/pés encostam no chão na linha y = 100 (12 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 70 a 84 pixels de largura e até 90 de altura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: matriarch_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 02. PRESA-DE-LUA, A MATRIARCA — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 02. PRESA-DE-LUA, A MATRIARCA — PEDIDO 2 (frente e costas) ===
 
@@ -236,40 +170,7 @@ Um arquivo só: matriarch_frente_costas.png — a folha de 672 x 448 px no taman
 
 ------------------------------------------------------------
 
-=== 03. LORDE VAREK, O USURPADOR — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um CHEFE para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Lorde Varek, o Usurpador" — nível 21, um chefe: precisa parecer imponente e especial. Região: Pedraluz (campos e cavernas).
-Guerreiro humano corpulento em armadura vermelho-escura com detalhes dourados, capa, uma coroa roubada torta na cabeça, espada larga e olhos vermelhos.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #7a1a1a, #c9a440, #e8ecf0.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 112 x 112 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 56).
-- As patas/pés encostam no chão na linha y = 100 (12 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 70 a 84 pixels de largura e até 90 de altura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: usurper_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 03. LORDE VAREK, O USURPADOR — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 03. LORDE VAREK, O USURPADOR — PEDIDO 2 (frente e costas) ===
 
@@ -297,40 +198,7 @@ Um arquivo só: usurper_frente_costas.png — a folha de 672 x 448 px no tamanho
 
 ------------------------------------------------------------
 
-=== 04. REI DAS CRIPTAS — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um CHEFE para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Rei das Criptas" — nível 26, um chefe: precisa parecer imponente e especial. Região: Pedraluz (campos e cavernas).
-Rei morto-vivo esquelético de manto roxo real, coroa dourada, cajado com cristal azul, olhos roxos brilhando nas órbitas.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #6a3d8a, #e8e2d0, #9ad0ff.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 112 x 112 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 56).
-- As patas/pés encostam no chão na linha y = 100 (12 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 70 a 84 pixels de largura e até 90 de altura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 112x112 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 672 x 336 pixels (6 colunas x 3 linhas de 112 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: boss_folha.png — a folha de 672 x 336 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 04. REI DAS CRIPTAS — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 04. REI DAS CRIPTAS — PEDIDO 2 (frente e costas) ===
 
@@ -1520,40 +1388,7 @@ Um arquivo só: leviathan_frente_costas.png — a folha de 672 x 448 px no taman
 
 ████████ MONSTROS DE PEDRALUZ ████████
 
-=== 24. RATO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Rato" — nível 1. Região: Pedraluz (campos e cavernas).
-Rato cinza-acastanhado, gordinho, fofo mas travesso, olhos vermelhos brilhantes, orelhas e rabo rosados.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #8a8580, #5a5550, #b8b0a8, #d0a0a0, #c0201a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 28 a 34 pixels de largura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: rat_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 24. RATO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 24. RATO — PEDIDO 2 (frente e costas) ===
 
@@ -1581,40 +1416,7 @@ Um arquivo só: rat_frente_costas.png — a folha de 384 x 256 px no tamanho exa
 
 ------------------------------------------------------------
 
-=== 25. COBRA — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Cobra" — nível 2. Região: Pedraluz (campos e cavernas).
-Cobra verde com o capuz aberto, olhos amarelos e língua bifurcada.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #5f8f3a, #3a6a2a, #e8d050.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 28 a 34 pixels de largura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: cobra_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 25. COBRA — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 25. COBRA — PEDIDO 2 (frente e costas) ===
 
@@ -1642,40 +1444,7 @@ Um arquivo só: cobra_frente_costas.png — a folha de 384 x 256 px no tamanho e
 
 ------------------------------------------------------------
 
-=== 26. LOBO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Lobo" — nível 3. Região: Pedraluz (campos e cavernas).
-Lobo cinza magro, rosnando, pelo arrepiado nas costas.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #7d7f86, #4a4c54, #c8ccd2.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: wolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 26. LOBO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 26. LOBO — PEDIDO 2 (frente e costas) ===
 
@@ -1703,40 +1472,7 @@ Um arquivo só: wolf_frente_costas.png — a folha de 384 x 256 px no tamanho ex
 
 ------------------------------------------------------------
 
-=== 27. ARANHIÇO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Aranhiço" — nível 4. Região: Pedraluz (campos e cavernas).
-Filhote de aranha marrom e peludo, olhinhos vermelhos.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #4a3426, #6a4a36, #c0201a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 20 a 26 pixels de largura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: spiderling_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 27. ARANHIÇO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 27. ARANHIÇO — PEDIDO 2 (frente e costas) ===
 
@@ -1764,40 +1500,7 @@ Um arquivo só: spiderling_frente_costas.png — a folha de 384 x 256 px no tama
 
 ------------------------------------------------------------
 
-=== 28. ARANHA GIGANTE — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Aranha Gigante" — nível 4. Região: Pedraluz (campos e cavernas).
-Aranha gigante marrom-escura e peluda, 8 olhos vermelhos.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #2b2420, #4a3a30, #c0201a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: spider_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 28. ARANHA GIGANTE — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 28. ARANHA GIGANTE — PEDIDO 2 (frente e costas) ===
 
@@ -1825,40 +1528,7 @@ Um arquivo só: spider_frente_costas.png — a folha de 384 x 256 px no tamanho 
 
 ------------------------------------------------------------
 
-=== 29. ARANHA TECELÃ — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Aranha Tecelã" — nível 6. Região: Pedraluz (campos e cavernas).
-Aranha roxa com fios de teia brilhantes presos nas patas.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #5a4a6a, #8a7a9a, #e6e2d6.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: weaver_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 29. ARANHA TECELÃ — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 29. ARANHA TECELÃ — PEDIDO 2 (frente e costas) ===
 
@@ -1886,40 +1556,7 @@ Um arquivo só: weaver_frente_costas.png — a folha de 384 x 256 px no tamanho 
 
 ------------------------------------------------------------
 
-=== 30. BANDIDO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Bandido" — nível 6. Região: Pedraluz (campos e cavernas).
-Bandido humano de capuz marrom e lenço vermelho cobrindo o rosto, faca curva.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #8a3a2a, #3a2a1a, #d9a57a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: bandit_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 30. BANDIDO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 30. BANDIDO — PEDIDO 2 (frente e costas) ===
 
@@ -1947,40 +1584,7 @@ Um arquivo só: bandit_frente_costas.png — a folha de 384 x 256 px no tamanho 
 
 ------------------------------------------------------------
 
-=== 31. URSO PARDO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Urso Pardo" — nível 7. Região: Pedraluz (campos e cavernas).
-Urso pardo grande e forte.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #6a4528, #4a2e18, #a07a52.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 46 a 56 pixels de largura e até 54 de altura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: bear_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 31. URSO PARDO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 31. URSO PARDO — PEDIDO 2 (frente e costas) ===
 
@@ -2008,40 +1612,7 @@ Um arquivo só: bear_frente_costas.png — a folha de 384 x 256 px no tamanho ex
 
 ------------------------------------------------------------
 
-=== 32. LOBO SOMBRIO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Lobo Sombrio" — nível 8. Região: Pedraluz (campos e cavernas).
-Lobo preto-azulado com olhos roxos brilhantes e fumaça escura saindo do pelo.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #3a3a48, #22222c, #a07aff.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: direwolf_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 32. LOBO SOMBRIO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 32. LOBO SOMBRIO — PEDIDO 2 (frente e costas) ===
 
@@ -2069,40 +1640,7 @@ Um arquivo só: direwolf_frente_costas.png — a folha de 384 x 256 px no tamanh
 
 ------------------------------------------------------------
 
-=== 33. FOGO-FÁTUO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Fogo-Fátuo" — nível 8. Região: Pedraluz (campos e cavernas).
-Espírito em forma de chama verde-água com um rostinho. Flutua.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #a0ffd0, #5ad0a0, #ffffff.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- Ele flutua no ar: não encosta no chão. A parte de baixo dele fica por volta da linha y = 50, e ele balança 1 ou 2 pixels para cima e para baixo na animação.
-- Tamanho dentro do quadro: uns 28 a 34 pixels de largura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: wisp_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 33. FOGO-FÁTUO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 33. FOGO-FÁTUO — PEDIDO 2 (frente e costas) ===
 
@@ -2130,40 +1668,7 @@ Um arquivo só: wisp_frente_costas.png — a folha de 384 x 256 px no tamanho ex
 
 ------------------------------------------------------------
 
-=== 34. MORCEGO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Morcego" — nível 8. Região: Pedraluz (campos e cavernas).
-Morcego roxo-escuro de asas abertas e dentinhos. Voa.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #3b3040, #5a4a60, #c0201a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- Ele flutua no ar: não encosta no chão. A parte de baixo dele fica por volta da linha y = 50, e ele balança 1 ou 2 pixels para cima e para baixo na animação.
-- Tamanho dentro do quadro: uns 28 a 34 pixels de largura.
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: bat_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 34. MORCEGO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 34. MORCEGO — PEDIDO 2 (frente e costas) ===
 
@@ -2191,40 +1696,7 @@ Um arquivo só: bat_frente_costas.png — a folha de 384 x 256 px no tamanho exa
 
 ------------------------------------------------------------
 
-=== 35. MASTIM DE GUERRA — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Mastim de Guerra" — nível 10. Região: Pedraluz (campos e cavernas).
-Cachorro grande e musculoso, marrom, com coleira de espinhos e armadura de couro.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #5a4030, #3a2a1a, #a4aab3.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: guarddog_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 35. MASTIM DE GUERRA — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 35. MASTIM DE GUERRA — PEDIDO 2 (frente e costas) ===
 
@@ -2252,40 +1724,7 @@ Um arquivo só: guarddog_frente_costas.png — a folha de 384 x 256 px no tamanh
 
 ------------------------------------------------------------
 
-=== 36. ESQUELETO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Esqueleto" — nível 10. Região: Pedraluz (campos e cavernas).
-Esqueleto guerreiro com espada enferrujada e escudo rachado.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #dcd6c4, #8a8270, #6a5a4a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: skeleton_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 36. ESQUELETO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 36. ESQUELETO — PEDIDO 2 (frente e costas) ===
 
@@ -2313,40 +1752,7 @@ Um arquivo só: skeleton_frente_costas.png — a folha de 384 x 256 px no tamanh
 
 ------------------------------------------------------------
 
-=== 37. ARQUEIRO RENEGADO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Arqueiro Renegado" — nível 11. Região: Pedraluz (campos e cavernas).
-Arqueiro humano de capuz verde-musgo, arco longo e aljava.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #4a5a2a, #2a3a1a, #d9a57a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: archer_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 37. ARQUEIRO RENEGADO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 37. ARQUEIRO RENEGADO — PEDIDO 2 (frente e costas) ===
 
@@ -2374,40 +1780,7 @@ Um arquivo só: archer_frente_costas.png — a folha de 384 x 256 px no tamanho 
 
 ------------------------------------------------------------
 
-=== 38. CAVALEIRO CAÍDO — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Cavaleiro Caído" — nível 13. Região: Pedraluz (campos e cavernas).
-Cavaleiro morto-vivo em armadura cinza-azulada amassada, elmo com fenda e olhos azuis fantasmagóricos, espada longa.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #5a6070, #3a4050, #9ad8ff.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: knight_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 38. CAVALEIRO CAÍDO — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 38. CAVALEIRO CAÍDO — PEDIDO 2 (frente e costas) ===
 
@@ -2435,40 +1808,7 @@ Um arquivo só: knight_frente_costas.png — a folha de 384 x 256 px no tamanho 
 
 ------------------------------------------------------------
 
-=== 39. CARNIÇAL — PEDIDO 1 (de lado) ===
-
-Crie a arte em PIXEL ART de um monstro para o meu jogo de RPG 2D (visão de cima em 3/4, estilo fofo/chibi, natureza viva, cores saturadas). Use a imagem do rato em anexo como referência de ESTILO (mesma grossura de contorno, mesmo tipo de sombreado, mesma quantidade de detalhe), mas desenhe a criatura abaixo.
-
-CRIATURA: "Carniçal" — nível 13. Região: Pedraluz (campos e cavernas).
-Carniçal curvado, pele verde-acinzentada podre, garras longas.
-
-ESTILO
-- Pixel art de verdade: 1 pixel da imagem = 1 pixel do jogo, sem borrado, sem anti-aliasing, sem gradiente suave, sem textura de pintura.
-- Contorno de 1 pixel marrom-escuro (#24140c), não preto puro.
-- Luz vindo do alto à esquerda: lado esquerdo/topo mais claro, lado direito/baixo mais escuro.
-- 3 a 4 tons por cor.
-- Cores principais: #6f7f5a, #4a5a3a, #d0ff6a.
-- Visual original (não copie personagens de nenhum jogo existente).
-
-MEDIDAS (muito importante)
-- Cada quadro tem exatamente 64 x 64 pixels, fundo TRANSPARENTE (PNG).
-- A criatura fica centralizada na horizontal (centro em x = 32).
-- As patas/pés encostam no chão na linha y = 58 (6 pixels acima da borda de baixo), iguais em todos os quadros.
-- Tamanho dentro do quadro: uns 36 a 44 pixels de largura (humanos: uns 40 pixels de altura).
-- Vista DE LADO, virada para a DIREITA (o jogo espelha para a esquerda).
-- NÃO desenhe sombra no chão (o jogo já desenha).
-
-ANIMAÇÕES — uma folha (sprite sheet) só, com quadros de 64x64 lado a lado, sem espaço entre eles:
-- Linha 1: ANDANDO — 6 quadros em loop.
-- Linha 2: ATACANDO — 4 quadros (prepara, golpeia, volta).
-- Linha 3: MORRENDO — 4 quadros (cai ou se desfaz; o último fica caído/parado no chão).
-Tamanho final da folha: 384 x 192 pixels (6 colunas x 3 linhas de 64 px). Nas linhas 2 e 3 os quadros que sobram ficam transparentes.
-
-ENTREGA
-Um arquivo só: ghoul_folha.png — a folha de 384 x 192 px no tamanho exato, sem aumentar. Não precisa de prévia ampliada.
-Mantenha a criatura idêntica em todos os quadros (mesmas cores, mesmo tamanho, mesma posição no chão).
-
-------------------------------------------------------------
+=== 39. CARNIÇAL — PEDIDO 1: JÁ ESTÁ NO JOGO, NÃO PRECISA PEDIR ===
 
 === 39. CARNIÇAL — PEDIDO 2 (frente e costas) ===
 
