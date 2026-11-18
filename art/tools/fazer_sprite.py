@@ -62,6 +62,13 @@ def main():
     W1 = [f[3] - f[1] for f in frames if f and f[0] == 0]; H1 = [f[4] - f[2] for f in frames if f and f[0] == 0]
     Y = 100 if q >= 112 else 58; ground = Y - 8 if fly else Y
     s = min(tw / float(np.median(W1)), (ground - 4) / float(np.median(H1)))
+    side = ROOT / 'art' / 'sprites' / f'{key}_side.png'
+    if kind == 'fb' and side.exists():                          # frente e costas: mesma altura da vista de lado (já aprovada)
+        sa = np.array(Image.open(side).convert('RGBA'))[:q, :, 3] > 0; hs = []
+        for c in range(6):
+            ys = np.where(sa[:, c * q:(c + 1) * q].any(1))[0]
+            if len(ys): hs.append(ys.max() - ys.min() + 1)
+        if hs: s = min(float(np.median(hs)) / float(np.median(H1)), (ground - 2) / float(np.median(H1)))
     sheet = Image.new('RGBA', (q * 6, q * len(nrows)), (0, 0, 0, 0)); col = [0] * len(nrows)
     for f in frames:
         if not f: continue
