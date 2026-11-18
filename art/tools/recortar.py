@@ -35,7 +35,10 @@ def remove_bg(im):
         for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             Y, X = y + dy, x + dx
             if 0 <= Y < H and 0 <= X < W and not seen[Y, X] and bgish[Y, X]: seen[Y, X] = True; q.append((Y, X))
-    fg = ~seen; a[..., 3] = np.where(fg, 255, 0); return fg, a
+    fg = ~seen
+    if corner[0] > 170 and corner[2] > 170 and corner[1] < 120:          # fundo magenta: tira também o magenta solto dentro do desenho
+        fg &= ~((r > 150) & (b > 150) & (r - g > 90) & (b - g > 90))
+    a[..., 3] = np.where(fg, 255, 0); return fg, a
 
 def find(fg):
     rows = fg.sum(1) > 1; bands = []; s = None
@@ -89,7 +92,7 @@ def clean_edges(A):
 def montar(src, key, q, height, spec):
     im = Image.open(src); fg, a = remove_bg(im); F = find(fg); img = Image.fromarray(a.astype(np.uint8))
     lines = [[t.strip() for t in L.split(',') if t.strip()] for L in spec.split(';')]
-    kind = {7: 'hero', 3: 'side', 4: 'fb'}[len(lines)]
+    kind = {7: 'hero', 3: 'side', 4: 'fb', 1: 'npc'}[len(lines)]
     def get(tok):
         flip = tok.startswith('~'); li, fi = map(int, tok.lstrip('~').split('.')); return F[li - 1][fi - 1], flip
     ref_h = np.median([get(t)[0][3] - get(t)[0][1] for t in lines[0]]); s = height / ref_h

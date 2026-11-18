@@ -4850,7 +4850,7 @@ function creatureFrame(type,f){ const k=type+'|'+f; if(creatureCache[k]) return 
 // ============================================================ criaturas desenhadas como imagem (arquivos em art/sprites, gerados por art/tools/fazer_sprite.py)
 // _side: andando x6, ataque x4, morte x4 (de lado, virado para a direita); _fb: andando de frente x6, de costas x6, ataque de frente x4, de costas x4
 // q = tamanho do quadro (64 monstros, 112 chefes); os pés ficam em y=58 (ou 100 nos chefes). Quem não tem imagem continua desenhado por código.
-const IMG_ART=/*ART:BEGIN*/{"hero_cacador":{"hero":1,"q":64},"hero_feiticeiro":{"hero":1,"q":64},"hero_guerreiro":{"hero":1,"q":64},"hero_monge":{"hero":1,"q":64},"hero_xama":{"hero":1,"q":64},"queen":{"q":112,"side":1},"rat":{"q":64,"side":1}}/*ART:END*/;
+const IMG_ART=/*ART:BEGIN*/{"archer":{"q":64,"side":1},"bandit":{"q":64,"side":1},"bat":{"q":64,"side":1},"bear":{"q":64,"side":1},"boss":{"q":112,"side":1},"cobra":{"q":64,"side":1},"direwolf":{"q":64,"side":1},"ghoul":{"q":64,"side":1},"guarddog":{"q":64,"side":1},"hero_cacador":{"hero":1,"q":64},"hero_feiticeiro":{"hero":1,"q":64},"hero_guerreiro":{"hero":1,"q":64},"hero_monge":{"hero":1,"q":64},"hero_xama":{"hero":1,"q":64},"knight":{"q":64,"side":1},"matriarch":{"q":112,"side":1},"npc_boatman":{"npc":1,"q":64},"npc_guard":{"npc":1,"q":64},"npc_merchant":{"npc":1,"q":64},"npc_priest":{"npc":1,"q":64},"npc_smith":{"npc":1,"q":64},"npc_tailor":{"npc":1,"q":64},"queen":{"q":112,"side":1},"rat":{"q":64,"side":1},"skeleton":{"q":64,"side":1},"spider":{"q":64,"side":1},"spiderling":{"q":64,"side":1},"usurper":{"q":112,"side":1},"weaver":{"q":64,"side":1},"wisp":{"q":64,"side":1},"wolf":{"q":64,"side":1}}/*ART:END*/;
 const ART_BASE=(typeof window!=='undefined'&&window.ART_BASE)||'art/sprites/', artImg={};
 function artSheet(t,kind){ const A=IMG_ART[t]; if(!A||!A[kind]) return null; const k=t+'_'+kind; let im=artImg[k]; if(!im){ im=new Image(); im.src=ART_BASE+k+'.png'; artImg[k]=im; } return im.complete&&im.naturalWidth?im:null; }
 const imgArtReady=t=>!!artSheet(t,'side');
@@ -5166,6 +5166,7 @@ function drawNpc(c,n,x,y){
     mage:{skin:'#e0b48a',robe:'#2a3a7a',body:'#2a3a7a',hair:'#c8c8d8',wizhat:'#3a2a8a',beard:'#e8e8f0',robeTrim:'#d8b04a',hs:'long'}, icemage:{skin:'#f0d8c8',robe:'#8ab8d8',body:'#8ab8d8',hair:'#f4faff',wizhat:'#c8e0ff',hs:'long',robeTrim:'#ffffff',hatBand:'#3a8ad8'}, seamage:{skin:'#b8d8c8',robe:'#1a6a6a',body:'#1a6a6a',hair:'#5ad0e0',hs:'long',robeTrim:'#e8d8b0',amulet:'#ffffff'},
     merchant:{pack:'#7a5230',scarf:'#c0402a',skin:'#d9a57a',body:'#3e6b4a',legs:'#4a3a2a',hat:'#6b4a2a',hair:'#3a2a1a',beard:'#3a2a1a',belt:'#6b4a2a',chestTrim:'#d8b04a'},
     guard:{tabard:'#2a4a8a',mat:'plate',skin:'#c99070',body:'#8a8f99',legs:'#4a4f58',helm:'#a4aab3',shield:'#3a5a8a',weapon:'#c9ccd2',spear:true,pauldron:'#a4aab3',trim:'#3a5a8a'}}[n.look];
+  { const sh=artSheet('npc_'+n.look,'npc'); if(sh){ /*npcArt*/ shadow(c,x,y,9); const t=Math.floor(now/420+(n.x*7+n.y*3))%12; drawImgFrame(c,sh,64,0,t===11?2:(t%2?1:0),x,y,1); return; } }
   drawHero(c,x,y,{dir:'down',...look},n.phase,false);
 }
 function drawPlayer(c,x,y){
